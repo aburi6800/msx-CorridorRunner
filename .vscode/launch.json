@@ -1,0 +1,30 @@
+{
+    // IntelliSense を使用して利用可能な属性を学べます。
+    // 既存の属性の説明をホバーして表示します。
+    // 詳細情報は次を確認してください: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "dezog",
+            "request": "launch",
+            "name": "DeZog",
+            "remoteType": "openmsx",
+            "listFiles": [
+                {
+                    "path": "src/msx/main.asm.lis",
+                    "srcDirs": [], // Use list file directly
+                    "asm": "z88dk",
+                    "z88dkMapFile": "dist/example.map",
+                    "addOffset": 0
+                }
+            ],
+            "commandsAfterLaunch": [
+                "-assert enable", // start with ASSERT mode ON
+                "-e cart dist/example.rom"
+            ],
+            "startAutomatically": false,
+            "rootFolder": "${workspaceFolder}",
+            "tmpDir": ".tmp"
+        }
+    ]
+}
