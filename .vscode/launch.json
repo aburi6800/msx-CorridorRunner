@@ -15,7 +15,8 @@
                     "srcDirs": [], // Use list file directly
                     "asm": "z88dk",
                     "z88dkMapFile": "dist/example.map",
-                    "addOffset": 0
+                    "mainFile": "src/msx/main.asm",
+                    "addOffset": 0  
                 }
             ],
             "commandsAfterLaunch": [

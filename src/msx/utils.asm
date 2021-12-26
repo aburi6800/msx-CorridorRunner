@@ -261,3 +261,15 @@ SECTION bss_user
 ; ■乱数ワークエリア
 RND_WK:
     DB 0
+
+; ■入力バッファ(STICK)
+; +0 : 現在の入力値
+; +1 : 前回の入力値
+INPUT_BUFF_STICK:
+    DEFS 2
+
+; ■入力バッファ(STRIG)
+; +0 : 現在の入力値
+; +1 : 前回の入力値
+INPUT_BUFF_STRIG:
+    DEFS 2
