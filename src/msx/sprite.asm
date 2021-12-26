@@ -382,18 +382,22 @@ CHARACTER_INIT_TABLE:
     DW INIT_ENEMY2                  ; ENEMY2
 
 ; ■キャラクターロジックテーブル
-; 1 : プレイヤー
-; 2 : テキ１
-; 3 : テキ２
 CHARACTER_UPDATE_TABLE:
     DW $0000                        ; DUMMY
     DW UPDATE_PLAYER                ; PLAYER
     DW UPDATE_ENEMY1                ; ENEMY1
     DW UPDATE_ENEMY2                ; ENEMY2
 
+; ■キャラクター描画テーブル
+CHARACTER_DRAW_TABLE:
+    DW $0000                        ; DUMMY
+    DW $0000                        ; DUMMY
+    DW $0000                        ; DUMMY
+    DW $0000                        ; DUMMY
+
 ; ■アニメーションパターンアドレステーブル
 ANIM_PTN_TBL:
-    DW ANIM_PTN_PLAYER
+    DW $0000
     DW ANIM_PTN_ENEMY1_R
     DW ANIM_PTN_ENEMY1_L
     DW ANIM_PTN_ENEMY2

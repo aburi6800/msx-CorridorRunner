@@ -35,17 +35,17 @@ ROUND_START:
 
     ; ■敵初期化
     ; @ToDo:マップデータの後に、敵の初期情報を置いて、そこから設定するようにしたい
-    LD B,5                          ; 敵の数
+;    LD B,5                          ; 敵の数
 ROUND_START_L1:
-    LD A,2                          ; 2＝テキ1
-    CALL ADD_CHARACTER
-    DJNZ ROUND_START_L1             ; 敵の数だけ繰り返す
+;    LD A,2                          ; 2＝テキ1
+;    CALL ADD_CHARACTER
+;    DJNZ ROUND_START_L1             ; 敵の数だけ繰り返す
 
-    LD B,5                          ; 敵の数
+;    LD B,5                          ; 敵の数
 ROUND_START_L2:
-    LD A,3                          ; 3＝テキ2
-    CALL ADD_CHARACTER
-    DJNZ ROUND_START_L2             ; 敵の数だけ繰り返す
+;    LD A,3                          ; 3＝テキ2
+;    CALL ADD_CHARACTER
+;    DJNZ ROUND_START_L2             ; 敵の数だけ繰り返す
 
     ; ■ゲーム状態変更
     LD A,STATE_GAME_MAIN            ; ゲーム状態 <- ゲームメイン
@@ -101,8 +101,8 @@ GAME_MAIN_L2:
 
     DJNZ GAME_MAIN_L1
 
-    ; ■画面更新
-    CALL DRAW
+;    ; ■画面更新
+;    CALL DRAW
 
 GAME_MAIN_EXIT:
     RET
@@ -145,5 +145,5 @@ SECTION rodata_user
 ; ====================================================================================================
 
 STRING_ROUND_START:
-    DW $0901
+    DW $0109
 	DB "READY ROUND 1",0

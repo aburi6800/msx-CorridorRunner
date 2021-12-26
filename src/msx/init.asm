@@ -141,7 +141,7 @@ SET_COLOR_TABLE:
 SET_SPRITE_PATTERN:
 	LD HL,SPR_PTN_DATA			    ; HLレジスタにスプライトデータの先頭アドレスを設定
     LD DE,SPR_PTN_ADDR			    ; DEレジスタにスプライトパターンジェネレータの先頭アドレスを設定
-	LD BC,32*9					    ; BCレジスタにスプライトデータのサイズを指定
+	LD BC,32*16					    ; BCレジスタにスプライトデータのサイズを指定
     CALL LDIRVM				 	    ; BIOS VRAMブロック転送
 
     RET

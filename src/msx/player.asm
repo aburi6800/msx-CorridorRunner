@@ -29,9 +29,13 @@ INIT_PLAYER:
     LD (IX+5),0                     ; スプライトパターンNo
     LD (IX+6),15                    ; カラーコード
 
-    LD (IX+7),0                     ; 移動方向
+    LD (IX+7),1                     ; 移動方向
     LD (IX+8),0                     ; アニメーションテーブル番号
     LD (IX+9),0                     ; アニメーションカウンタ
+
+    ; ■ワークエリア初期化
+    XOR A
+    LD (PLAYER_CONTROL_MODE),A
 
 INIT_PLAYER_EXIT:
     RET
@@ -78,17 +82,17 @@ UPDATE_PLAYER_CONTROL:
 
     LD A,(INPUT_BUFF_STICK)
     OR A
-    RET Z                           ; ゼロ(＝未入力)なら抜ける
+    RET Z                           ; STICK値がゼロ(＝未入力)なら抜ける
 
     CP 7
     JP NZ,UPDATE_PLAYER_CONTROL_L1
 
     LD A,PLAYERMODE_LEFTTURN
-    LD (PLAYER_CONTROL_MODE),A
+    LD (PLAYER_CONTROL_MODE),A      ; プレイヤー状態を左回転に変更
     LD A,3
-    LD (PLAYER_CNT_WK1),A
-    LD A,5
-    LD (PLAYER_CNT_WK2),A
+    LD (PLAYER_CNT_WK1),A           ; WK1：処理繰り返し回数
+    LD A,1
+    LD (PLAYER_CNT_WK2),A           ; WK2：ウェイトカウンタ
     RET
 
 UPDATE_PLAYER_CONTROL_L1:
@@ -96,11 +100,11 @@ UPDATE_PLAYER_CONTROL_L1:
     JP NZ,UPDATE_PLAYER_CONTROL_L2
 
     LD A,PLAYERMODE_RIGHTTURN
-    LD (PLAYER_CONTROL_MODE),A
+    LD (PLAYER_CONTROL_MODE),A      ; プレイヤー状態を右回転に変更
     LD A,3
-    LD (PLAYER_CNT_WK1),A
-    LD A,5
-    LD (PLAYER_CNT_WK2),A
+    LD (PLAYER_CNT_WK1),A           ; WK1：処理繰り返し回数
+    LD A,1
+    LD (PLAYER_CNT_WK2),A           ; WK2：ウェイトカウンタ
     RET
 
 UPDATE_PLAYER_CONTROL_L2:
@@ -108,13 +112,11 @@ UPDATE_PLAYER_CONTROL_L2:
     JP NZ,UPDATE_PLAYER_CONTROL_EXIT
 
     LD A,PLAYERMODE_CHARGE
-    LD (PLAYER_CONTROL_MODE),A
-    LD A,0
-    LD (PLAYER_CNT_WK1),A
-    LD A,0
-    LD (PLAYER_CNT_WK2),A
-    LD A,0
-    LD (PLAYER_CHARGE_POWER),A
+    LD (PLAYER_CONTROL_MODE),A      ; プレイヤー状態をチャージに変更
+    XOR A
+    LD (PLAYER_CNT_WK1),A           ; WK1：チャージカウンタ
+    LD (PLAYER_CNT_WK2),A           ; WK2：未使用
+    LD (PLAYER_CHARGE_POWER),A      ; チャージパワー値をリセット
     RET
 
 UPDATE_PLAYER_CONTROL_EXIT:
@@ -125,31 +127,31 @@ UPDATE_PLAYER_CONTROL_EXIT:
 ; ----------------------------------------------------------------------------------------------------
 UPDATE_PLAYER_TURN:
     ; ■動作ウェイト判定
-    ;  WK2をデクリメントし、ゼロでない場合はなにもせずに終了する
+    ;   WK2をデクリメントし、ゼロでない場合はなにもせずに終了する
     LD HL,PLAYER_CNT_WK2
-    SUB (HL)
+    DEC (HL)
     RET NZ
 
-    ;■動作ウェイト値をリセット
-    LD A,5
+    ;■WK2(動作ウェイト値)をリセット
+    LD A,10
     LD (HL),A
 
     ; ■方向変更カウンタ判定
-    ;  WK1をデクリメントし、ゼロの場合はプレイヤー操作状態をリセットする
-    LD HL,(PLAYER_CNT_WK1)
-    SUB (HL)
+    ;   WK1をデクリメントし、ゼロの場合はプレイヤー操作状態をリセットする
+    LD HL,PLAYER_CNT_WK1
+    DEC (HL)
     JP Z,UPDATE_PLAYER_TURN_END
 
     ; ■方向変更の方向判定
     LD A,(PLAYER_CONTROL_MODE)
-    CP 2
+    CP PLAYERMODE_RIGHTTURN
     JP Z,UPDATE_PLAYER_TURN_RIGHT
 
     ; ■左回転
     LD A,(IX+7)
     DEC A
     JP NZ,UPDATE_PLAYER_TURN_EXIT
-    LD A,1
+    LD A,8
     JR UPDATE_PLAYER_TURN_EXIT
 
 UPDATE_PLAYER_TURN_RIGHT:
@@ -162,6 +164,10 @@ UPDATE_PLAYER_TURN_RIGHT:
 
 UPDATE_PLAYER_TURN_EXIT:
     LD (IX+7),A
+
+    DEC A                           ; (方向-1)をパターン番号として設定
+    LD (IX+5),A
+
     RET
 
 UPDATE_PLAYER_TURN_END:
@@ -174,7 +180,44 @@ UPDATE_PLAYER_TURN_END:
 ; プレイヤーチャージサブルーチン
 ; ----------------------------------------------------------------------------------------------------
 UPDATE_PLAYER_CHARGE:
-    ; ■
+    ; ■STICK値を判定し、4〜6(右下〜左下)以外の場合は次の状態に遷移させる
+    LD A,(INPUT_BUFF_STICK)
+    CP 7
+    JP NC,UPDATE_PLAYER_CHARGE_END  ; STICKの値が7〜8の場合はキャリーが立たないので、次の状態に遷移させる
+    CP 4
+    JP C,UPDATE_PLAYER_CHARGE_END   ; STICKの値が1〜3の場合はキャリーが立つので、次の状態に遷移させる
+
+    ; ■上記以外の時はチャージ
+    ;   カウンタ＝０の時は、チャージパワーを+1してパワー値に対応したカウンタを取得
+    ;   ただしチャージパワーが16の時は加算しない
+    LD A,(PLAYER_CNT_WK1)
+    OR A
+    JP NZ,UPDATE_PLAYER_CHARGE_L1   ; カウンタがゼロ以外の時は次の処理へ
+
+    LD HL,PLAYER_CHARGE_POWER
+
+    INC (HL)                        ; チャージパワー+1
+    LD B,(HL)
+    LD C,$00
+    LD HL,CHARGE_WAIT_VALUE
+
+    ADD HL,BC
+    LD A,(HL)
+    LD (PLAYER_CNT_WK1),A
+
+UPDATE_PLAYER_CHARGE_L1:
+    LD A,(PLAYER_CHARGE_POWER)
+    CP 16
+    RET Z                           ; チャージパワーが16の場合は終了
+
+    LD HL,PLAYER_CNT_WK1
+    DEC (HL)
+    RET
+
+UPDATE_PLAYER_CHARGE_END:
+    ; ■プレイヤー移動に遷移
+    LD A,PLAYERMODE_MOVE
+    LD (PLAYER_CONTROL_MODE),A
 
     RET
 
@@ -274,25 +317,25 @@ UPDATE_PLAYER_MISS:
 ; ----------------------------------------------------------------------------------------------------
 ; プレイヤー操作サブルーチン
 ; ----------------------------------------------------------------------------------------------------
-PLAYER_CONTROL:
+;PLAYER_CONTROL:
     ; ■A <- 操作入力データ（方向）
-    LD A,(INPUT_BUFF_STICK)
+;    LD A,(INPUT_BUFF_STICK)
 
     ; DEBUG
-    LD HL,30+32
-    CALL PRTHEX
+;    LD HL,30+32
+;    CALL PRTHEX
     ; DEBUGここまで
 
     ; ■入力データをスプライトキャラクターワークテーブルに保存
-    LD (IX+7),A
-    OR A
-    RET Z
+;    LD (IX+7),A
+;    OR A
+;    RET Z
 
     ; ■スプライトパターン番号更新
-    CALL SPRITE_ANIM
+;    CALL SPRITE_ANIM
 
-PLAYER_CTRL_EXIT:
-    RET
+;PLAYER_CTRL_EXIT:
+;    RET
 
 
 SECTION rodata_user
@@ -302,13 +345,8 @@ SECTION rodata_user
 ; ====================================================================================================
 
 ; ■チャージウェイト値
-CHARGE_WAIT:
-    DB $02,$03,$04,$05,$06,$07,$08,$09,$0A,$0B,$0C,$0D,$0E,$0F,$0F,$0F,$FF
-
-; ■アニメーションパターン
-ANIM_PTN_PLAYER:
-	DB 1,1,1,2,2,2,3,3,3,2,2,2,0
-
+CHARGE_WAIT_VALUE:
+    DB $00,$02,$02,$04,$04,$04,$08,$08,$08,$08,$0C,$0C,$0C,$0C,$0F,$0F,$FF
 
 SECTION bss_user
 ; ====================================================================================================
@@ -317,7 +355,7 @@ SECTION bss_user
 ; ====================================================================================================
 
 ; ■プレイヤー操作モード
-; 0=OPERATION,1=TURN LEFT,2=TURN RIGHT,3=CHARGE,4=MOVE,5=MISS
+; 0=CONTROL,1=TURN LEFT,2=TURN RIGHT,3=CHARGE,4=MOVE,5=MISS
 PLAYER_CONTROL_MODE:
     DEFS 1
 
