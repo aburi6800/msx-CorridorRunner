@@ -197,8 +197,8 @@ UPDATE_PLAYER_CHARGE:
     LD HL,PLAYER_CHARGE_POWER
 
     INC (HL)                        ; チャージパワー+1
-    LD B,(HL)
-    LD C,$00
+    LD C,(HL)
+    LD B,$00
     LD HL,CHARGE_WAIT_VALUE
 
     ADD HL,BC

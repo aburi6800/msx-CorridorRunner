@@ -59,15 +59,15 @@ ROUND_START_EXIT:
     RET
 
 ROUND_START_INIT:
+    ; ■ラウンド開始時の初回処理
+;    CALL SCREEN_CLRAR               ; 画面クリア
+    CALL CLEAR_OFFSCREEN             ; オフスクリーンクリア
+    LD HL,STRING_ROUND_START
+    CALL PRTSTR
+
     ; ■BGM再生
     LD HL,_01
     CALL SOUNDDRV_BGMPLAY
-
-    ; ■ラウンド開始時の初回処理
-    CALL SCREEN_CLRAR               ; 画面クリア
-
-    LD HL,STRING_ROUND_START
-    CALL PRTSTR
 
     RET
 

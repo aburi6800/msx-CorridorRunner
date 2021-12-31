@@ -143,6 +143,7 @@ DRAW:
 
     ; ■パターンネームテーブル設定
 ;    CALL DRAW_MAP                   ; マップデータ描画
+    CALL DRAW_VRAM
     CALL DRAW_INFO                  ; 情報描画
 
 DRAW_EXIT:
@@ -159,7 +160,31 @@ DRAW_INFO:
     LD HL,INFO_STRING2
     CALL PRTSTR
 
-    ;ToDo:スコアやハイスコアの表示も入れる
+    LD A,(PLAYER_CHARGE_POWER)
+    OR A
+    JR Z,DRAW_INFO_EXIT             ; ゼロなら抜ける
+
+    LD B,A
+
+DRAW_INFO_L1:
+    LD D,0
+    LD E,B
+    LD HL,2+32*23
+    ADD HL,DE
+    LD DE,OFFSCREEN
+    ADD HL,DE
+
+    LD A,B
+    CP 11
+    JR NC,DRAW_INFO_L2
+    LD (HL),$AF
+    JP DRAW_INFO_L3
+
+DRAW_INFO_L2:
+    LD (HL),$B0
+
+DRAW_INFO_L3:
+    DJNZ DRAW_INFO_L1
 
 DRAW_INFO_EXIT:
     RET
@@ -180,8 +205,8 @@ INCLUDE "sprite.asm"
 ; ■フィールド操作サブルーチン群
 INCLUDE "field.asm"
 
-; ■ユーティリティーサブルーチン群
-INCLUDE "utils.asm"
+; ■共通サブルーチン群
+INCLUDE "common.asm"
 
 ; ■BIOSアドレス定義
 INCLUDE "include/msxbios.inc"

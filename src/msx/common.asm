@@ -1,6 +1,6 @@
 ; ====================================================================================================
 ;
-; utils.asm
+; common.asm
 ;
 ; included from main.asm
 ;
@@ -61,8 +61,43 @@ GET_CONTROL_EXIT:
 
 
 ; ====================================================================================================
+; オフスクリーン初期化
+; ====================================================================================================
+CLEAR_OFFSCREEN:
+    LD B,32*24/4
+    LD HL,OFFSCREEN
+
+CLEAR_OFFSCREEN_L1:
+    LD (HL),$20
+    INC HL
+    LD (HL),$20
+    INC HL
+    LD (HL),$20
+    INC HL
+    LD (HL),$20
+    INC HL
+    DJNZ CLEAR_OFFSCREEN_L1
+
+CLEAR_OFFSCREEN_EXIT:
+    RET
+
+
+; ====================================================================================================
+; オフスクリーンの内容をVRAMに転送
+; ====================================================================================================
+DRAW_VRAM:
+    LD HL,OFFSCREEN
+    LD DE,PTN_NAME_ADDR
+    LD BC,32*24
+    CALL LDIRVM
+
+DRAW_VRAM_EXIT:
+    RET
+
+
+; ====================================================================================================
 ; 文字列表示サブルーチン
-; IN  : HL = 表示文字データの開始アドレス
+; IN  : HL = 文字データのアドレス
 ; ====================================================================================================
 PRTSTR:
     LD C,(HL)                       ; BC <- HLアドレスの示すオフセット値データ
@@ -73,7 +108,8 @@ PRTSTR:
     PUSH HL                         ; HL -> DE
     POP DE
 
-    LD HL,PTN_NAME_ADDR             ; HL <- パターンネームテーブルの先頭アドレス
+;    LD HL,PTN_NAME_ADDR             ; HL <- パターンネームテーブルの先頭アドレス
+    LD HL,OFFSCREEN                 ; HL <- オフスクリーンバッファの先頭アドレス
     ADD HL,BC                       ; HL=HL+BC
 
 PRTSTR_L1:
@@ -81,9 +117,10 @@ PRTSTR_L1:
 	OR 0					        ; 0かどうか
     JR Z,PRTSTR_END			        ; 0の場合はPRTENDへ
 
-	CALL WRTVRM				        ; BIOS WRTVRM呼び出し
-	    					        ; - HL : 書き込み先のVRAMアドレス
-    	                            ; - A  : 書き込むデータ
+    LD (HL),A                       ; オフスクリーンバッファに設定
+;	CALL WRTVRM				        ; BIOS WRTVRM呼び出し
+;	    					        ; - HL : 書き込み先のVRAMアドレス
+;    	                            ; - A  : 書き込むデータ
 
 	INC HL					        ; HL=HL+1
     INC DE					        ; DE=DE+1
@@ -102,7 +139,8 @@ PRTHEX:
     PUSH AF
     ; ■VRAMアドレス算出
     LD DE,HL                        ; DE <- HL
-    LD HL,PTN_NAME_ADDR             ; HL <- パターンネームテーブルの先頭アドレス
+;    LD HL,PTN_NAME_ADDR             ; HL <- パターンネームテーブルの先頭アドレス
+    LD HL,OFFSCREEN                 ; HL <- オフスクリーンバッファの先頭アドレス
     ADD HL,DE                       ; HL=HL+DE
 
     ; ■表示対象データの上位4ビットに対する表示文字コード算出
@@ -113,8 +151,8 @@ PRTHEX:
     SRL A
     CALL PRTHEX_GETCHR              ; Aレジスタの値からキャラクタコードを求める
 
-    ; ■VRAM書き込み
-    CALL WRTVRM
+;    CALL WRTVRM
+    LD (HL),A                       ; オフスクリーンバッファに設定
 
     ; ■VRAMアドレスをインクリメント
     INC HL
@@ -124,8 +162,8 @@ PRTHEX:
     AND @00001111                   ; 下位4ビットを取り出し
     CALL PRTHEX_GETCHR              ; Aレジスタの値からキャラクタコードを求める
 
-    ; ■VRAM書き込み
-    CALL WRTVRM
+;    CALL WRTVRM
+    LD (HL),A                       ; オフスクリーンバッファに設定
 
 PRTHEX_EXIT:
     POP AF
@@ -273,3 +311,7 @@ INPUT_BUFF_STICK:
 ; +1 : 前回の入力値
 INPUT_BUFF_STRIG:
     DEFS 2
+
+; ■オフスクリーンバッファ
+OFFSCREEN:
+    DEFS 32*24

@@ -7,6 +7,8 @@
 ; ====================================================================================================
 SECTION code_user
 
+    MAPDATA_SIZE:                   EQU 176
+
 ; ====================================================================================================
 ; マップデータコピールーチン
 ; 対象ラウンドのマップデータをマップワークにコピーする
@@ -47,26 +49,28 @@ COPY_MAP_DATA_EXIT:
 ; 予め、マップデータコピールーチン(COPY_MAP_DATA)を実行してMAP_WKにデータを展開しておくこと
 ; ====================================================================================================
 DRAW_MAP:
-    ; ■ラウンドデータの取得先アドレス算出
+    CALL CLEAR_OFFSCREEN
+
+    ; ■マップデータの取得先アドレス算出
     ; - 遡って取得するので、末端のアドレスを算出する
-    LD HL,MAP_WK                    ; HL <- マップワーク
-    LD BC,175                       ; BC <- ラウンドデータのbyte数-1
+    LD HL,MAP_WK                    ; HL <- マップワークアドレス
+    LD BC,MAPDATA_SIZE-1            ; BC <- マップデータ長-1
     ADD HL,BC                       ; HL=HL+BC
 
-    ; ■フィールド描画ループ回数設定
-    LD B,176                        ; フィールドデータカウント (176byte)
+    ; ■マップデータループ回数設定
+    LD B,MAPDATA_SIZE               ; B <- マップデータ長 (176byte)
     
 DRAW_MAP_L1:
-    PUSH HL                         ; ラウンドデータの取得先アドレスをスタックに退避
-    PUSH BC                         ; フィールドデータカウントをスタックに退避
+    PUSH HL                         ; マップワークアドレスをスタックに退避
+    PUSH BC                         ; マップデータループ回数をスタックに退避
 
-    ; ■ラウンドデータからマップチップデータを取得
-    LD A,(HL)                       ; A <- (HL)   
-    CALL DRAW_MAPCHIP
+    LD A,(HL)                       ; A <- マップチップ番号
+    CALL DRAW_MAPCHIP               ; マップチップ描画
 
 DRAW_MAP_L2:
-    POP BC                          ; BC <- スタック(フィールドデータカウント)
-    POP HL                          ; HL <- スタック(ラウンドデータの取得先アドレス)
+    POP BC                          ; BC <- スタック(マップデータループ回数)
+    POP HL                          ; HL <- スタック(マップワークアドレス)
+
     DEC HL
     DJNZ DRAW_MAP_L1
 
@@ -85,39 +89,51 @@ DRAW_MAPCHIP:
     ADD A,A                         ; A=A*4
     ADD A,A                         ;
 
-    LD E,A                          ; BC <- チップセットテーブルのアドレスオフセット値
-    LD D,0
+    LD L,A                          ; HL <- チップセットテーブルのアドレスオフセット値
+    LD H,0
 
-    LD HL,(CHIPSET_WK)              ; HL <- チップセットテーブルのアドレス
+    LD DE,(CHIPSET_WK)              ; DE <- チップセットテーブルのアドレス
     ADD HL,DE                       ; HL=HL+DE
+
     PUSH HL                         ; HL -> DE
     POP DE
 
+    ; ■マップチップをオフスクリーンに描画
+    ;   マップチップ番号=0のときも何か絵を出せるように処理は行う
     ; 左上
-    CALL GET_CHIP_VRAMADDR
-    LD A,(DE)
-    CALL WRTVRM
+;    CALL GET_CHIP_VRAMADDR
+    CALL GET_OFFSCREEN_WRTADDR
+
+    LD A,(DE)                       ; A <- 左上のマップキャラクタ
+;    CALL WRTVRM
+    LD (HL),A
 
     ; 右上
-    INC HL                          ; HL=HL+1
+    INC HL
+
     INC DE
-    LD A,(DE)
-    CALL WRTVRM
+    LD A,(DE)                       ; A <- 右上のマップキャラクタ
+;    CALL WRTVRM
+    LD (HL),A
 
     ; 左下
     PUSH BC
-    LD BC,31                        ; HL=HL+31
-    ADD HL,BC                   
+    LD BC,31
+    ADD HL,BC
     POP BC
+
     INC DE
-    LD A,(DE)
-    CALL WRTVRM
+    LD A,(DE)                       ; A <- 左下のマップキャラクタ
+;    CALL WRTVRM
+    LD (HL),A
 
     ; 右下
-    INC HL                          ; HL=HL+1
+    INC HL
+
     INC DE
-    LD A,(DE)
-    CALL WRTVRM
+    LD A,(DE)                       ; A <- 右下のマップキャラクタ
+;    CALL WRTVRM
+    LD (HL),A
 
     POP AF                          ; スタックからマップチップ番号を復元
     OR A
@@ -125,13 +141,14 @@ DRAW_MAPCHIP:
 
     ; 画面最下段か
     LD A,B                          ; A <- B
-    CP 160                          ; A=A-160
-    RET NC                          ; 160以上の場合は最下段なので抜ける
+    CP 161                          ; A=A-161
+    RET NC                          ; 161以上の場合は最下段なので抜ける
 
     ; 更に左下の情報を取得
     LD DE,31
     ADD HL,DE
-    CALL RDVRM                      ; BIOS RDVRM
+;    CALL RDVRM                      ; BIOS RDVRM
+    LD A,(HL)
     CP $20                          ; A > $20(空白)か
     RET NZ                          ; ゼロでなければ抜ける
 
@@ -146,12 +163,14 @@ DRAW_MAPCHIP:
     ; 床のさらに下を描画
     POP HL                          ; スタックから描画先のVRAMアドレスを復元
     LD A,(DE)
-    CALL WRTVRM
+;    CALL WRTVRM
+    LD (HL),A
 
     INC HL
     INC DE
     LD A,(DE)
-    CALL WRTVRM
+;    CALL WRTVRM
+    LD (HL),A
 
     RET
 
@@ -199,6 +218,56 @@ GET_CHIP_VRAMADDR:
     ; ■HLに左上(=$1820)のVRAMアドレスを加算
     LD D,$18
     LD E,$20    
+    ADD HL,DE
+
+    INC B                           ; -1したBの値を+1して元に戻す
+
+    POP DE
+    RET
+
+
+; ====================================================================================================
+; マップデータ番号からマップチップ左上のオフスクリーンアドレスを求める
+; IN  : B = マップデータの番号(1～176)
+; OUT : HL = 描画先のオフスクリーンアドレス(左上)
+; ====================================================================================================
+GET_OFFSCREEN_WRTADDR:
+    PUSH DE
+
+    DEC B                           ; BはDJNZする都合上1～なので、-1する
+
+    ; ■Y座標の算出を行う。
+    ;  (マップチップ番号-1)を16で割り、64倍することで求める。
+    ;  16で割るのは、4ビット右シフトすることで求める。
+    ;  64倍は、16で割った結果(0～11)を上位2ビットと下位2ビットに分け、
+    ;  上位2ビットは上位レジスタの0～1ビットへ、下位2ビットは下位レジスタの7～6ビットに設定する。
+    ;  これを実現するため、以下の処理を行う。
+    ;  下位レジスタ＝元の5～4ビットの値を7～6ビットに設定
+    ;  上位レジスタ＝元の7～6ビットの値を1～0ビットに設定
+    LD A,B
+    AND @00110000                   ; 5～4ビット目を取得
+    ADD A,A                         ; 2ビット左シフト = 4倍なので2回ADDする。最初の値の5～4ビット目が7～6ビット目になる
+    ADD A,A
+    LD L,A                          ; 下位8ビットを設定
+
+    LD A,B
+    AND @11000000                   ; 7～6ビット目を取得
+    RLCA                            ; 2回左ローテート = 1～0ビット目に値が設定される
+    RLCA
+    LD H,A                          ; 上位8ビットを設定
+
+    ; ■X座標の算出を行う。
+    ;  (マップチップ番号-1)の下位4ビットを取得し、2倍することで求める。
+    LD A,B
+    AND @00001111
+    ADD A,A                         ; マップチップは2x2キャラクタなのでA=A*2する
+
+    LD D,0
+    LD E,A
+    ADD HL,DE                       ; HLに横座標のアドレスを加算
+
+    ; ■HLにオフスクリーンのアドレスを加算
+    LD DE,OFFSCREEN+$0020
     ADD HL,DE
 
     INC B                           ; -1したBの値を+1して元に戻す
