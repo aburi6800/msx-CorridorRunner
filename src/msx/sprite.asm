@@ -72,26 +72,31 @@ SPRITE_MOVE:
     POP IY
 
     ; ■Y座標計算
-    LD B,(IY+1)                     ; BC <- 移動量データ(Y方向)
-    LD C,(IY)
+    LD H,(IY+1)                     ; BC <- 移動量データ(Y方向)
+    LD L,(IY)
+    LD A,(IX+8)                     ; A <- 移動量データ
+    CALL CALCULATE_MOVE_VALUE       ; 移動量計算
+    LD B,H
+    LD C,L
+
     LD H,(IX+2)                     ; HL <- Y座標
     LD L,(IX+1)
     ADC HL,BC                       ; HL=HL+BC
 
     ; ■Y座標画面下限チェック
     LD A,H                          ; A <- Y座標(整数部)
-    CP 191-16                       ; 画面下限を超えたか
+    CP 191-24                       ; 画面下限を超えたか
     JR C,SPRITE_MOVE_L0             ; キャリーフラグがONの場合は画面内なのでSPRITE_MOVE_L0へ
  
-    LD H,191-16                     ; Y座標(整数部)=(191-16)
+    LD H,191-24                     ; Y座標(整数部)=(191-16)
     LD L,0                          ; Y座標(小数部)=0
     JR C,SPRITE_MOVE_L1             ; 上限の判定は不要なので次のチェックへ
 
 SPRITE_MOVE_L0:
     ; ■Y座標画面上限チェック
-    CP 16                           ; 画面上限を超えたか
+    CP 8                            ; 画面上限を超えたか
     JR NC,SPRITE_MOVE_L1            ; キャリーフラグがOFFの場合は画面内なのでSPRITE_MOVE_L1へ
-    LD H,16                         ; Y座標(整数部)=16
+    LD H,8                          ; Y座標(整数部)=8
     LD L,0                          ; Y座標(小数部)=0
 
 SPRITE_MOVE_L1:
@@ -100,25 +105,31 @@ SPRITE_MOVE_L1:
     LD (IX+1),L                     ; L -> Y座標(小数部)
 
     ; ■X座標計算
-    LD B,(IY+3)                     ; BC <- 移動量データ(X方向)
-    LD C,(IY+2)
+    LD H,(IY+3)                     ; BC <- 移動量データ(X方向)
+    LD L,(IY+2)
+    LD A,(IX+8)                     ; A <- 移動量データ
+    CALL CALCULATE_MOVE_VALUE       ; 移動量計算
+    LD B,H
+    LD C,L
+
     LD H,(IX+4)                     ; HL <- X座標
     LD L,(IX+3)
     ADC HL,BC                       ; HL=HL+BC
 
-    ; ■X座標画面左端チェック
+    ; ■X座標画面端チェック
     LD A,H                          ; 座標値チェック
-    CP 255-16                       ; A=A-(255-16)
+    CP 255-16                       ; A=A-(255-8)
     JR C,SPRITE_MOVE_L2             ; キャリーフラグがONの場合は画面内なのでSPRITE_MOVE_L2へ
 
-    LD H,0                          ; X座標(整数部)=0
+    ; ■一旦左端として座標値を設定する
+    LD H,255-16                     ; X座標(整数日)=255-16
     LD L,0                          ; X座標(小数部)=0
 
-    ; ■X座標画面右端チェック
-    CP 255-8                        ; 最大移動量を8と仮定した比較
-    JR NC,SPRITE_MOVE_L2            ; キャリーフラグがOFF(=画面左部にはみ出てた場合)はHはそのままで良いのでSPRITE_MOVE_L2へ
+    OR A
+    CP 255-7                        ; 最大移動量を8と仮定した比較
+    JR C,SPRITE_MOVE_L2             ; キャリーフラグがOFF(=画面左部にはみ出てた場合)はHはそのままで良いのでSPRITE_MOVE_L2へ
 
-    LD H,255-16                     ; X座標(整数日)=255-16
+    LD H,0                          ; X座標(整数部)=0
     LD L,0                          ; X座標(小数部)=0
 
 SPRITE_MOVE_L2:
@@ -127,6 +138,46 @@ SPRITE_MOVE_L2:
     LD (IX+3),L
 
 SPRITE_MOVE_EXIT:
+    RET
+
+
+; ====================================================================================================
+; 移動量計算サブルーチン
+; IN  : HL = 移動量データ(上位＝小数部、下位＝整数部)
+;       A = 移動量(ビット7＝0:左シフト、1:右シフト、ビット6〜0＝シフト量) 
+; 破壊: BC
+; ====================================================================================================
+CALCULATE_MOVE_VALUE:
+    ; ■移動量のビット7が立っていたら除算、以外は乗算
+    PUSH AF
+    AND %10000000
+    JR NZ,CALCULATE_MOVE_VALUE_DIVIDE
+
+ ALCULATE_MOVE_VALUE_MULTIPLE:
+    ; ■Aレジスタの値をBレジスタに設定
+    POP BC
+
+CALCULATE_MOVE_VALUE_MULTIPLE_L1:
+    ADD HL,HL
+
+    DJNZ CALCULATE_MOVE_VALUE_MULTIPLE_L1
+
+    RET
+
+CALCULATE_MOVE_VALUE_DIVIDE:
+    ; ■Aレジスタの0〜6ビット目だけ取得
+    POP AF
+    AND %01111111
+
+    ; ■Aレジスタの値をBレジスタに設定
+    LD B,A
+
+CALCULATE_MOVE_VALUE_DIVIDE_L1:
+    SRL H
+    RR L
+
+    DJNZ CALCULATE_MOVE_VALUE_DIVIDE_L1
+
     RET
 
 
@@ -418,9 +469,9 @@ SECTION bss_user
 ; +5:スプライトパターンNo
 ; +6:カラーコード(0=非表示)
 ; +7:移動方向(STICKの値に対応)  
-; +8:アニメーションテーブル番号
-; +9:アニメーションカウンタ
-; +10:汎用
+; +8:移動量(ビット7＝0:左シフト、1:右シフト、ビット6〜0＝シフト量)
+; +9:アニメーションテーブル番号
+; +10:アニメーションカウンタ
 ; +11:汎用
 ; +12:汎用
 ; +13:汎用

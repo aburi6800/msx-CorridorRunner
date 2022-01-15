@@ -30,8 +30,9 @@ INIT_PLAYER:
     LD (IX+6),15                    ; カラーコード
 
     LD (IX+7),1                     ; 移動方向
-    LD (IX+8),0                     ; アニメーションテーブル番号
-    LD (IX+9),0                     ; アニメーションカウンタ
+    LD (IX+8),0                     ; 移動量
+    LD (IX+9),0                     ; アニメーションテーブル番号
+    LD (IX+10),0                    ; アニメーションカウンタ
 
     ; ■ワークエリア初期化
     XOR A
@@ -225,6 +226,35 @@ UPDATE_PLAYER_CHARGE_END:
 ; プレイヤー移動サブルーチン
 ; ----------------------------------------------------------------------------------------------------
 UPDATE_PLAYER_MOVE:
+    ; ■チャージパワー減算
+    LD HL,PLAYER_CHARGE_POWER
+    DEC (HL)
+    JR Z,UPDATE_PLAYER_MOVE_END
+
+    ; ■チャージパワーから移動量計算
+    LD A,(HL)
+    CP 7
+    JR C,UPDATE_PLAYER_MOVE_L1
+    LD (IX+8),%00000011
+    JR UPDATE_PLAYER_MOVE_L3
+
+UPDATE_PLAYER_MOVE_L1:
+    CP 4
+    JR C,UPDATE_PLAYER_MOVE_L2
+    LD (IX+8),%00000010
+    JR UPDATE_PLAYER_MOVE_L3
+
+UPDATE_PLAYER_MOVE_L2:
+    LD (IX+8),%00000001
+
+UPDATE_PLAYER_MOVE_L3:
+    CALL SPRITE_MOVE
+    RET
+
+UPDATE_PLAYER_MOVE_END:
+    ; ■プレイヤー操作に遷移
+    LD A,PLAYERMODE_CONTROL
+    LD (PLAYER_CONTROL_MODE),A
 
     RET
 
