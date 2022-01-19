@@ -30,6 +30,8 @@ ROUND_START:
 
     ; ■プレイヤー初期化
     ; @ToDo:マップデータの後に、プレイヤーの初期情報を置いて、そこから設定するようにしたい
+    LD A,2
+    CALL ADD_CHARACTER
     LD A,1
     CALL ADD_CHARACTER
 
@@ -82,7 +84,7 @@ GAME_MAIN:
 GAME_MAIN_L1:
     ; ■対象のキャラクター番号からスプライトキャラクターワークテーブルのアドレスを取得
     LD A,B
-    SUB 1
+;    SUB 1
     CALL GET_SPR_WK_ADDR            ; IX <- 対象のスプライトキャラクターワークテーブルのアドレス
 
     ; ■BCレジスタをスタックに退避
@@ -92,6 +94,7 @@ GAME_MAIN_L1:
     LD A,(IX)                       ; A <- キャラクター番号
     OR A
     JR Z,GAME_MAIN_L2               ; ゼロの場合はGAME_MAIN_L2へ
+    SUB 1
     LD HL,CHARACTER_UPDATE_TABLE    ; HL <- キャラクターロジックテーブルのアドレス
     CALL TBL_JP
 

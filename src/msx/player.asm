@@ -18,7 +18,36 @@ SECTION code_user
 ; プレイヤー初期化
 ; ====================================================================================================
 INIT_PLAYER:
+    ; キャラクター番号2にキャラクター番号1の内容をコピーする
+    ; 現在のIXは転送先(DE)に設定
+    ; キャラクター番号1のワークアドレスを転送元(HL)に設定
+    ; 転送サイズは16バイト
+    PUSH IX
+    PUSH IX
+
+    LD A,1
+    CALL GET_SPR_WK_ADDR
+    PUSH IX
+    POP HL
+    POP DE
+    LD BC,$0010
+
+    LDIR
+
+    POP IX
     LD (IX),1                       ; キャラクター番号=プレイヤー
+    LD (IX+5),0                     ; スプライトパターンNo
+    LD (IX+6),1                     ; カラーコード
+
+    ; ■ワークエリア初期化
+    XOR A
+    LD (PLAYER_CONTROL_MODE),A
+
+INIT_PLAYER_EXIT:
+    RET
+
+INIT_PLAYER2:
+    LD (IX),2                       ; キャラクター番号=プレイヤー
 
     LD (IX+1),0                     ; Y座標(小数部)
     LD (IX+2),88                    ; Y座標(整数部)
@@ -26,7 +55,7 @@ INIT_PLAYER:
     LD (IX+3),0                     ; X座標(小数部)
     LD (IX+4),120                   ; X座標(整数部)
 
-    LD (IX+5),0                     ; スプライトパターンNo
+    LD (IX+5),8                     ; スプライトパターンNo
     LD (IX+6),15                    ; カラーコード
 
     LD (IX+7),1                     ; 移動方向
@@ -34,11 +63,7 @@ INIT_PLAYER:
     LD (IX+9),0                     ; アニメーションテーブル番号
     LD (IX+10),0                    ; アニメーションカウンタ
 
-    ; ■ワークエリア初期化
-    XOR A
-    LD (PLAYER_CONTROL_MODE),A
-
-INIT_PLAYER_EXIT:
+INIT_PLAYER2_EXIT:
     RET
 
 
@@ -50,7 +75,7 @@ UPDATE_PLAYER:
     LD A,(PLAYER_CONTROL_MODE)
 
     ; ■RET先のアドレスをスタックに入れておく
-    LD HL,UPDATE_PLAYER_L2
+    LD HL,UPDATE_PLAYER_EXIT
     PUSH HL
 
     ; ■ジャンプテーブルのアドレス設定
@@ -73,7 +98,39 @@ UPDATE_PLAYER_L1:
     JP UPDATE_PLAYER_MOVE           ; 移動
     JP UPDATE_PLAYER_MISS           ; ミス
 
-UPDATE_PLAYER_L2:
+UPDATE_PLAYER_EXIT:
+    RET
+
+
+UPDATE_PLAYER2:
+    ; キャラクター番号1にキャラクター番号2の内容をコピーする
+    ; 現在のIXは転送先(DE)に設定
+    PUSH IX
+    PUSH IX
+
+    ; キャラクター番号1のワークアドレスを転送元(HL)に設定
+    LD A,2
+    CALL GET_SPR_WK_ADDR
+    PUSH IX
+    POP HL
+    INC HL
+
+    POP DE
+    INC DE
+
+    ; Y座標(小数部)からスプライトパターンNoまでの5バイトを転送する
+    LD BC,$0005
+
+    LDIR
+
+    ; スプライトパターン番号はキャラクター番号1の値+8とする
+    DEC DE
+    LD A,(DE)
+    ADD A,8
+    LD (DE),A
+    POP IX
+
+UPDATE_PLAYER2_EXIT:
     RET
 
 ; ----------------------------------------------------------------------------------------------------
@@ -376,7 +433,7 @@ SECTION rodata_user
 
 ; ■チャージウェイト値
 CHARGE_WAIT_VALUE:
-    DB $00,$02,$02,$04,$04,$04,$08,$08,$08,$08,$0C,$0C,$0C,$0C,$0F,$0F,$FF
+    DB $02,$02,$02,$02,$04,$04,$04,$04,$06,$06,$08,$08,$0A,$0A,$0C,$0C,$FF
 
 SECTION bss_user
 ; ====================================================================================================

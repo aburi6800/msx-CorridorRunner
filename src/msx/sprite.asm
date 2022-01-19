@@ -15,7 +15,7 @@ INCLUDE "enemy2.asm"
 ; スプライトキャラクターワークテーブルのアドレス値を求める
 ; SPR_CHR_WK_TBL+(キャラクターNo*16)のアドレスを求めてIXレジスタに設定します。
 ; DE,HLレジスタの値を破壊します。
-; IN  : A = キャラクターNo
+; IN  : A = キャラクターNo(1〜)
 ; OUT : IX = 求めたスプライトキャラクターワークテーブルのアドレス
 ; ====================================================================================================
 GET_SPR_WK_ADDR:
@@ -28,6 +28,7 @@ GET_SPR_WK_ADDR:
 
     ; ■オフセット値算出
     ; DEレジスタにA*16を求める
+    DEC A
     LD H,0                          ; HL=A
     LD L,A
 
@@ -280,7 +281,7 @@ SPRITE_ANIM_EXIT:
 ; 最大キャラクター数に達している場合は何もせずに終了する
 ; キャラクター登録可能な場合は、キャラクター登録数を増加させて対象キャラクター番号の
 ; データをスプライトキャラクターワークテーブルに登録する
-; IN  : A = 対象のキャラクター番号
+; IN  : A = 対象のキャラクター番号(1〜)
 ; ====================================================================================================
 ADD_CHARACTER:
     PUSH BC                         ; BCレジスタをスタックに退避
@@ -306,6 +307,7 @@ ADD_CHARACTER_L2:
     LD IX,HL                        ; IX <- HL
 
     POP AF                          ; AFレジスタ(=キャラクター番号)をスタックから復元
+    DEC A
     LD HL,CHARACTER_INIT_TABLE      ; HL <- キャラクター初期化テーブルのアドレス
     CALL TBL_JP
 
@@ -427,28 +429,20 @@ MOVE_DATA:
 
 ; ■キャラクター初期化テーブル
 CHARACTER_INIT_TABLE:
-    DW $0000                        ; DUMMY
     DW INIT_PLAYER                  ; PLAYER
+    DW INIT_PLAYER2                 ; PLAYER2
     DW INIT_ENEMY1                  ; ENEMY1
     DW INIT_ENEMY2                  ; ENEMY2
 
 ; ■キャラクターロジックテーブル
 CHARACTER_UPDATE_TABLE:
-    DW $0000                        ; DUMMY
     DW UPDATE_PLAYER                ; PLAYER
+    DW UPDATE_PLAYER2               ; PLAYER2
     DW UPDATE_ENEMY1                ; ENEMY1
     DW UPDATE_ENEMY2                ; ENEMY2
 
-; ■キャラクター描画テーブル
-CHARACTER_DRAW_TABLE:
-    DW $0000                        ; DUMMY
-    DW $0000                        ; DUMMY
-    DW $0000                        ; DUMMY
-    DW $0000                        ; DUMMY
-
 ; ■アニメーションパターンアドレステーブル
 ANIM_PTN_TBL:
-    DW $0000
     DW ANIM_PTN_ENEMY1_R
     DW ANIM_PTN_ENEMY1_L
     DW ANIM_PTN_ENEMY2
