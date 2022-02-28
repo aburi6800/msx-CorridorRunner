@@ -147,8 +147,8 @@ DRAW:
     CALL UPDATE_COLOR_TBL
 
     ; ■パターンネームテーブル設定
-    CALL DRAW_VRAM
     CALL DRAW_INFO                  ; 情報描画
+    CALL DRAW_VRAM                  ; オフスクリーンの内容をVRAMに転送
     EI
 DRAW_EXIT:
     RET

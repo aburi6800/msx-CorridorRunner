@@ -286,29 +286,52 @@ UPDATE_PLAYER_MOVE:
     ; ■チャージパワー減算
     LD HL,PLAYER_CHARGE_POWER
     DEC (HL)
-    JR Z,UPDATE_PLAYER_MOVE_END
+    JP Z,UPDATE_PLAYER_MOVE_END
 
     ; ■チャージパワーから移動量計算
     LD A,(HL)
-    CP 7
-    JR C,UPDATE_PLAYER_MOVE_L1
-    LD (IX+8),%00000011
+    CP 5
+    JR NC,UPDATE_PLAYER_MOVE_L1
+
+    ; 1〜4のときの移動量
+    LD (IX+8),1
     JR UPDATE_PLAYER_MOVE_L3
 
 UPDATE_PLAYER_MOVE_L1:
-    CP 4
-    JR C,UPDATE_PLAYER_MOVE_L2
-    LD (IX+8),%00000010
+    CP 11
+    JR NC,UPDATE_PLAYER_MOVE_L2
+
+    ; 5〜10のときの移動量
+    LD (IX+8),2
     JR UPDATE_PLAYER_MOVE_L3
 
 UPDATE_PLAYER_MOVE_L2:
-    LD (IX+8),%00000001
+    ; 11〜のときの移動量
+    LD (IX+8),3
 
 UPDATE_PLAYER_MOVE_L3:
+    ; ■マップチップ判定
+    ; ここでアイテムがあれば取得する
+    LD B,(IX+2)                     ; B <- Y座標(整数部)
+    LD C,(IX+4)                     ; C <- X座標(整数部)
+    CALL GET_MAPDATA                ; A <- マップデータ
+
+    CP 2
+    JR NZ,UPDATE_PLAYER_MOVE_L4
+
+    ; ■アイテム取得
+    CALL UPDATE_PLAYER_GETITEM
+
+UPDATE_PLAYER_MOVE_L4:
+    ; ■スプライトキャラクター移動
     CALL SPRITE_MOVE
+
     RET
 
 UPDATE_PLAYER_MOVE_END:
+    ; ■マップチップ判定
+    ; ここで床がなければミスにする
+
     ; ■プレイヤー操作に遷移
     LD A,PLAYERMODE_CONTROL
     LD (PLAYER_CONTROL_MODE),A
@@ -316,10 +339,36 @@ UPDATE_PLAYER_MOVE_END:
     RET
 
 ; ----------------------------------------------------------------------------------------------------
+; アイテム取得サブルーチン
+; ----------------------------------------------------------------------------------------------------
+UPDATE_PLAYER_GETITEM:
+
+    ; ■マップデータオフセット取得
+    LD B,(IX+2)                     ; B <- Y座標(整数部)
+    LD C,(IX+4)                     ; C <- X座標(整数部)
+    CALL GET_MAPDATA_OFFSET         ; A <- マップデータオフセット
+
+    ; ■マップデータ更新
+    LD H,0
+    LD L,A
+    LD DE,MAP_WK
+    ADD HL,DE
+    LD (HL),1    
+
+    ; ■仮想画面更新
+    ; マップデータのオフセットに該当するマップチップを書き換える
+    LD B,A
+    CALL DRAW_MAPCHIP
+
+UPDATE_PLAYER_GETITEM_EXIT:
+    RET
+
+; ----------------------------------------------------------------------------------------------------
 ; プレイヤーミスサブルーチン
 ; ----------------------------------------------------------------------------------------------------
 UPDATE_PLAYER_MISS:
 
+UPDATE_PLAYER_MISS_EXIT:
     RET
 
 

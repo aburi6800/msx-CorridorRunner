@@ -20,9 +20,14 @@ ROUND_START:
     SBC HL,BC
     JR NZ,ROUND_START_EXIT
 
-    ; ■マップ描画
+    ; ■マップデータをワークにコピー
     LD A,(ROUND)
     CALL COPY_MAP_DATA
+
+    ; ■オフスクリーン初期化
+    CALL CLEAR_OFFSCREEN
+
+    ; ■オフスクリーン描画
     CALL DRAW_MAP
 
     ; ■スプライトキャラクターワークテーブル初期化
@@ -106,6 +111,7 @@ GAME_MAIN_L2:
 
 ;    ; ■画面更新
 ;    CALL DRAW
+;    CALL DRAW_MAP
 
 GAME_MAIN_EXIT:
     RET
