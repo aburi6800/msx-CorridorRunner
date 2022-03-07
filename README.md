@@ -5,7 +5,7 @@
 ```
 mkdir build && cd build
 cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/z88dk.cmake ..
-make
+make clean && make
 ```
 
 ## Run with openMSX
@@ -15,7 +15,7 @@ make
 
 ```
 $ ls -laF dist/*.rom
--rw-rw-r-- 1 hiromasa hiromasa 16384  9月  3 18:13 dist/example.rom
+-rwxrwxrwx 1 hitoshi hitoshi 16384  3月  7 21:28 dist/example.rom*
 $ openmsx dist/example.rom
 ```
 

@@ -19,9 +19,8 @@ STATE_TITLE:            EQU 1       ; ゲーム状態：タイトル
 STATE_GAME_INIT:        EQU 2       ; ゲーム状態：ゲーム初期化
 STATE_ROUND_START:      EQU 3       ; ゲーム状態：ラウンド開始
 STATE_GAME_MAIN:        EQU 4       ; ゲーム状態：ゲームメイン
-STATE_PLAYER_MISS:      EQU 5       ; ゲーム状態：プレイヤーミス
-STATE_OVER:             EQU 6       ; ゲーム状態：ゲームオーバー
-STATE_ROUND_CLEAR:      EQU 7       ; ゲーム状態：ラウンドクリアー
+STATE_OVER:             EQU 5       ; ゲーム状態：ゲームオーバー
+STATE_ROUND_CLEAR:      EQU 6       ; ゲーム状態：ラウンドクリアー
 
 COLOR_TBL_CHG_DATA_CNT  EQU 12      ; カラーテーブルパターン数
 
@@ -56,7 +55,6 @@ MAINLOOP_L1:
     JP GAME_INIT                    ; ゲーム状態：ゲーム初期化
     JP ROUND_START                  ; ゲーム状態：ラウンド開始
     JP GAME_MAIN                    ; ゲーム状態：ゲームメイン
-    JP PLAYER_MISS                  ; ゲーム状態：プレイヤーミス
     JP OVER                         ; ゲーム状態：ゲームオーバー
     JP ROUND_CLEAR                  ; ゲーム状態：ラウンドクリアー
 
@@ -80,7 +78,7 @@ VSYNC:
 ; ====================================================================================================
 CHANGE_STATE:
     LD (GAME_STATE),A
-    CALL TICK_RESET
+    CALL TICK_RESET                 ; 経過時間リセット
 
 CHANGE_STATE_EXIT:
     RET
@@ -100,6 +98,7 @@ TICK_RESET_EXIT:
 
 ; ====================================================================================================
 ; 経過時間カウント
+; 各状態では処理に入った直後にゼロフラグを判定することで、初回処理を行うタイミングを判断できる
 ; ====================================================================================================
 TICK_COUNT:
     ; DEBUG
@@ -148,7 +147,7 @@ DRAW:
 
     ; ■パターンネームテーブル設定
     CALL DRAW_INFO                  ; 情報描画
-    CALL DRAW_VRAM                  ; オフスクリーンの内容をVRAMに転送
+    CALL DRAW_VRAM                  ; オフスクリーンバッファの内容をVRAMに転送
     EI
 DRAW_EXIT:
     RET
@@ -194,33 +193,41 @@ UPDATE_COLOR_TBL_EXIT:
 ; -----------------------------------------------------------------------------------------------------
 DRAW_INFO:
 
+    ; ToDo : ここはスコアとハイスコアの値の表示だけにする
     LD HL,INFO_STRING1
     CALL PRTSTR
 
     LD HL,INFO_STRING2
     CALL PRTSTR
 
+    ; ■パワーチャージメーター
     LD A,(PLAYER_CHARGE_POWER)
     OR A
     JR Z,DRAW_INFO_EXIT             ; ゼロなら抜ける
 
-    LD B,A
+    LD B,A                          ; B <- チャージパワー値
 
 DRAW_INFO_L1:
+    ; ■オフスクリーンバッファのオフセット値を算出
     LD D,0
     LD E,B
     LD HL,2+32*23
     ADD HL,DE
+
+    ; ■オフスクリーンバッファのアドレスを算出
     LD DE,OFFSCREEN
     ADD HL,DE
 
+    ; ■描画するキャラクターをチャージパワー値から判定
     LD A,B
     CP 11
     JR NC,DRAW_INFO_L2
+    ; - 0～10のとき
     LD (HL),$AF
-    JP DRAW_INFO_L3
+    JR DRAW_INFO_L3
 
 DRAW_INFO_L2:
+    ; - 11～のとき
     LD (HL),$B0
 
 DRAW_INFO_L3:
@@ -281,7 +288,7 @@ SECTION rodata_user
 ; ■画面上部表示内容
 INFO_STRING1:
     DW $0000
-    DB "SCORE 000000 TOP 000000      ",$B8,$B8,$B8,0
+    DB "SCORE 000000 TOP 000000      ",$88,$88,$88,0
 
 ; ■画面下部表示内容
 INFO_STRING2:

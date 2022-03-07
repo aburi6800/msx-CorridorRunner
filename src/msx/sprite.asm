@@ -12,6 +12,33 @@ INCLUDE "enemy1.asm"
 INCLUDE "enemy2.asm"
 
 ; ====================================================================================================
+; スプライトキャラクターワークテーブル初期化
+; ====================================================================================================
+INIT_SPR_CHR_WK_TBL:
+    LD B,MAX_CHR_CNT                ; 最大キャラクター数
+
+INIT_SPR_CHR_WK_TBL_L1:
+    LD A,B
+    CALL GET_SPR_WK_ADDR            ; スプライトキャラクターワークテーブルのアドレスを取得
+
+    LD (IX),0                       ; キャラクター番号
+    LD (IX+1),0                     ; Y座標(小数)
+    LD (IX+2),-16                   ; Y座標(整数)
+    LD (IX+3),0                     ; X座標(小数)
+    LD (IX+4),-16                   ; X座標(整数)
+    LD (IX+5),0                     ; スプライトパターンNo
+    LD (IX+5),0                     ; カラーコード
+    LD (IX+7),0                     ; 移動方向
+    LD (IX+8),0                     ; アニメーションテーブル番号
+    LD (IX+9),0                     ; アニメーションカウンタ
+
+    DJNZ INIT_SPR_CHR_WK_TBL_L1
+
+INIT_SPR_CHR_WK_TBL_EXIT:
+    RET 
+
+
+; ====================================================================================================
 ; スプライトキャラクターワークテーブルのアドレス値を求める
 ; SPR_CHR_WK_TBL+(キャラクターNo*16)のアドレスを求めてIXレジスタに設定します。
 ; DE,HLレジスタの値を破壊します。
@@ -77,11 +104,13 @@ SPRITE_MOVE:
     LD L,(IY)
     LD A,(IX+8)                     ; A <- 移動量データ
     CALL CALCULATE_MOVE_VALUE       ; 移動量計算
-    LD B,H
-    LD C,L
 
-    LD H,(IX+2)                     ; HL <- Y座標
-    LD L,(IX+1)
+;    LD B,H
+;    LD C,L
+;    LD H,(IX+2)                     ; HL <- Y座標
+;    LD L,(IX+1)
+    LD B,(IX+2)                     ; BC <- Y座標
+    LD C,(IX+1)
     ADC HL,BC                       ; HL=HL+BC
 
     ; ■Y座標画面下限チェック
@@ -110,11 +139,13 @@ SPRITE_MOVE_L1:
     LD L,(IY+2)
     LD A,(IX+8)                     ; A <- 移動量データ
     CALL CALCULATE_MOVE_VALUE       ; 移動量計算
-    LD B,H
-    LD C,L
 
-    LD H,(IX+4)                     ; HL <- X座標
-    LD L,(IX+3)
+;    LD B,H
+;    LD C,L
+;    LD H,(IX+4)                     ; HL <- X座標
+;    LD L,(IX+3)
+    LD B,(IX+4)                     ; BC <- X座標
+    LD C,(IX+3)
     ADC HL,BC                       ; HL=HL+BC
 
     ; ■X座標画面端チェック
