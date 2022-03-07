@@ -3,6 +3,7 @@
 ; enemy1.asm
 ;
 ; included from sprite.asm
+; requirement player.asm
 ;
 ; ====================================================================================================
 SECTION code_user
@@ -84,17 +85,16 @@ UPDATE_ENEMY1:
     CALL ENEMY_BOUND                ; ボールバウンド処理
 
     ; ■ヒット判定
-    LD A,(PLAYER_MISS_CNT)          ; プレイヤーミスカウント<>0なら衝突判定はしないで終了
+    CALL IS_PLAYER_MISS
     OR A
-    JR NZ,UPDATE_ENEMY1_L1
+    JR NZ,UPDATE_ENEMY1_L1          ; プレイヤーミス状態なら衝突判定せずに終了
 
     LD C,0                          ; C <- 衝突判定用の相手キャラクター番号
                                     ;      0 = プレイヤー
     CALL HIT_CHECK                  ; 衝突判定
     JR NC,UPDATE_ENEMY1_L1          ; ヒットしてなかったら終了
 
-    LD A,20                         ; プレイヤーミスカウントを設定
-    LD (PLAYER_MISS_CNT),A
+    CALL SET_PLAYER_MISS_EXPLOSION  ; プレイヤーミス状態（爆発）に設定
 
     ; ■SFX再生
 ;    LD HL,SFX_02

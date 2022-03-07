@@ -13,6 +13,7 @@ SECTION code_user
     PLAYERMODE_CHARGE:              EQU $03
     PLAYERMODE_MOVE:                EQU $04
     PLAYERMODE_MISS:                EQU $05
+    PLAYERMODE_EXPLOSION:           EQU $06
 
 ; ====================================================================================================
 ; プレイヤー初期化
@@ -55,8 +56,8 @@ INIT_PLAYER2:
     LD (IX+3),0                     ; X座標(小数部)
     LD (IX+4),120                   ; X座標(整数部)
 
-    LD (IX+5),8                     ; スプライトパターンNo
-    LD (IX+6),15                    ; カラーコード
+    LD (IX+5),1                     ; スプライトパターンNo
+    LD (IX+6),5                     ; カラーコード
 
     LD (IX+7),1                     ; 移動方向
     LD (IX+8),0                     ; 移動量
@@ -97,6 +98,7 @@ UPDATE_PLAYER_L1:
     JP UPDATE_PLAYER_CHARGE         ; チャージ
     JP UPDATE_PLAYER_MOVE           ; 移動
     JP UPDATE_PLAYER_MISS           ; ミス
+    JP UPDATE_PLAYER_EXPLOSION      ; ミス（爆発）
 
 UPDATE_PLAYER_EXIT:
     RET
@@ -123,10 +125,10 @@ UPDATE_PLAYER2:
 
     LDIR
 
-    ; スプライトパターン番号はキャラクター番号1の値+8とする
+    ; プレイヤーのスプライトパターン番号は、1枚目のスプライトパターン番号+4とする
     DEC DE
     LD A,(DE)
-    ADD A,8
+    ADD A,1
     LD (DE),A
     POP IX
 
@@ -221,10 +223,11 @@ UPDATE_PLAYER_TURN_RIGHT:
     LD A,1
 
 UPDATE_PLAYER_TURN_EXIT:
-    LD (IX+7),A
+    LD (IX+7),A                     ; 方向を設定
 
-    DEC A                           ; (方向-1)をパターン番号として設定
-    LD (IX+5),A
+    DEC A                           ; (方向-1)をキャラクター番号(0～7)
+    ADD A,A                         ; A=A*2
+    LD (IX+5),A                     ; スプライトパターン番号を設定
 
     RET
 
@@ -331,11 +334,29 @@ UPDATE_PLAYER_MOVE_L4:
 UPDATE_PLAYER_MOVE_END:
     ; ■マップチップ判定
     ; ここで床がなければミスにする
+    LD B,(IX+2)                     ; B <- Y座標(整数部)
+    LD C,(IX+4)                     ; C <- X座標(整数部)
+    CALL GET_MAPDATA                ; A <- マップデータ
+    OR A
+    JR NZ,UPDATE_PLAYER_MOVE_END_L2 ; マップデータがゼロでなければ、プレイヤー操作に状態遷移
 
-    ; ■プレイヤー操作に遷移
+    ; ■ミス時の初期設定
+    ; - 時間経過カウントをリセット
+    LD A,1
+    LD (PLAYER_MISS_TIME_CNT),A
+    ; - パターンテーブルのインデックス
+    LD A,0
+    LD (PLAYER_MISS_PTN_CNT),A
+
+    ; ■ミスの状態に遷移
+    LD A,PLAYERMODE_MISS
+    LD (PLAYER_CONTROL_MODE),A
+    RET
+
+UPDATE_PLAYER_MOVE_END_L2:
+    ; ■プレイヤー操作に状態遷移
     LD A,PLAYERMODE_CONTROL
     LD (PLAYER_CONTROL_MODE),A
-
     RET
 
 ; ----------------------------------------------------------------------------------------------------
@@ -367,111 +388,91 @@ UPDATE_PLAYER_GETITEM_EXIT:
 ; プレイヤーミスサブルーチン
 ; ----------------------------------------------------------------------------------------------------
 UPDATE_PLAYER_MISS:
+    ; ■ミスカウント減算
+    LD HL,PLAYER_MISS_TIME_CNT
+    DEC (HL)
+    RET NZ
+    
+    ; ■カウントゼロ時の処理
+    ; - スプライトパターン番号を取得する
+    ; - ゼロの場合はゲーム状態変更処理へ
+    LD HL,PLAYER_MISS_PTN_CNT
+    LD B,0
+    LD C,(HL)
+    LD HL,PLAYER_MISS_PTN1
+    ADD HL,BC
+    LD A,(HL)
+    OR A
+    JP Z,PLAYER_MISS_CHANGE_GAME_STATE
 
-UPDATE_PLAYER_MISS_EXIT:
+    ; - スプライトパターン番号を更新する
+    LD (IX+5),A
+    ; - ミスカウントリセット
+    LD A,5
+    LD (PLAYER_MISS_TIME_CNT),A
+    ; - パターンカウントを+1
+    LD HL,PLAYER_MISS_PTN_CNT
+    INC (HL)
+    RET
+
+; ----------------------------------------------------------------------------------------------------
+; プレイヤーミス（爆発）サブルーチン
+; ----------------------------------------------------------------------------------------------------
+UPDATE_PLAYER_EXPLOSION:
+
+    RET
+
+; ====================================================================================================
+; プレイヤーミス後のゲーム状態変更処理
+; ====================================================================================================
+PLAYER_MISS_CHANGE_GAME_STATE:
+    ; ■残機判定
+    ; - ゼロならゲーム状態をゲームオーバーへ
+    LD A,(LEFT)
+    OR A
+    JR Z,PLAYER_MISS_CHANGE_GAME_STATE_L1
+
+    ; ■残機ゼロ以外の時の処理
+    ; - 残機を１減らす
+    LD HL,LEFT
+    DEC (HL)
+    ; - ゲーム状態をラウンドスタートに戻す
+    LD A,STATE_ROUND_START
+    CALL CHANGE_STATE
+
+    RET
+
+PLAYER_MISS_CHANGE_GAME_STATE_L1:
+    ; ■ゲームの状態をゲームオーバーへ変更
+    LD A,STATE_PLAYER_MISS
+    CALL CHANGE_STATE
+
     RET
 
 
-    ; ■プレイヤー操作不可カウント判定
-    ; - プレイヤー操作不可カウント<>0の場合は、操作を受け付けずに終了する
-;    LD A,(PLAYER_MISS_CNT)          ; A <- プレイヤーミスカウント
-;    OR A
-;    JR Z,UPDATE_PLAYER_L1           ; ゼロの時だけプレイヤー操作処理へ
-
-    ; ■プレイヤーを操作不可にする
-;    DEC A                           ; A=A-1
-;    LD (PLAYER_MISS_CNT),A          ; A -> プレイヤーミスカウント
-
-;    LD HL,STRING4                   ; 'OUT !!'表示
-;    CALL PRTSTR
-
-;    JR UPDATE_PLAYER_EXIT
-
-;UPDATE_PLAYER_L1:
-;    LD HL,STRING3
-;    CALL PRTSTR
-
-    ; ■プレイヤー操作
-    ; @ToDo:なぜか下方向だけ、一定量ごとに右に1ドット移動してしまう
-;    CALL PLAYER_CONTROL             ; プレイヤー操作処理
-;    CALL SPRITE_MOVE                ; スプライトキャラクター移動処理
-
-    ; ■移動先座標のマップ判定
-;    LD B,(IX+2)                     ; B <- Y座標(整数部)
-;    LD C,(IX+4)                     ; C <- X座標(整数部)
-;    CALL GET_MAPDATA_NO             ; マップデータ番号取得
-;    CALL GET_MAPDATA                ; マップデータ取得
+; ====================================================================================================
+; プレイヤーミス状態かを判定して返却する
+; IN  : NONE
+; OUT : A 0=ミス状態でない、1=ミス状態である
+; ====================================================================================================
+IS_PLAYER_MISS:
+    LD A,(PLAYER_CONTROL_MODE)      ; プレイヤー操作状態を取得
+    SUB PLAYERMODE_MISS
+    LD A,0
+    RET C                           ; PLAYERMODE_MISS未満の状態のときはキャリーが立っているのでA=ゼロでRET
+    LD A,1
+    RET
 
 
-;UPDATE_PLAYER_L2:
-;    JP UPDATE_PLAYER_L3             ; マップデータ=0
-;    JP UPDATE_PLAYER_L4             ; マップデータ=1
-;    JP UPDATE_PLAYER_L5             ; マップデータ=2
-;    JP UPDATE_PLAYER_L6             ; マップデータ=3
-
-;UPDATE_PLAYER_L3:
-;    LD HL,STRING5                   ; テスト：'MISS !!'表示 
-;    CALL PRTSTR
-;    JP UPDATE_PLAYER_EXIT
-
-;UPDATE_PLAYER_L4:
-;    JP UPDATE_PLAYER_EXIT
-
-;UPDATE_PLAYER_L5:
-    ; ■アイテムを取った処理
-    ;   自分の座標からマップデータ番号を求める
-;    PUSH AF
-;    LD B,(IX+2)                     ; B <- Y座標(整数部)
-;    LD C,(IX+4)                     ; C <- X座標(整数部)
-;    CALL GET_MAPDATA_NO             ; A <- マップデータ番号
-;    POP AF
-
-    ;   マップデータを1(床)に更新
-;    LD HL,MAP_WK
-;    LD B,0
-;    LD C,A
-;    ADD HL,BC
-;    LD (HL),1
-
-    ;   マップデータ番号から左上のアドレスを取得
-;    LD B,A
-;    CALL DRAW_MAPCHIP               ; 床を描画
-
-    ; SFX再生
-;    LD HL,SFX_01
-;    CALL SOUNDDRV_SFXPLAY
-
-;    JP UPDATE_PLAYER_EXIT
-
-
-;UPDATE_PLAYER_L6:
-;    JP UPDATE_PLAYER_EXIT
-
-;UPDATE_PLAYER_EXIT:
-;    RET
-
-; ----------------------------------------------------------------------------------------------------
-; プレイヤー操作サブルーチン
-; ----------------------------------------------------------------------------------------------------
-;PLAYER_CONTROL:
-    ; ■A <- 操作入力データ（方向）
-;    LD A,(INPUT_BUFF_STICK)
-
-    ; DEBUG
-;    LD HL,30+32
-;    CALL PRTHEX
-    ; DEBUGここまで
-
-    ; ■入力データをスプライトキャラクターワークテーブルに保存
-;    LD (IX+7),A
-;    OR A
-;    RET Z
-
-    ; ■スプライトパターン番号更新
-;    CALL SPRITE_ANIM
-
-;PLAYER_CTRL_EXIT:
-;    RET
+; ====================================================================================================
+; プレイヤーミス状態（爆発）に設定する
+; IN  : NONE
+; OUT : NONE
+; ====================================================================================================
+SET_PLAYER_MISS_EXPLOSION:
+    LD A,PLAYERMODE_EXPLOSION       ; プレイヤー操作状態を爆発に変更
+    LD (PLAYER_CONTROL_MODE),A
+    RET
 
 
 SECTION rodata_user
@@ -483,6 +484,12 @@ SECTION rodata_user
 ; ■チャージウェイト値
 CHARGE_WAIT_VALUE:
     DB $02,$02,$02,$02,$04,$04,$04,$04,$06,$06,$08,$08,$0A,$0A,$0C,$0C,$FF
+
+; ■ミス時のキャラクターパターンデータ
+;   ここでは１枚目のスプライトパターン番号のみ設定する
+;   ２枚目のスプライトパターンは+1されたパターンが設定される
+PLAYER_MISS_PTN1:
+    DB 16,18,20,22,0
 
 SECTION bss_user
 ; ====================================================================================================
@@ -505,7 +512,9 @@ PLAYER_CNT_WK1:
 PLAYER_CNT_WK2:
     DEFS 1
 
-; ■プレイヤーミスカウント
-PLAYER_MISS_CNT:
+; ■プレイヤーミス時の時間カウント
+PLAYER_MISS_TIME_CNT:
     DEFS 1
-
+; ■プレイヤーミス時のスプライトパターン
+PLAYER_MISS_PTN_CNT:
+    DEFS 1

@@ -141,7 +141,7 @@ SET_COLOR_TABLE:
 SET_SPRITE_PATTERN:
 	LD HL,SPR_PTN_DATA			    ; HLレジスタにスプライトデータの先頭アドレスを設定
     LD DE,SPR_PTN_ADDR			    ; DEレジスタにスプライトパターンジェネレータの先頭アドレスを設定
-	LD BC,32*16					    ; BCレジスタにスプライトデータのサイズを指定
+	LD BC,32*23					    ; BCレジスタにスプライトデータのサイズを指定
     CALL LDIRVM				 	    ; BIOS VRAMブロック転送
 
     RET
@@ -154,6 +154,7 @@ INIT_SPR_CHR_WK_TBL:
     LD B,MAX_CHR_CNT                ; 最大キャラクター数
 
 INIT_SPR_CHR_WK_TBL_L1:
+    LD A,B
     CALL GET_SPR_WK_ADDR            ; スプライトキャラクターワークテーブルのアドレスを取得
 
     LD (IX),0                       ; キャラクター番号
