@@ -26,8 +26,8 @@ SCORE:
 
 ; ■タイム
 TIME:
-    DEFS 2
+    DEFS 1
 
 ; ■残機
 LEFT:
-    DEFS 2
+    DEFS 1

@@ -30,11 +30,16 @@ GAME_TITLE_EXIT:
 ; タイトル初回処理
 ; ----------------------------------------------------------------------------------------------------
 GAME_TITLE_INIT:
-    ; ■各変数初期化
-    XOR A
-    LD (ROUND),A                    ; ラウンド数 <- 0
+    ; ■スプライトキャラクターワークテーブル初期化
+    CALL INIT_SPR_CHR_WK_TBL
+
+    ; ■オフスクリーン初期化
+    CALL CLEAR_OFFSCREEN
 
     ; ■タイトル画面作成
+;    XOR A
+;    LD (ROUND),A                    ; ラウンド数 <- 0
+
 ;    CALL COPY_MAP_DATA
 ;    CALL DRAW_MAP                   ; フィールド描画
 

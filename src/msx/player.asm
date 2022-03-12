@@ -38,7 +38,7 @@ INIT_PLAYER:
     POP IX
     LD (IX),1                       ; キャラクター番号=プレイヤー
     LD (IX+5),0                     ; スプライトパターンNo
-    LD (IX+6),1                     ; カラーコード
+    LD (IX+6),15                    ; カラーコード
 
     ; ■ワークエリア初期化
     XOR A
@@ -351,6 +351,10 @@ UPDATE_PLAYER_MOVE_END:
     ; ■ミスの状態に遷移
     LD A,PLAYERMODE_MISS
     LD (PLAYER_CONTROL_MODE),A
+
+    ; ■BGM再生
+    LD HL,_06
+    CALL SOUNDDRV_BGMPLAY
     RET
 
 UPDATE_PLAYER_MOVE_END_L2:
@@ -408,7 +412,7 @@ UPDATE_PLAYER_MISS:
     ; - スプライトパターン番号を更新する
     LD (IX+5),A
     ; - ミスカウントリセット
-    LD A,5
+    LD A,7
     LD (PLAYER_MISS_TIME_CNT),A
     ; - パターンカウントを+1
     LD HL,PLAYER_MISS_PTN_CNT

@@ -19,8 +19,8 @@ GAME_INIT:
     LD (ROUND),A                    ; ラウンド数 <- 1
     LD A,0
     LD (SCORE),A                    ; スコア <- 0
-    LD A,3
-    LD (LEFT),A                     ; 残機 <- 3
+    LD A,2
+    LD (LEFT),A                     ; 残機 <- 2
 
     ; ToDo : ここで固定表示される文字列もオフスクリーンに設定しておく？
 

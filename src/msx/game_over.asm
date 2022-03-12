@@ -20,6 +20,10 @@ GAME_OVER:
     SBC HL,BC
     JR NZ,GAME_OVER_EXIT
 
+    ; ■ゲーム状態変更
+    LD A,STATE_TITLE                ; ゲーム状態をタイトルへ
+    CALL CHANGE_STATE
+
 GAME_OVER_EXIT:
     RET
 
@@ -38,7 +42,7 @@ GAME_OVER_INIT:
     CALL PRTSTR
 
     ; ■BGM再生
-    LD HL,_08
+    LD HL,_07
     CALL SOUNDDRV_BGMPLAY
 
 GAME_OVER_INIT_EXIT:

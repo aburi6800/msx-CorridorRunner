@@ -55,7 +55,7 @@ ROUND_START_L2:
 ;    DJNZ ROUND_START_L2             ; 敵の数だけ繰り返す
 
     ; ■ゲーム状態変更
-    LD A,STATE_GAME_MAIN            ; ゲーム状態 <- ゲームメイン
+    LD A,STATE_GAME_MAIN            ; ゲーム状態をゲームメインへ
     CALL CHANGE_STATE
 
     ; ■BGM再生
