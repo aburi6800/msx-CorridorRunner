@@ -150,9 +150,9 @@ UPDATE_PLAYER_CONTROL:
     LD A,PLAYERMODE_LEFTTURN
     LD (PLAYER_CONTROL_MODE),A      ; プレイヤー状態を左回転に変更
     LD A,3
-    LD (PLAYER_CNT_WK1),A           ; WK1：処理繰り返し回数
+    LD (PLAYER_CNT_WK1),A           ; WK1:処理繰り返し回数
     LD A,1
-    LD (PLAYER_CNT_WK2),A           ; WK2：ウェイトカウンタ
+    LD (PLAYER_CNT_WK2),A           ; WK2:ウェイトカウンタ
     RET
 
 UPDATE_PLAYER_CONTROL_L1:
@@ -162,9 +162,9 @@ UPDATE_PLAYER_CONTROL_L1:
     LD A,PLAYERMODE_RIGHTTURN
     LD (PLAYER_CONTROL_MODE),A      ; プレイヤー状態を右回転に変更
     LD A,3
-    LD (PLAYER_CNT_WK1),A           ; WK1：処理繰り返し回数
+    LD (PLAYER_CNT_WK1),A           ; WK1:処理繰り返し回数
     LD A,1
-    LD (PLAYER_CNT_WK2),A           ; WK2：ウェイトカウンタ
+    LD (PLAYER_CNT_WK2),A           ; WK2:ウェイトカウンタ
     RET
 
 UPDATE_PLAYER_CONTROL_L2:
@@ -174,8 +174,8 @@ UPDATE_PLAYER_CONTROL_L2:
     LD A,PLAYERMODE_CHARGE
     LD (PLAYER_CONTROL_MODE),A      ; プレイヤー状態をチャージに変更
     XOR A
-    LD (PLAYER_CNT_WK1),A           ; WK1：チャージカウンタ
-    LD (PLAYER_CNT_WK2),A           ; WK2：未使用
+    LD (PLAYER_CNT_WK1),A           ; WK1:チャージカウンタ
+    LD (PLAYER_CNT_WK2),A           ; WK2:未使用
     LD (PLAYER_CHARGE_POWER),A      ; チャージパワー値をリセット
     RET
 
@@ -444,7 +444,7 @@ PLAYER_MISS_CHANGE_GAME_STATE:
 
 PLAYER_MISS_CHANGE_GAME_STATE_L1:
     ; ■ゲームの状態をゲームオーバーへ変更
-    LD A,STATE_OVER
+    LD A,STATE_GAME_OVER
     CALL CHANGE_STATE
 
     RET

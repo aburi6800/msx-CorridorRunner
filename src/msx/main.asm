@@ -4,6 +4,8 @@
 ;
 ; ====================================================================================================
 SECTION code_user
+
+; ■BGMドライバのAPI定義
 EXTERN SOUNDDRV_INIT
 EXTERN SOUNDDRV_EXEC
 EXTERN SOUNDDRV_BGMPLAY
@@ -14,13 +16,13 @@ PUBLIC _main
 
 _main:
 
-STATE_INIT:             EQU 0       ; ゲーム状態：初期処理
-STATE_TITLE:            EQU 1       ; ゲーム状態：タイトル
-STATE_GAME_INIT:        EQU 2       ; ゲーム状態：ゲーム初期化
-STATE_ROUND_START:      EQU 3       ; ゲーム状態：ラウンド開始
-STATE_GAME_MAIN:        EQU 4       ; ゲーム状態：ゲームメイン
-STATE_OVER:             EQU 5       ; ゲーム状態：ゲームオーバー
-STATE_ROUND_CLEAR:      EQU 6       ; ゲーム状態：ラウンドクリアー
+STATE_INIT:             EQU 0       ; ゲーム状態:初期処理
+STATE_TITLE:            EQU 1       ; ゲーム状態:タイトル
+STATE_GAME_INIT:        EQU 2       ; ゲーム状態:ゲーム初期化
+STATE_ROUND_START:      EQU 3       ; ゲーム状態:ラウンド開始
+STATE_GAME_MAIN:        EQU 4       ; ゲーム状態:ゲームメイン
+STATE_GAME_OVER:        EQU 5       ; ゲーム状態:ゲームオーバー
+STATE_ROUND_CLEAR:      EQU 6       ; ゲーム状態:ラウンドクリアー
 
 COLOR_TBL_CHG_DATA_CNT  EQU 12      ; カラーテーブルパターン数
 
@@ -50,13 +52,13 @@ MAINLOOP:
     JP (HL)
 
 MAINLOOP_L1:
-    JP INIT                         ; ゲーム状態：初期処理
-    JP TITLE                        ; ゲーム状態：タイトル
-    JP GAME_INIT                    ; ゲーム状態：ゲーム初期化
-    JP ROUND_START                  ; ゲーム状態：ラウンド開始
-    JP GAME_MAIN                    ; ゲーム状態：ゲームメイン
-    JP OVER                         ; ゲーム状態：ゲームオーバー
-    JP ROUND_CLEAR                  ; ゲーム状態：ラウンドクリアー
+    JP INIT                         ; ゲーム状態:初期処理
+    JP GAME_TITLE                   ; ゲーム状態:タイトル
+    JP GAME_INIT                    ; ゲーム状態:ゲーム初期化
+    JP ROUND_START                  ; ゲーム状態:ラウンド開始
+    JP GAME_MAIN                    ; ゲーム状態:ゲームメイン
+    JP GAME_OVER                    ; ゲーム状態:ゲームオーバー
+    JP ROUND_CLEAR                  ; ゲーム状態:ラウンドクリアー
 
 MAINLOOP_RET:
 VSYNC:
@@ -79,8 +81,6 @@ VSYNC:
 CHANGE_STATE:
     LD (GAME_STATE),A
     CALL TICK_RESET                 ; 経過時間リセット
-
-CHANGE_STATE_EXIT:
     RET
 
 
@@ -91,8 +91,6 @@ TICK_RESET:
     LD A,0                          ; A <- 0
     LD (TICK1+0),A
     LD (TICK1+1),A
-
-TICK_RESET_EXIT:
     RET
 
 
@@ -200,6 +198,22 @@ DRAW_INFO:
     LD HL,INFO_STRING2
     CALL PRTSTR
 
+    ; ■残機表示
+    LD A,(LEFT)
+    OR A
+    JR Z,DRAW_INFO_L01              ; ゼロなら表示不要のため処理を抜ける
+
+    LD HL,OFFSCREEN
+    LD BC,$001C
+    ADD HL,BC
+    LD B,A
+
+DRAW_INFO_L0:
+    LD (HL),$88
+    INC HL
+    DJNZ DRAW_INFO_L0
+
+DRAW_INFO_L01:
     ; ■パワーチャージメーター
     LD A,(PLAYER_CHARGE_POWER)
     OR A
@@ -241,10 +255,22 @@ DRAW_INFO_EXIT:
 INCLUDE "init.asm"
 
 ; ■タイトル
-INCLUDE "title.asm"
+INCLUDE "game_title.asm"
+
+; ■ゲーム初期化
+INCLUDE "game_init.asm"
+
+; ■ラウンドスタート
+INCLUDE "game_round_start.asm"
 
 ; ■ゲームメイン
-INCLUDE "game.asm"
+INCLUDE "game_main.asm"
+
+; ■ラウンドクリア
+INCLUDE "game_round_clear.asm"
+
+; ■ゲームオーバー
+INCLUDE "game_over.asm"
 
 ; ■スプライト操作サブルーチン群
 INCLUDE "sprite.asm"
@@ -278,6 +304,9 @@ INCLUDE "assets/08.asm"
 ; ■SFXデータ
 INCLUDE "assets/sfx_01.asm"
 INCLUDE "assets/sfx_02.asm"
+
+INCLUDE "game_global_rodata.asm"
+INCLUDE "game_global_bss.asm"
 
 SECTION rodata_user
 ; ====================================================================================================
@@ -324,26 +353,6 @@ TICK2:
     DEFS 2                      ; 1/10のタイマー、TICK=6ごとにインクリメント
 TICK3:
     DEFS 2                      ; 1秒のタイマー、TICK1=60ごとにインクリメント
-
-; ■ゲーム状態
-GAME_STATE:
-    DEFS 1
-
-; ■ラウンド
-ROUND:
-    DEFS 1
-
-; ■スコア
-SCORE:
-    DEFS 3
-
-; ■タイム
-TIME:
-    DEFS 2
-
-; ■残機
-LEFT:
-    DEFS 2
 
 ; ■カラーテーブル変更カウンタ
 COLOR_TBL_CNT:
