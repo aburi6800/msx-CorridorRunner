@@ -24,6 +24,8 @@ STATE_GAME_MAIN:        EQU 4       ; ゲーム状態:ゲームメイン
 STATE_GAME_OVER:        EQU 5       ; ゲーム状態:ゲームオーバー
 STATE_ROUND_CLEAR:      EQU 6       ; ゲーム状態:ラウンドクリアー
 
+STATE_ALL_CLEAR:        EQU 7       ; ゲーム状態:オールクリアー
+
 COLOR_TBL_CHG_DATA_CNT  EQU 12      ; カラーテーブルパターン数
 
 ; ====================================================================================================
@@ -59,6 +61,7 @@ MAINLOOP_L1:
     JP GAME_MAIN                    ; ゲーム状態:ゲームメイン
     JP GAME_OVER                    ; ゲーム状態:ゲームオーバー
     JP ROUND_CLEAR                  ; ゲーム状態:ラウンドクリアー
+    JP ALL_CLEAR                    ; ゲーム状態:オールクリアー
 
 MAINLOOP_RET:
 VSYNC:
@@ -271,6 +274,9 @@ INCLUDE "game_round_clear.asm"
 
 ; ■ゲームオーバー
 INCLUDE "game_over.asm"
+
+; ■オールクリア
+INCLUDE "game_all_clear.asm"
 
 ; ■スプライト操作サブルーチン群
 INCLUDE "sprite.asm"

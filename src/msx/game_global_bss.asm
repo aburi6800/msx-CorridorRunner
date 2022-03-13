@@ -24,8 +24,8 @@ ROUND:
 SCORE:
     DEFS 3
 
-; ■タイム
-TIME:
+; ■ターゲット残り
+TARGET_LEFT:
     DEFS 1
 
 ; ■残機
