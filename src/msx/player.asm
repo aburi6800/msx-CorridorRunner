@@ -317,6 +317,7 @@ UPDATE_PLAYER_MOVE_L3:
     ; ここでアイテムがあれば取得する
     LD B,(IX+2)                     ; B <- Y座標(整数部)
     LD C,(IX+4)                     ; C <- X座標(整数部)
+    CALL GET_MAPDATA_OFFSET         ; A <- マップデータオフセット
     CALL GET_MAPDATA                ; A <- マップデータ
 
     CP 2
@@ -336,6 +337,7 @@ UPDATE_PLAYER_MOVE_END:
     ; ここで床がなければミスにする
     LD B,(IX+2)                     ; B <- Y座標(整数部)
     LD C,(IX+4)                     ; C <- X座標(整数部)
+    CALL GET_MAPDATA_OFFSET         ; A <- マップデータオフセット
     CALL GET_MAPDATA                ; A <- マップデータ
     OR A
     JR NZ,UPDATE_PLAYER_MOVE_END_L2 ; マップデータがゼロでなければ、プレイヤー操作に状態遷移
