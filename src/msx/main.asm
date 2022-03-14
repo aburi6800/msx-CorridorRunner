@@ -329,7 +329,7 @@ SECTION rodata_user
 ; ■画面上部表示内容
 INFO_STRING1:
     DW $0000
-    DB "SCORE 00000000 HI 00000000     ",0
+    DB "SCORE 00000000 HI 00000000    ",0
 
 ; ■画面下部表示内容
 INFO_STRING2:

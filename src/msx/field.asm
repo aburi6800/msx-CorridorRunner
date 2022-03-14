@@ -20,7 +20,7 @@ COPY_MAP_DATA:
     LD HL,ROUND_TBL
     CALL GET_ADDR_TBL               ; DE <- マップデータの先頭アドレス
 
-    ; ■マップデータの先頭1byte(チップセット番号)からチップセットテーブルのアドレスをおワークに設定する
+    ; ■マップデータの先頭1byte(チップセット番号)からチップセットテーブルのアドレスをワークに設定する
     PUSH DE
     LD A,(DE)                       ; A <- チップセット番号
     LD HL,CHIPSET_TBL
