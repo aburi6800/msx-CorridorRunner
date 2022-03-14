@@ -2,6 +2,8 @@
 
 ## Build
 
+Clone the project and execute the following command.  
+
 ```
 $ mkdir build && cd build
 $ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/z88dk.cmake ..
@@ -11,7 +13,6 @@ $ make clean && make
 The `.rom` file is output to the project's `dist` directory.  
 
 ## Run with openMSX
-
 
 [openMSX](https://openmsx.org/)
 
