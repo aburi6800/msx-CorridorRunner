@@ -387,6 +387,10 @@ UPDATE_PLAYER_GETITEM:
     LD B,A
     CALL DRAW_MAPCHIP
 
+    ; ■スコア追加
+    LD DE,$0001                     ; 100pts
+    CALL ADDSCORE                   ; スコア加算
+
 UPDATE_PLAYER_GETITEM_EXIT:
     RET
 

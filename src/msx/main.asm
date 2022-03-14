@@ -201,6 +201,12 @@ DRAW_INFO:
     LD HL,INFO_STRING2
     CALL PRTSTR
 
+    ; ■スコア表示
+    LD B,3
+    LD DE,SCORE
+    LD HL,$0006
+    CALL PRTBCD
+
     ; ■残機表示
     LD A,(LEFT)
     OR A
@@ -323,7 +329,7 @@ SECTION rodata_user
 ; ■画面上部表示内容
 INFO_STRING1:
     DW $0000
-    DB "SCORE 000000 TOP 000000         ",0
+    DB "SCORE 00000000 HI 00000000     ",0
 
 ; ■画面下部表示内容
 INFO_STRING2:
