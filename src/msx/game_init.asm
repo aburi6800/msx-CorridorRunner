@@ -18,7 +18,10 @@ GAME_INIT:
     LD A,1
     LD (ROUND),A                    ; ラウンド数 <- 1
     LD A,0
-    LD (SCORE),A                    ; スコア <- 0
+    LD IX,SCORE
+    LD (IX),A                       ; スコア <- 0
+    LD (IX+1),A
+    LD (IX+2),A
     LD A,2
     LD (LEFT),A                     ; 残機 <- 2
 

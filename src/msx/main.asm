@@ -194,7 +194,7 @@ UPDATE_COLOR_TBL_EXIT:
 ; -----------------------------------------------------------------------------------------------------
 DRAW_INFO:
 
-    ; ToDo : ここはスコアとハイスコアの値の表示だけにする
+    ; ToDo : ここはゲーム中変動する表示だけにする
     LD HL,INFO_STRING1
     CALL PRTSTR
 
@@ -205,6 +205,12 @@ DRAW_INFO:
     LD B,3
     LD DE,SCORE
     LD HL,$0006
+    CALL PRTBCD
+
+    ; ■ハイスコア表示
+    LD B,3
+    LD DE,HISCORE
+    LD HL,$0012
     CALL PRTBCD
 
     ; ■残機表示

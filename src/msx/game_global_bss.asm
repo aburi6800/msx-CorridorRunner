@@ -24,6 +24,10 @@ ROUND:
 SCORE:
     DEFS 3
 
+; ■ハイスコア
+HISCORE:
+    DEFS 3
+
 ; ■ターゲット残り
 TARGET_LEFT:
     DEFS 1

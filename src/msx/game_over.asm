@@ -37,6 +37,9 @@ GAME_OVER_INIT:
     ; ■オフスクリーン初期化
     CALL CLEAR_OFFSCREEN
 
+    ; ■ハイスコア更新判定
+    CALL CHECK_HIGHSCORE_UPDATE
+
     ; ■ゲームオーバーメッセージ表示
     LD HL,STRING_GAME_OVER
     CALL PRTSTR
@@ -46,6 +49,47 @@ GAME_OVER_INIT:
     CALL SOUNDDRV_BGMPLAY
 
 GAME_OVER_INIT_EXIT:
+    RET
+
+; ---------------------------------------------------------------------------------------------------
+; ハイスコア更新判定処理
+; ---------------------------------------------------------------------------------------------------
+CHECK_HIGHSCORE_UPDATE:
+    ; ■ハイスコア更新判定
+    LD HL,SCORE
+    LD DE,HISCORE
+    LD B,3
+
+CHECK_HIGHSCORE_UPDATE_L1:
+    OR A
+    LD A,(DE)                           ; A <- ハイスコア(DEアドレスの値)
+    INC DE                              ; DE=DE+1
+
+    SUB (HL)                            ; A=A-HL(スコアの値)
+    INC HL                              ; HL=HL+1
+
+    ; マイナスだったらハイスコア更新
+    JP M,CHECK_HIGHSCORE_UPDATE_L2
+
+    ; 同じだったら次の桁をチェック
+    JP Z,CHECK_HIGHSCORE_UPDATE_L3
+
+    ; プラスだったら更新不要なのでループを抜ける
+    JR CHECK_HIGHSCORE_UPDATE_EXIT
+
+CHECK_HIGHSCORE_UPDATE_L2:
+    ; ■ハイスコア更新
+    ; -スコアの値(3byte)でハイスコアの値を置き換える
+    LD HL,SCORE
+    LD DE,HISCORE
+    LD B,3
+    LDIR                            ; HL(SCORE)→DE(HISCORE)へ転送
+    RET
+
+CHECK_HIGHSCORE_UPDATE_L3:
+    DJNZ CHECK_HIGHSCORE_UPDATE_L1
+
+CHECK_HIGHSCORE_UPDATE_EXIT:
     RET
 
 SECTION rodata_user
