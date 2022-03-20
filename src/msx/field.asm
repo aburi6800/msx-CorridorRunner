@@ -16,21 +16,34 @@ SECTION code_user
 ; IN  : A = ラウンド数
 ; ====================================================================================================
 COPY_MAP_DATA:
-    DEC A
+    DEC A                           ; ラウンド数-1をテーブルの要素番号とする
     LD HL,ROUND_TBL
     CALL GET_ADDR_TBL               ; DE <- マップデータの先頭アドレス
 
-    ; ■マップデータの先頭1byte(チップセット番号)からチップセットテーブルのアドレスをワークに設定する
-    PUSH DE
-    LD A,(DE)                       ; A <- チップセット番号
+    PUSH DE                         ; マップデータの先頭アドレスをスタックにPUSH
+    PUSH DE    
+
+    ; ■マップデータの先頭1byte(チップセット/BGM番号)からチップセットテーブルのアドレスをワークに設定する
+    LD A,(DE)                       ; A <- チップセット/BGM番号
     LD HL,CHIPSET_TBL
     CALL GET_ADDR_TBL               ; DE <- チップセットデータの先頭アドレス
-    LD HL,CHIPSET_WK
+    LD HL,CHIPSET_WK                ; チップセットデータのアドレスをワークへ設定
     LD (HL),E
     INC HL
     LD (HL),D
+
+    ; ■マップデータの先頭1byteからBGMテーブルのアドレスをワークに設定する
     POP DE
-    INC DE
+    LD A,(DE)                       ; A <- チップセット/BGM番号
+    LD HL,BGM_TBL
+    CALL GET_ADDR_TBL               ; DE <- BGMデータの先頭アドレス
+    LD HL,BGM_WK                    ; BGMデータのアドレスをワークへ設定
+    LD (HL),E
+    INC HL
+    LD (HL),D
+
+    POP DE
+    INC DE                          ; 先頭1byte読み飛ばし
 
     ; ■マップデータの先頭アドレスから176byteをマップワークにブロック転送する
     LD H,D                          ; HL=転送元アドレス(DE)
@@ -39,6 +52,18 @@ COPY_MAP_DATA:
     LD BC,176                       ; BC=転送データ数(byte)
     LDIR                            ; ブロック転送(HL->DE * BC)
 
+    ; ■プレイヤーの初期座標をワークに設定
+;    INC HL
+    LD A,(HL)
+    LD (PLAYER_INIT_VALUE_Y),A
+    INC HL
+    LD A,(HL)
+    LD (PLAYER_INIT_VALUE_X),A
+    INC HL
+    LD A,(HL)
+    LD (PLAYER_INIT_VALUE_DIRECTION),A
+
+    ; TODO:敵キャラクターの初期設定処理を追加
 COPY_MAP_DATA_EXIT:
     RET
 
@@ -281,7 +306,7 @@ ROUND_TBL:
 ; ■マップデータ
 ;   1byte : チップセット番号(0～3)
 ; 176byte : フィールドデータ(16byte x 11line)
-;   2byte : プレイヤーの初期位置（Y座標、X座標)
+;   3byte : プレイヤーの初期位置(Y座標、X座標)、方向
 ;   1byte : 敵番号、$FF=終端。
 ;   7byte : $FF以外の場合は以降にY座標、X座標、方向、汎用データ（4byte)を設定。
 MAP_ROUND1:
@@ -297,32 +322,44 @@ MAP_ROUND1:
     DB 1,1,1,0,0,0,0,1,1,0,0,0,0,1,1,1
     DB 1,1,1,0,0,0,1,1,1,1,0,0,0,0,1,1
     DB 1,1,1,0,0,0,1,1,3,1,0,0,2,1,1,0
+    DB 20*8,15*8,1
+    DB $FF
+
+; ■BGMテーブル
+BGM_TBL:
+    DW _02
+    DW _03
+    DW _04
+    DW _05
 
 ; ■チップセットテーブル
-; パターン1
 CHIPSET_TBL:
     DW CHIPSET_1
     DW CHIPSET_2
     DW CHIPSET_3
     DW CHIPSET_4
+
 CHIPSET_1:
     DB $20, $20, $20, $20
     DB $60, $61, $62, $63
     DB $64, $65, $66, $67
     DB $69, $6A, $6B, $6C
     DB $68, $68, $00, $00
+
 CHIPSET_2:
     DB $20, $20, $20, $20
     DB $70, $71, $72, $73
     DB $74, $75, $76, $77
     DB $79, $7A, $7B, $7C
     DB $78, $78, $00, $00
+
 CHIPSET_3:
     DB $20, $20, $20, $20
     DB $80, $81, $82, $83
     DB $84, $85, $86, $87
     DB $89, $8A, $8B, $8C
     DB $88, $88, $00, $00
+
 CHIPSET_4:
     DB $20, $20, $20, $20
     DB $90, $91, $92, $93
@@ -340,6 +377,10 @@ SECTION bss_user
 MAP_WK:
     DEFS 176
 
-; ■チップセットテーブルのアドレス(2byte)
+; ■チップセットのアドレス(2byte)
 CHIPSET_WK:
+    DEFS 2
+
+; ■BGMのアドレス(2byte)
+BGM_WK:
     DEFS 2

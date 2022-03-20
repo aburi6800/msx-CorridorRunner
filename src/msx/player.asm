@@ -50,16 +50,19 @@ INIT_PLAYER_EXIT:
 INIT_PLAYER2:
     LD (IX),2                       ; キャラクター番号=プレイヤー
 
+    LD A,(PLAYER_INIT_VALUE_Y)
     LD (IX+1),0                     ; Y座標(小数部)
-    LD (IX+2),88                    ; Y座標(整数部)
+    LD (IX+2),A                     ; Y座標(整数部)
 
+    LD A,(PLAYER_INIT_VALUE_X)
     LD (IX+3),0                     ; X座標(小数部)
-    LD (IX+4),120                   ; X座標(整数部)
+    LD (IX+4),A                     ; X座標(整数部)
 
     LD (IX+5),1                     ; スプライトパターンNo
     LD (IX+6),5                     ; カラーコード
 
-    LD (IX+7),1                     ; 移動方向
+    LD A,(PLAYER_INIT_VALUE_DIRECTION)
+    LD (IX+7),A                     ; 移動方向
     LD (IX+8),0                     ; 移動量
     LD (IX+9),0                     ; アニメーションテーブル番号
     LD (IX+10),0                    ; アニメーションカウンタ
@@ -507,6 +510,20 @@ SECTION bss_user
 ; プログラム起動時にcrtでゼロでramに設定される 
 ; ====================================================================================================
 
+; ■プレイヤー初期値
+; ラウンド開始時にラウンドデータから設定される
+; Y座標
+PLAYER_INIT_VALUE_Y:
+    DEFS 1
+
+; X座標
+PLAYER_INIT_VALUE_X:
+    DEFS 1
+
+; 方向
+PLAYER_INIT_VALUE_DIRECTION:
+    DEFS 1
+
 ; ■プレイヤー操作モード
 ; 0=CONTROL,1=TURN LEFT,2=TURN RIGHT,3=CHARGE,4=MOVE,5=MISS
 PLAYER_CONTROL_MODE:
@@ -516,7 +533,7 @@ PLAYER_CONTROL_MODE:
 PLAYER_CHARGE_POWER:
     DEFS 1
 
-; ■カウントワーク
+; ■汎用カウンタワーク
 PLAYER_CNT_WK1:
     DEFS 1
 PLAYER_CNT_WK2:
@@ -525,6 +542,7 @@ PLAYER_CNT_WK2:
 ; ■プレイヤーミス時の時間カウント
 PLAYER_MISS_TIME_CNT:
     DEFS 1
-; ■プレイヤーミス時のスプライトパターン
+
+; ■プレイヤーミス時のスプライトパターンカウント
 PLAYER_MISS_PTN_CNT:
     DEFS 1
