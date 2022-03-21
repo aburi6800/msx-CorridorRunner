@@ -2,7 +2,7 @@
 ;
 ; game_init.asm
 ;
-; included from main.asm
+; included from game.asm
 ;
 ; ====================================================================================================
 SECTION code_user
@@ -15,17 +15,17 @@ GAME_INIT:
     CALL INIT_RND
 
     ; ■各変数初期化
+    ; - ラウンド数
     LD A,1
-    LD (ROUND),A                    ; ラウンド数 <- 1
+    LD (ROUND),A
+    ; - スコア
     LD A,0
-    LD IX,SCORE
-    LD (IX),A                       ; スコア <- 0
-    LD (IX+1),A
-    LD (IX+2),A
+    LD (SCORE),A
+    LD (SCORE+1),A
+    LD (SCORE+2),A
+    ; - 残機
     LD A,2
-    LD (LEFT),A                     ; 残機 <- 2
-
-    ; ToDo : ここで固定表示される文字列もオフスクリーンに設定しておく？
+    LD (LEFT),A
 
     ; ■ゲーム状態変更
     LD A,STATE_ROUND_START          ; ゲーム状態 <- ラウンド開始

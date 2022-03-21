@@ -2,7 +2,7 @@
 ;
 ; game_global_rodata.asm
 ;
-; included from main.asm
+; included from game.asm
 ;
 ; ====================================================================================================
 

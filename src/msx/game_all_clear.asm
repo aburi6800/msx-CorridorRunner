@@ -2,7 +2,7 @@
 ;
 ; game_all_clear.asm
 ;
-; include from main.asm
+; include from game.asm
 ;
 ; ====================================================================================================
 SECTION code_user

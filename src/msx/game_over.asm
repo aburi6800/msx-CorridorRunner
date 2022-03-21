@@ -2,7 +2,7 @@
 ;
 ; game_over.asm
 ;
-; include from main.asm
+; include from game.asm
 ;
 ; ====================================================================================================
 SECTION code_user
@@ -35,7 +35,7 @@ GAME_OVER_INIT:
     CALL INIT_SPR_CHR_WK_TBL
 
     ; ■オフスクリーン初期化
-    CALL CLEAR_OFFSCREEN
+    CALL RESET_OFFSCREEN
 
     ; ■ハイスコア更新判定
     CALL CHECK_HIGHSCORE_UPDATE

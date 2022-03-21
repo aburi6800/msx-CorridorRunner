@@ -2,7 +2,7 @@
 ;
 ; game_round_start.asm
 ;
-; include from main.asm
+; include from game.asm
 ;
 ; ====================================================================================================
 SECTION code_user
@@ -24,8 +24,8 @@ ROUND_START:
     LD A,(ROUND)
     CALL COPY_MAP_DATA
 
-    ; ■オフスクリーン初期化
-    CALL CLEAR_OFFSCREEN
+    ; ■オフスクリーンリセット
+    CALL RESET_OFFSCREEN
 
     ; ■オフスクリーン描画
     CALL DRAW_MAP
@@ -73,8 +73,8 @@ ROUND_START_INIT:
     ; ■スプライトキャラクターワークテーブル初期化
     CALL INIT_SPR_CHR_WK_TBL
 
-    ; ■オフスクリーン初期化
-    CALL CLEAR_OFFSCREEN
+    ; ■オフスクリーンリセット
+    CALL RESET_OFFSCREEN
 
     ; ■ラウンド数をBCD変換してワークに設定
     LD A,(ROUND)

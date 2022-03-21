@@ -2,7 +2,7 @@
 ;
 ; game_title.asm
 ;
-; included from main.asm
+; included from game.asm
 ;
 ; ====================================================================================================
 SECTION code_user
@@ -33,8 +33,8 @@ GAME_TITLE_INIT:
     ; ■スプライトキャラクターワークテーブル初期化
     CALL INIT_SPR_CHR_WK_TBL
 
-    ; ■オフスクリーン初期化
-    CALL CLEAR_OFFSCREEN
+    ; ■オフスクリーンリセット
+    CALL RESET_OFFSCREEN
 
     ; ■タイトル画面作成
 ;    XOR A
