@@ -82,7 +82,7 @@ CHECK_HIGHSCORE_UPDATE_L2:
     ; -スコアの値(3byte)でハイスコアの値を置き換える
     LD HL,SCORE
     LD DE,HISCORE
-    LD B,3
+    LD BC,3
     LDIR                            ; HL(SCORE)→DE(HISCORE)へ転送
     RET
 
