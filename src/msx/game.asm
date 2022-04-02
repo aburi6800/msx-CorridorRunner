@@ -198,13 +198,9 @@ DRAW_INFO:
     LD DE,SCORE
     LD HL,$0006
     CALL PRTBCD
+
     ; ■パワーチャージメーター
-    LD A,(PLAYER_CHARGE_POWER)
-    OR A
-    JR Z,DRAW_INFO_EXIT             ; ゼロなら抜ける
-
-    LD B,A                          ; B <- チャージパワー値
-
+    LD B,16                         ; B <- チャージパワー値
 DRAW_INFO_L1:
     ; ■オフスクリーンバッファのオフセット値を算出
     LD D,0
@@ -217,18 +213,27 @@ DRAW_INFO_L1:
     ADD HL,DE
 
     ; ■描画するキャラクターをチャージパワー値から判定
+    ; - チャージパワー値 < ループカウンタのとき
+    LD A,(PLAYER_CHARGE_POWER)
+    CP B                            
+    JR C,DRAW_INFO_L3
+    JR Z,DRAW_INFO_L3
+
     LD A,B
     CP 11
     JR NC,DRAW_INFO_L2
-    ; - 0～10のとき
+ 
+    ; - 1～10のとき
     LD (HL),$AF
-    JR DRAW_INFO_L3
-
+    JR DRAW_INFO_L4
 DRAW_INFO_L2:
     ; - 11～のとき
     LD (HL),$B0
-
+    JR DRAW_INFO_L4
 DRAW_INFO_L3:
+    ; - 0のとき
+    LD (HL),$20
+DRAW_INFO_L4:
     DJNZ DRAW_INFO_L1
 
 DRAW_INFO_EXIT:
