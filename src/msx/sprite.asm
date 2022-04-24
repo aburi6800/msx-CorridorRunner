@@ -7,9 +7,21 @@
 ; ====================================================================================================
 SECTION code_user
 
+; ■移動方向の定数
+DIRECTION_UP:                       EQU 1
+DIRECTION_UPRIGHT:                  EQU 2
+DIRECTION_RIGHT:                    EQU 3
+DIRECTION_DOWNRIGHT:                EQU 4
+DIRECTION_DOWN:                     EQU 5
+DIRECTION_DOWNLEFT:                 EQU 6
+DIRECTION_LEFT:                     EQU 7
+DIRECTION_UPLEFT:                   EQU 8
+
 INCLUDE "player.asm"
+INCLUDE "enemy.asm"
 INCLUDE "enemy1.asm"
 INCLUDE "enemy2.asm"
+
 
 ; ====================================================================================================
 ; スプライトキャラクターワークテーブル初期化
@@ -39,11 +51,38 @@ INIT_SPR_CHR_WK_TBL_EXIT:
 
 
 ; ====================================================================================================
+; スプライトキャラクターY座標ランダム値取得処理
+; IN  : none
+; OUT : A = X座標(8〜168)
+; ====================================================================================================
+GET_RND_SPR_Y:
+    CALL GET_RND                    ; 乱数取得(0〜255)
+;    SUB A,8                         ; Y座標を最低でも8にする措置
+;                                    ; - Aが8未満だったら$EF～になる
+    CP 192-8-16                     ; A=A-192-8-16
+    JR NC,GET_RND_SPR_Y             ; Aが16～192の範囲外だったら再度乱数取得
+    ADD A,8                         ; オフセット加算
+    RET
+
+
+; ====================================================================================================
+; スプライトキャラクターX座標ランダム値取得処理
+; IN  : none
+; OUT : A = X座標(0〜239)
+; ====================================================================================================
+GET_RND_SPR_X:
+    CALL GET_RND                    ; A <- 乱数(0〜255)
+    CP 255-16                       ; A=A-(255-16)
+    JR NC,GET_RND_SPR_X             ; Aが(255-16)を超えていたら再度乱数取得
+    RET
+
+
+; ====================================================================================================
 ; スプライトキャラクターワークテーブルのアドレス値を求める
-; SPR_CHR_WK_TBL+(キャラクターNo*16)のアドレスを求めてIXレジスタに設定します。
-; DE,HLレジスタの値を破壊します。
-; IN  : A = キャラクターNo(1〜)
-; OUT : IX = 求めたスプライトキャラクターワークテーブルのアドレス
+; SPR_CHR_WK_TBL+(テーブルINDEX*16)のアドレスを求めてIXレジスタに設定します。
+; IN  : A = テーブルINDEX(1〜)
+; OUT : IX = 対象INDEXのスプライトキャラクターワークアドレス
+; USE : DE, HL
 ; ====================================================================================================
 GET_SPR_WK_ADDR:
     ; ■スプライトキャラクターワークテーブルの先頭アドレス
@@ -54,8 +93,9 @@ GET_SPR_WK_ADDR:
     JR Z,GET_SPR_WK_ADDR_EXIT       ; A=0ならそのまま終了する
 
     ; ■オフセット値算出
-    ; DEレジスタにA*16を求める
-    DEC A
+    ; HLレジスタに(A-1)*16を求める
+    DEC A                           ; INDEX値はDJNZループに使用されているBレジスタを想定しているため、
+                                    ; デクリメントしておく
     LD H,0                          ; HL=A
     LD L,A
 
@@ -64,11 +104,8 @@ GET_SPR_WK_ADDR:
     ADD HL,HL
     ADD HL,HL
 
-    LD D,H                          ; HL -> DE
-    LD E,L
-
     ; ■スプライトキャラクターワークテーブルのアドレス算出
-    LD HL,SPR_CHR_WK_TBL            ; HL=スプライトキャラクターワークテーブルの先頭アドレス
+    LD DE,SPR_CHR_WK_TBL            ; DE <- スプライトキャラクターワークテーブルの先頭アドレス
     ADD HL,DE                       ; HL=HL+DE
 
     PUSH HL                         ; HL -> IX
@@ -105,20 +142,16 @@ SPRITE_MOVE:
     LD A,(IX+8)                     ; A <- 移動量データ
     CALL CALCULATE_MOVE_VALUE       ; 移動量計算
 
-;    LD B,H
-;    LD C,L
-;    LD H,(IX+2)                     ; HL <- Y座標
-;    LD L,(IX+1)
     LD B,(IX+2)                     ; BC <- Y座標
     LD C,(IX+1)
     ADC HL,BC                       ; HL=HL+BC
 
     ; ■Y座標画面下限チェック
     LD A,H                          ; A <- Y座標(整数部)
-    CP 191-24                       ; 画面下限を超えたか
+    CP 192-8-16                     ; 画面下限を超えたか
     JR C,SPRITE_MOVE_L0             ; キャリーフラグがONの場合は画面内なのでSPRITE_MOVE_L0へ
  
-    LD H,191-24                     ; Y座標(整数部)=(191-16)
+    LD H,192-8-16                   ; Y座標(整数部)=(192-8-16)
     LD L,0                          ; Y座標(小数部)=0
     JR C,SPRITE_MOVE_L1             ; 上限の判定は不要なので次のチェックへ
 
@@ -140,25 +173,21 @@ SPRITE_MOVE_L1:
     LD A,(IX+8)                     ; A <- 移動量データ
     CALL CALCULATE_MOVE_VALUE       ; 移動量計算
 
-;    LD B,H
-;    LD C,L
-;    LD H,(IX+4)                     ; HL <- X座標
-;    LD L,(IX+3)
     LD B,(IX+4)                     ; BC <- X座標
     LD C,(IX+3)
     ADC HL,BC                       ; HL=HL+BC
 
     ; ■X座標画面端チェック
     LD A,H                          ; 座標値チェック
-    CP 255-16                       ; A=A-(255-16)
+    CP 256-16                       ; A=A-(256-16)
     JR C,SPRITE_MOVE_L2             ; キャリーフラグがONの場合は画面内なのでSPRITE_MOVE_L2へ
 
     ; ■一旦右端として座標値を設定する
-    LD H,255-16                     ; X座標(整数部)=255-15
+    LD H,256-16                     ; X座標(整数部)=256-16
     LD L,0                          ; X座標(小数部)=0
 
     OR A
-    CP 255-7                        ; 最大移動量を4と仮定した比較
+    CP 256-8                        ; 最大移動量を4と仮定した比較
     JR C,SPRITE_MOVE_L2             ; キャリーフラグがOFF(=画面左部にはみ出てた場合)はHはそのままで良いのでSPRITE_MOVE_L2へ
 
     LD H,0                          ; X座標(整数部)=0
@@ -320,13 +349,13 @@ ADD_CHARACTER:
 
     LD B,MAX_CHR_CNT                ; B=最大キャラクター数
     LD HL,SPR_CHR_WK_TBL            ; HL <- スプライトキャラクターワークテーブル
+    LD DE,16                        ; アドレス増分
 
 ADD_CHARACTER_L1:
     LD A,(HL)                       ; A <- キャラクター番号
     OR A
     JR Z,ADD_CHARACTER_L2           ; キャラクター番号がゼロなら登録処理へ
 
-    LD DE,16
     ADD HL,DE                       ; HL=HL+16
     DJNZ ADD_CHARACTER_L1
 
@@ -340,7 +369,9 @@ ADD_CHARACTER_L2:
     POP AF                          ; AFレジスタ(=キャラクター番号)をスタックから復元
     DEC A
     LD HL,CHARACTER_INIT_TABLE      ; HL <- キャラクター初期化テーブルのアドレス
-    CALL TBL_JP
+    CALL TBL_JP                     ; 各キャラクタの初期処理を呼び出す
+                                    ; 各初期処理では、IXレジスタの指すアドレスに
+                                    ; 各値を設定していく
 
 ADD_CHARACTER_EXIT:
     POP BC

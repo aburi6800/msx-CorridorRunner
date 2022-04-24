@@ -7,38 +7,42 @@
 ; ====================================================================================================
 SECTION code_user
 
-    PLAYERMODE_CONTROL:             EQU $00
-    PLAYERMODE_LEFTTURN:            EQU $01
-    PLAYERMODE_RIGHTTURN:           EQU $02
-    PLAYERMODE_CHARGE:              EQU $03
-    PLAYERMODE_MOVE:                EQU $04
-    PLAYERMODE_MISS:                EQU $05
-    PLAYERMODE_EXPLOSION:           EQU $06
+CHRNO_PLAYER1:                      EQU 1       ; キャラクター番号
+CHRNO_PLAYER2:                      EQU 2       ; キャラクター番号
+
+; ■プレイヤー状態の定数
+PLAYERMODE_CONTROL:                 EQU $00
+PLAYERMODE_LEFTTURN:                EQU $01
+PLAYERMODE_RIGHTTURN:               EQU $02
+PLAYERMODE_CHARGE:                  EQU $03
+PLAYERMODE_MOVE:                    EQU $04
+PLAYERMODE_MISS:                    EQU $05
+PLAYERMODE_EXPLOSION:               EQU $06
 
 ; ====================================================================================================
 ; プレイヤー初期化
 ; ====================================================================================================
 INIT_PLAYER:
-    ; キャラクター番号2にキャラクター番号1の内容をコピーする
+    LD (IX),CHRNO_PLAYER1           ; キャラクター番号=プレイヤー(1)
+
+    ; キャラクター番号1にキャラクター番号2の内容をコピーする
     ; 現在のIXは転送先(DE)に設定
-    ; キャラクター番号1のワークアドレスを転送元(HL)に設定
-    ; 転送サイズは16バイト
+    ; のワークアドレスを転送元(HL)に設定
     PUSH IX
     PUSH IX
 
-    LD A,1
+    LD A,1                          ; IX <- キャラクター番号2のワークアドレス
     CALL GET_SPR_WK_ADDR
     PUSH IX
-    POP HL
-    POP DE
-    LD BC,$0010
-
-    LDIR
+    POP HL                          ; IX(転送元アドレス) -> HL
+    POP DE                          ; DE <- 元のキャラクター番号1のワークアドレス(スタックから取得)
+    LD BC,$0010                     ; 転送サイズ=16byte
+    LDIR                            ; ブロック転送
 
     POP IX
-    LD (IX),1                       ; キャラクター番号=プレイヤー
+    LD (IX),CHRNO_PLAYER1           ; キャラクター番号=プレイヤー(2)
     LD (IX+5),0                     ; スプライトパターンNo
-    LD (IX+6),15                    ; カラーコード
+    LD (IX+6),1                     ; カラーコード
 
     ; ■ワークエリア初期化
     XOR A
@@ -48,20 +52,33 @@ INIT_PLAYER_EXIT:
     RET
 
 INIT_PLAYER2:
-    LD (IX),2                       ; キャラクター番号=プレイヤー
+    ; スプライト2枚目用の初期化処理
+    ; ただしワークへの登録順は2枚目→1枚目の順のため、
+    ; ここでプレイヤーキャラクターのワーク初期化を行う
 
-    LD A,(PLAYER_INIT_VALUE_Y)
+    ; ■プレイヤー初期位置データのアドレス取得
+    LD HL,PLAYER_INIT_TBL
+    LD A,(ROUND)
+    DEC A
+    CALL GET_ADDR_TBL               ; DE=初期値データの取得先アドレス
+
+    LD (IX),CHRNO_PLAYER2           ; キャラクター番号=プレイヤー(2)
+
+    ; ■プレイヤー初期位置データ設定
+    LD A,(DE)
     LD (IX+1),0                     ; Y座標(小数部)
     LD (IX+2),A                     ; Y座標(整数部)
 
-    LD A,(PLAYER_INIT_VALUE_X)
+    INC DE
+    LD A,(DE)
     LD (IX+3),0                     ; X座標(小数部)
     LD (IX+4),A                     ; X座標(整数部)
 
     LD (IX+5),1                     ; スプライトパターンNo
-    LD (IX+6),5                     ; カラーコード
+    LD (IX+6),7                     ; カラーコード
 
-    LD A,(PLAYER_INIT_VALUE_DIRECTION)
+    INC DE
+    LD A,(DE)
     LD (IX+7),A                     ; 移動方向
     LD (IX+8),0                     ; 移動量
     LD (IX+9),0                     ; アニメーションテーブル番号
@@ -108,12 +125,13 @@ UPDATE_PLAYER_EXIT:
 
 
 UPDATE_PLAYER2:
-    ; キャラクター番号1にキャラクター番号2の内容をコピーする
+    ; キャラクター番号2にキャラクター番号1の内容をコピーする
     ; 現在のIXは転送先(DE)に設定
     PUSH IX
     PUSH IX
 
-    ; キャラクター番号1のワークアドレスを転送元(HL)に設定
+    ; スプライトキャラクターワークテーブルの2要素目のアドレスを転送元(HL)に設定
+    ; (2要素目＝キャラクター番号1のデータ)
     LD A,2
     CALL GET_SPR_WK_ADDR
     PUSH IX
@@ -125,10 +143,9 @@ UPDATE_PLAYER2:
 
     ; Y座標(小数部)からスプライトパターンNoまでの5バイトを転送する
     LD BC,$0005
-
     LDIR
 
-    ; プレイヤーのスプライトパターン番号は、1枚目のスプライトパターン番号+4とする
+    ; プレイヤーのスプライトパターン番号は、1枚目のスプライトパターン番号+1とする
     DEC DE
     LD A,(DE)
     ADD A,1
@@ -228,9 +245,10 @@ UPDATE_PLAYER_TURN_RIGHT:
 UPDATE_PLAYER_TURN_EXIT:
     LD (IX+7),A                     ; 方向を設定
 
-    DEC A                           ; (方向-1)をキャラクター番号(0～7)
-    ADD A,A                         ; A=A*2
-    LD (IX+5),A                     ; スプライトパターン番号を設定
+    ; ■(方向-1)*2をスプライトパターン番号にする(0,2,4,6,8,10,12,14)
+    DEC A
+    ADD A,A
+    LD (IX+5),A
 
     RET
 
@@ -513,6 +531,7 @@ SECTION bss_user
 ; ■プレイヤー初期値
 ; ラウンド開始時にラウンドデータから設定される
 ; Y座標
+PLAYER_INIT_VALUE:
 PLAYER_INIT_VALUE_Y:
     DEFS 1
 
