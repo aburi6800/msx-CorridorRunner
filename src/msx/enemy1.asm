@@ -2,71 +2,80 @@
 ;
 ; enemy1.asm
 ;
-; included from sprite.asm
+; included from enemy.asm
 ; requirement player.asm
 ;
 ; ====================================================================================================
 SECTION code_user
 
+CHRNO_ENEMY1:           EQU 3       ; キャラクター番号
+
 ; ====================================================================================================
 ; テキ1初期化
 ; ====================================================================================================
 INIT_ENEMY1:
-    LD (IX),2                       ; キャラクター番号=テキ1
+    LD HL,(ENEMY_PARAM_ADDR)        ; HL <- パラメータのアドレス
+    LD (IX),CHRNO_ENEMY1            ; キャラクター番号=テキ1
 
-INIT_ENEMY1_L2:
     ; ■Y座標設定
-    CALL GET_RND                    ; 乱数取得(0〜255)
-    SUB A,16                        ; Y座標を最低でも16にする措置
-                                    ; - Aが16未満だったら$EF～になる
-    CP 192-16                       ; A=A-192-16
-    JR NC,INIT_ENEMY1_L2            ; Aが16～192の範囲外だったら再度乱数取得
-    LD H,A
-    LD L,0
-    LD (IX+1),L                     ; Y座標(下位)
-    LD (IX+2),H                     ; Y座標(上位)
+    LD A,(HL)
+    CP $FF
+    JR Z,INIT_ENEMY1_L1             ; $FFならランダム設定とする
+    JP INIT_ENEMY1_L2
+
+INIT_ENEMY1_L1:
+    CALL GET_RND_SPR_Y              ; A <- Y座標(ランダム)
+INIT_ENEMY1_L2:
+    LD (IX+1),0                     ; Y座標(下位)
+    LD (IX+2),A                     ; Y座標(上位)
+
+    ; ■X座標設定
+    INC HL
+    LD A,(HL)
+    CP $FF
+    JR Z,INIT_ENEMY1_L3
+    JP INIT_ENEMY1_L4
 
 INIT_ENEMY1_L3:
-    ; ■X座標設定
-    CALL GET_RND                    ; 乱数取得(0〜255)
-    CP 255-16                       ; A=A-(255-16)
-    JR NC,INIT_ENEMY1_L3            ; Aが(255-16)を超えていたら再度乱数取得
-    LD H,A
-    LD L,0
-    LD (IX+3),L                     ; X座標(下位)
-    LD (IX+4),H                     ; X座標(上位)
+    CALL GET_RND_SPR_X              ; A <- X座標(ランダム)
+INIT_ENEMY1_L4:
+    LD (IX+3),0                     ; X座標(下位)
+    LD (IX+4),A                     ; X座標(上位)
 
     ; ■パターンNo設定
     LD (IX+5),3                     ; パターンNo=3(テキ1)
     
-INIT_ENEMY1_L4:
+INIT_ENEMY1_L5:
     ; ■カラーコード設定
-    CALL GET_RND                    ; 乱数取得(0〜255)
-    AND 15                          ; 取得した乱数から0〜15の値を取得する
-    ADD A,2                         ; A=A+2(カラーコード0,1を除外)
-    CP 15                           ; Aが15を超えていたら再度乱数取得
-    JR NC,INIT_ENEMY1_L4 
-    LD (IX+6),A                     ; カラーコード
+    LD (IX+6),$B                     ; カラーコード
 
     ; ■方向設定
+    INC HL
+    LD A,(HL)
+    CP $FF
+    JR Z,INIT_ENEMY1_L6
+    JP INIT_ENEMY1_L7
+
+INIT_ENEMY1_L6:
     CALL GET_RND                    ; 乱数取得(0〜255)
     AND @00000111                   ; 取得した乱数から0〜7の値を取得する
     ADD A,2                         ; A=A+2
     AND @00001110                   ; 下位1ビットを0にする(=2,4,6,8の値にする)
+INIT_ENEMY1_L7:
     LD (IX+7),A                     ; 方向
 
     ; ■キャラクタアニメーションテーブル番号設定
     ; 移動方向が1～4は右向き(ANIM_PTN_ENEMY1)
-    ;          5～8は左向き(ANIM_PTN_ENEMY2)を設定する
+    ;           5～8は左向き(ANIM_PTN_ENEMY2)を設定する
     CP 5
-    JR NC,INIT_ENEMY1_L5            ; 5～8はキャリーフラグが立たないのでENEMY_BOUND_L5へ
+    JR NC,INIT_ENEMY1_L8            ; 5～8はキャリーフラグが立たないのでENEMY_BOUND_L5へ
 
     ; 右向きの設定
     LD (IX+8),1                     ; アニメーションテーブル番号=1(ANIM_PTN_ENEMY1_R)
     LD (IX+9),0                     ; アニメーションカウンタ=0
-    JR INIT_ENEMY1_EXIT
+    RET
 
-INIT_ENEMY1_L5:
+INIT_ENEMY1_L8:
     ; 左向きの設定
     LD (IX+8),2                     ; アニメーションテーブル番号=2(ANIM_PTN_ENEMY1_L)
     LD (IX+9),0                     ; アニメーションカウンタ=0
@@ -81,8 +90,8 @@ INIT_ENEMY1_EXIT:
 UPDATE_ENEMY1:
     ; ■移動
     CALL SPRITE_MOVE                ; スプライトキャラクター移動処理
+    CALL ENEMY_BOUND                ; テキバウンド処理
     CALL SPRITE_ANIM                ; スプライトパターン番号更新
-    CALL ENEMY_BOUND                ; ボールバウンド処理
 
     ; ■ヒット判定
     CALL IS_PLAYER_MISS
@@ -104,7 +113,7 @@ UPDATE_ENEMY1_L1:
     RET 
 
 ; ----------------------------------------------------------------------------------------------------
-; 敵バウンド処理
+; テキバウンド処理
 ; ----------------------------------------------------------------------------------------------------
 ENEMY_BOUND:
     ; ■移動方向のアドレスをHLレジスタに設定
@@ -113,99 +122,117 @@ ENEMY_BOUND:
     LD DE,7                         ; HL=HL+7
     ADD HL,DE                       ; HL=移動方向のアドレス
 
+    ; ■テキバウンド処理（垂直方向）
+    CALL ENEMY_BOUND_VERTICAL
+
+    ; ■テキバウンド処理（水平方向）
+    CALL ENEMY_BOUND_HOLIZONTAL
+
+;ENEMY_BOUND_L5:
+;    ; ■キャラクタアニメーションテーブル番号設定
+;    ; 移動方向が1～4は右向き(ANIM_PTN_ENEMY1)
+;    ;          5～8は左向き(ANIM_PTN_ENEMY2)を設定する
+;    LD A,(HL)                       ; A <- 移動方法
+;    CP 5
+;    JR NC,ENEMY_BOUND_L6            ; 5～8はキャリーフラグが立たないのでENEMY_BOUND_L4へ
+;
+;    INC HL
+;    LD (HL),1                       ; アニメーションテーブル番号=1(ANIM_PTN_ENEMY1)
+;    INC HL
+;    LD (HL),0                       ; アニメーションカウンタ=0
+;    JR ENEMY_BOUND_EXIT
+;
+;ENEMY_BOUND_L6:
+;    INC HL
+;    LD (HL),2                       ; アニメーションテーブル番号=2(ANIM_PTN_ENEMY2)
+;    INC HL
+;    LD (HL),0                       ; アニメーションカウンタ=0
+;
+ENEMY_BOUND_EXIT:
+    RET
+
+; ----------------------------------------------------------------------------------------------------
+; 敵バウンド処理（垂直方向）
+; IN  : IX = 対象キャラクターのスプライトキャラクターワークテーブルの先頭アドレス
+;       HL = 移動方向のアドレス
+; ----------------------------------------------------------------------------------------------------
+ENEMY_BOUND_VERTICAL:
     ; ■Y座標をDレジスタに取得
     LD D,(IX+2)                     ; D <- Y座標(整数部)
 
-ENEMY_BOUND_L1:
-    ; ■Y座標が上端か調べる
+    ; ■画面上端チェック
     LD A,D
-    CP 16+1
-    JR NC,ENEMY_BOUND_L2            ; 画面上端でなければ画面下端チェックへ
+    CP 8+1                          ; Y座標が8以下だと、ここでキャリーが立つ
+    JR NC,ENEMY_BOUND_VERTICAL_L1   ; 画面上端でなければ画面下端チェックへ
 
     ; ■Y座標が上端の場合の跳ね返りの方向決定
-    ; - V=2の時：V=4
-    ; - V=8の時：V=6
-    LD A,(HL)                       ; A <- 今の移動方向
-    LD (HL),4                       ; まずは次の移動方向を4とする
-    CP 2
-    JR Z,ENEMY_BOUND_L3             ; 移動方向=2の場合はこのままでいいので、画面左端チェックへ
+    ; - V=DIRECTION_UPRIGHT の時：V = DIRECTION_DOWNRIGHT
+    ; - V=DIRECTION_UPLEFT の時 ：V = DIRECTION_DOWNLEFT
+    LD A,(HL)                       ; A <- 現在の移動方向
+    LD (HL),DIRECTION_DOWNRIGHT     ; まずは次の移動方向をDIRECTION_DOWNRIGHTとする
+    CP DIRECTION_UPRIGHT
+    RET Z
 
-    LD (HL),6                       ; V=8の時はここに来る、次の移動方向を6にする
-    JR ENEMY_BOUND_L3               ; 画面上端の場合が画面下端チェックは不要、画面左端チェックへ
+    LD (HL),DIRECTION_DOWNLEFT      ; 次の移動方向をDIRECTION_DOWNLEFTにする
+    RET
 
-ENEMY_BOUND_L2:
-    ; ■Y座標が画面下端か調べる
+ENEMY_BOUND_VERTICAL_L1:
+    ; ■画面下端チェック
     LD A,D
-    CP 191-16
-    JR NZ,ENEMY_BOUND_L3            ; 画面下端でなければ画面左端チェックへ
+    CP 192-8-16-1
+    RET C                           ; 画面下端でなければ終了
 
     ; ■Y座標が下端の場合の跳ね返りの方向決定
-    ; - V=4の時：V=2
-    ; - V=6の時：V=8
-    LD A,(HL)                       ; A <- 移動方向
-    LD (HL),2                       ; まずは2とする
-    CP 4
+    ; - V=DIRECTION_DOWNRIGHT の時：V = DIRECTION_UPRIGHT
+    ; - V=DIRECTION_DOWNLEFT の時 ：V = DIRECTION_UPLEFT
+    LD A,(HL)                       ; A <- 現在の移動方向
+    LD (HL),DIRECTION_UPRIGHT       ; まずは次の移動方向をDIRECTION_UPRIGHTとする
+    CP DIRECTION_DOWNRIGHT
+    RET Z                           ; 移動方向=DIRECTION_DOWNRIGHTの場合はこのままでいいので、終了
 
-    JR Z,ENEMY_BOUND_L3
-    LD (HL),8                       ; V=6の時はここに来る
+    LD (HL),DIRECTION_UPLEFT        ; 次の移動方向をDIRECTION_UPLEFTにする
+    RET
 
-ENEMY_BOUND_L3:
+; ----------------------------------------------------------------------------------------------------
+; 敵バウンド処理（水平方向）
+; IN  : IX = 対象キャラクターのスプライトキャラクターワークテーブルの先頭アドレス
+;       HL = 移動方向のアドレス
+; ----------------------------------------------------------------------------------------------------
+ENEMY_BOUND_HOLIZONTAL:
     ; ■X座標をDレジスタに取得
     LD D,(IX+4)                     ; D <- X座標(整数部)
 
     ; ■X座標が画面左端か調べる
     LD A,D
-    CP 0
-    JR NZ,ENEMY_BOUND_L4            ; 画面左端でなければ画面右端チェックへ
+    CP 0+1
+    JR NC,ENEMY_BOUND_HOLIZONTAL_L1 ; 画面左端でなければ画面右端チェックへ
 
-    ; ■跳ね返りの方向決定(X<0の時)
-    ; - V=8の時：V=2
-    ; - V=6の時：V=4
-    LD A,(HL)                       ; A <- 移動方向
-    LD (HL),2                       ; まずは2とする
-    CP 8
-    JR Z,ENEMY_BOUND_L5
+    ; ■跳ね返りの方向決定
+    ; - V=DIRECTION_UPLEFT の時  ：V = DIRECTION_UPRIGHT
+    ; - V=DIRECTION_DOWNLEFT の時：V = DIRECTION_DOWNRIGHT
+    LD A,(HL)                       ; A <- 現在の移動方向
+    LD (HL),DIRECTION_UPRIGHT       ; まずは次の移動方向をDIRECTION_UPRIGHTとする
+    CP DIRECTION_UPLEFT
+    RET Z
 
-    LD (HL),4                       ; V=6の時はここに来る
-    JR ENEMY_BOUND_L5
+    LD (HL),DIRECTION_DOWNRIGHT     ; 次の移動方向をDIRECTION_DOWNRIGHTにする
+    RET
 
-ENEMY_BOUND_L4:
+ENEMY_BOUND_HOLIZONTAL_L1:
     ; ■X座標が右端か調べる
     LD A,D
-    CP 255-16
-    JR NZ,ENEMY_BOUND_EXIT          ; 画面右端でなければ終了
+    CP 256-16-1
+    RET C                           ; 画面右端でなければ終了
 
-    ; ■跳ね返りの方向決定(X>239の時)
-    ; - V=2の時：V=8
-    ; - V=4の時：V=6
-    LD A,(HL)                       ; A <- 移動方向
-    LD (HL),8                       ; まずは2とする
-    CP 2
-    JR Z,ENEMY_BOUND_L5
+    ; ■跳ね返りの方向決定
+    ; - V = DIRECTION_UPRIGHT の時  ：V = DIRECTION_UPLEFT
+    ; - V = DIRECTION_DOWNRIGHT の時：V = DIRECTION_DOWNLEFT
+    LD A,(HL)                       ; A <- 現在の移動方向
+    LD (HL),DIRECTION_UPLEFT        ; まずは次の移動方向をDIRECTION_UPLEFTとする
+    CP DIRECTION_UPRIGHT
+    RET Z
 
-    LD (HL),6                       ; V=6の時はここに来る
-
-ENEMY_BOUND_L5:
-    ; ■キャラクタアニメーションテーブル番号設定
-    ; 移動方向が1～4は右向き(ANIM_PTN_ENEMY1)
-    ;          5～8は左向き(ANIM_PTN_ENEMY2)を設定する
-    LD A,(HL)                       ; A <- 移動方法
-    CP 5
-    JR NC,ENEMY_BOUND_L6            ; 5～8はキャリーフラグが立たないのでENEMY_BOUND_L4へ
-
-    INC HL
-    LD (HL),1                       ; アニメーションテーブル番号=1(ANIM_PTN_ENEMY1)
-    INC HL
-    LD (HL),0                       ; アニメーションカウンタ=0
-    JR ENEMY_BOUND_EXIT
-
-ENEMY_BOUND_L6:
-    INC HL
-    LD (HL),2                       ; アニメーションテーブル番号=2(ANIM_PTN_ENEMY2)
-    INC HL
-    LD (HL),0                       ; アニメーションカウンタ=0
-
-ENEMY_BOUND_EXIT:
+    LD (HL),DIRECTION_DOWNLEFT      ; 次の移動方向をDIRECTION_DOWNLEFTにする
     RET
 
 
@@ -217,6 +244,6 @@ SECTION rodata_user
 
 ; ■アニメーションパターン
 ANIM_PTN_ENEMY1_R:
-	DB 4,4,4,4,5,5,5,5,0
+	DB 2,2,2,2,6,6,6,6,10,10,10,10,14,14,14,14,0
 ANIM_PTN_ENEMY1_L:
-	DB 6,6,6,6,7,7,7,7,0
+	DB 2,2,2,2,6,6,6,6,10,10,10,10,14,14,14,14,0

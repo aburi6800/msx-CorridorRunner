@@ -7,7 +7,6 @@ Clone the project and execute the following command.
 ```
 $ mkdir build && cd build
 $ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/z88dk.cmake ..
-$ cd build
 $ make clean && make
 ```
 The `.rom` file is output to the project's `dist` directory.  

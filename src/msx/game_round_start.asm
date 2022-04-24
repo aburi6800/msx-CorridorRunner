@@ -20,46 +20,28 @@ ROUND_START:
     SBC HL,BC
     JR NZ,ROUND_START_EXIT
 
-    ; ■マップデータをワークにコピー
-    LD A,(ROUND)
-    CALL COPY_MAP_DATA
-
-    ; ■オフスクリーンリセット
-    CALL RESET_OFFSCREEN
-
-    ; ■オフスクリーン描画
-    CALL DRAW_MAP
+    ; ■フィールド初期化処理
+    ; ここの前にチップセットとBGMの初期設定をしておく…？
+    CALL INIT_FIELD
 
     ; ■スプライトキャラクターワークテーブル初期化
     CALL INIT_SPR_CHR_WK_TBL
 
     ; ■プレイヤー初期化
-    ; @ToDo:マップデータの後に、プレイヤーの初期情報を置いて、そこから設定するようにしたい
-    LD A,2
+    ; ゲームメインではdjnzでループするため、先に処理したいキャラクタを後に登録する
+    LD A,CHRNO_PLAYER2
     CALL ADD_CHARACTER
-    LD A,1
+    LD A,CHRNO_PLAYER1
     CALL ADD_CHARACTER
 
-    ; ■敵初期化
-    ; @ToDo:マップデータの後に、敵の初期情報を置いて、そこから設定するようにしたい
-;    LD B,5                          ; 敵の数
-ROUND_START_L1:
-;    LD A,2                          ; 2＝テキ1
-;    CALL ADD_CHARACTER
-;    DJNZ ROUND_START_L1             ; 敵の数だけ繰り返す
-
-;    LD B,5                          ; 敵の数
-ROUND_START_L2:
-;    LD A,3                          ; 3＝テキ2
-;    CALL ADD_CHARACTER
-;    DJNZ ROUND_START_L2             ; 敵の数だけ繰り返す
+    ; ■テキ初期化
+    CALL ENEMY_APPEARANCE_INIT
 
     ; ■ゲーム状態変更
     LD A,STATE_GAME_MAIN            ; ゲーム状態をゲームメインへ
     CALL CHANGE_STATE
 
     ; ■BGM再生
-;    LD HL,_02
     LD HL,(BGM_WK)
     CALL SOUNDDRV_BGMPLAY
 
