@@ -213,11 +213,15 @@ DRAW_INFO_L1:
     ADD HL,DE
 
     ; ■描画するキャラクターをチャージパワー値から判定
-    ; - チャージパワー値 < ループカウンタのとき
     LD A,(PLAYER_CHARGE_POWER)
+
+    ; - チャージパワー値 = 0 のとき
+    OR A
+    JR Z,DRAW_INFO_L3
+
+    ; - チャージパワー値 < ループカウンタのとき
     CP B                            
     JR C,DRAW_INFO_L3
-    JR Z,DRAW_INFO_L3
 
     LD A,B
     CP 11
