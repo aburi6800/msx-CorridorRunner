@@ -628,7 +628,7 @@ SECTION bss_user
 ; ====================================================================================================
 
 ; ■プレイヤー操作モード
-; 0=CONTROL,1=TURN LEFT,2=TURN RIGHT,3=CHARGE,4=MOVE,5=MISS
+; 0=CONTROL,1=TURN LEFT,2=TURN RIGHT,3=CHARGE,4=MOVE,5〜=MISS
 PLAYER_CONTROL_MODE:
     DEFS 1
 
