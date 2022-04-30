@@ -17,7 +17,9 @@ PLAYERMODE_RIGHTTURN:               EQU $02
 PLAYERMODE_CHARGE:                  EQU $03
 PLAYERMODE_MOVE:                    EQU $04
 PLAYERMODE_MISS:                    EQU $05
-PLAYERMODE_EXPLOSION:               EQU $06
+PLAYERMODE_EXPLOSION_INIT:          EQU $06
+PLAYERMODE_EXPLOSION:               EQU $07
+PLAYERMODE_EXPLOSION2:              EQU $08
 
 ; ====================================================================================================
 ; プレイヤー初期化
@@ -68,11 +70,13 @@ INIT_PLAYER2:
     LD A,(DE)
     LD (IX+1),0                     ; Y座標(小数部)
     LD (IX+2),A                     ; Y座標(整数部)
+    LD (PLAYER_POS),A               ; ワークに設定
 
     INC DE
     LD A,(DE)
     LD (IX+3),0                     ; X座標(小数部)
     LD (IX+4),A                     ; X座標(整数部)
+    LD (PLAYER_POS+1),A             ; ワークに設定
 
     LD (IX+5),1                     ; スプライトパターンNo
     LD (IX+6),7                     ; カラーコード
@@ -81,8 +85,9 @@ INIT_PLAYER2:
     LD A,(DE)
     LD (IX+7),A                     ; 移動方向
     LD (IX+8),0                     ; 移動量
-    LD (IX+9),0                     ; アニメーションテーブル番号
-    LD (IX+10),0                    ; アニメーションカウンタ
+    LD (IX+9),0                     ; アニメーションテーブルアドレス
+    LD (IX+10),0                    ; アニメーションテーブルアドレス
+    LD (IX+11),0                    ; アニメーションカウンタ
 
 INIT_PLAYER2_EXIT:
     RET
@@ -118,7 +123,9 @@ UPDATE_PLAYER_L1:
     JP UPDATE_PLAYER_CHARGE         ; チャージ
     JP UPDATE_PLAYER_MOVE           ; 移動
     JP UPDATE_PLAYER_MISS           ; ミス
+    JP UPDATE_PLAYER_EXPLOSION_INIT ; ミス（爆発初期化）
     JP UPDATE_PLAYER_EXPLOSION      ; ミス（爆発）
+    JP UPDATE_PLAYER_EXPLOSION2     ; ミス（爆発2）
 
 UPDATE_PLAYER_EXIT:
     RET
@@ -337,7 +344,11 @@ UPDATE_PLAYER_MOVE_L3:
     ; ■マップチップ判定
     ; ここでアイテムがあれば取得する
     LD B,(IX+2)                     ; B <- Y座標(整数部)
+    LD A,B
+    LD (PLAYER_POS),A               ; ワークに設定
     LD C,(IX+4)                     ; C <- X座標(整数部)
+    LD A,C
+    LD (PLAYER_POS+1),A             ; ワークに設定
     CALL GET_MAPDATA_OFFSET         ; A <- マップデータオフセット
     CALL GET_MAPDATA                ; A <- マップデータ
 
@@ -357,7 +368,11 @@ UPDATE_PLAYER_MOVE_END:
     ; ■マップチップ判定
     ; ここで床がなければミスにする
     LD B,(IX+2)                     ; B <- Y座標(整数部)
+    LD A,B
+    LD (PLAYER_POS),A               ; ワークに設定
     LD C,(IX+4)                     ; C <- X座標(整数部)
+    LD A,C
+    LD (PLAYER_POS+1),A             ; ワークに設定
     CALL GET_MAPDATA_OFFSET         ; A <- マップデータオフセット
     CALL GET_MAPDATA                ; A <- マップデータ
     OR A
@@ -447,11 +462,94 @@ UPDATE_PLAYER_MISS:
     RET
 
 ; ----------------------------------------------------------------------------------------------------
-; プレイヤーミス（爆発）サブルーチン
+; プレイヤーミス（爆発初期化）サブルーチン
 ; ----------------------------------------------------------------------------------------------------
-UPDATE_PLAYER_EXPLOSION:
+UPDATE_PLAYER_EXPLOSION_INIT:
+    ; ■BGM停止
+    CALL SOUNDDRV_STOP
+
+    ; ■ミスカウント初期化
+    LD A,30
+    LD (PLAYER_MISS_TIME_CNT),A
+
+    ; ■プレイヤー状態を爆発に変更
+    LD A,PLAYERMODE_EXPLOSION
+    LD (PLAYER_CONTROL_MODE),A
 
     RET
+
+; ----------------------------------------------------------------------------------------------------
+; プレイヤーミス（爆発）サブルーチン
+; 30flame経過まで待つ。
+; 30flame経過後は、スプライトキャラクターワークを初期化してバクハツを生成する
+; ----------------------------------------------------------------------------------------------------
+UPDATE_PLAYER_EXPLOSION:
+    ; ■ミスカウント減算
+    LD HL,PLAYER_MISS_TIME_CNT
+    DEC (HL)
+    RET NZ
+
+    ; ■プレイヤーの座標を画面外に設定
+    ;   バクハツ完了後の状態遷移までを行う必要があるため、
+    ;   プレイヤーは非表示で生かしておく
+    LD (IX+2),-16
+    LD (IX+4),-16
+
+    ; ■プレイヤー以外のスプライトキャラクターを除去
+    ;   ここ以降はプレイヤーのワークアドレス(IX)は参照できなくなるので注意
+    ;   1,2はプレイヤー固定なので対象外、3以降に対して除去していく
+    LD B,MAX_CHR_CNT
+UPDATE_PLAYER_EXPLOSION_L1:
+    LD A,B
+    CALL GET_SPR_WK_ADDR            ; IX <- 対象インデックスのスプライトキャラクターワークテーブルアドレス
+    LD A,(IX)                       ; キャラクター番号
+    SUB 3                           ; キャラクター番号 - 3
+    JR C,UPDATE_PLAYER_EXPLOSION_L11
+    CALL DEL_CHARACTER              ; スプライトキャラクターワークテーブルから除去
+UPDATE_PLAYER_EXPLOSION_L11:
+    DJNZ UPDATE_PLAYER_EXPLOSION_L1; 次が0になるまで繰り返し処理
+
+    ; ■バクハツのキャラクターを生成
+    LD B,4
+UPDATE_PLAYER_EXPLOSION_L2:
+    LD A,B
+    ADD A,A
+    LD (INIT_EXPLOSION_DIRECTION),A
+    LD A,CHRNO_EXPLOSION
+    CALL ADD_CHARACTER
+    DJNZ UPDATE_PLAYER_EXPLOSION_L2
+
+    ; ■SFX再生
+    LD HL,SFX_03
+    CALL SOUNDDRV_BGMPLAY
+
+    ; ■ミスカウント初期化
+    LD A,64
+    LD (PLAYER_MISS_TIME_CNT),A
+
+    ; ■プレイヤー状態を爆発2に変更
+    LD A,PLAYERMODE_EXPLOSION2
+    LD (PLAYER_CONTROL_MODE),A
+
+    RET
+
+
+; ----------------------------------------------------------------------------------------------------
+; プレイヤーミス（爆発2）サブルーチン
+; 64flame経過まで待つ。
+; 64flame経過後は、次のゲーム状態に遷移する。
+; ----------------------------------------------------------------------------------------------------
+UPDATE_PLAYER_EXPLOSION2:
+    ; ■ミスカウント減算
+    LD HL,PLAYER_MISS_TIME_CNT
+    DEC (HL)
+    LD A,(HL)
+    OR A
+    RET NZ
+
+;    ; ■プレイヤーミス時のゲーム状態変更
+;    CALL PLAYER_MISS_CHANGE_GAME_STATE
+
 
 ; ====================================================================================================
 ; プレイヤーミス後のゲーム状態変更処理
@@ -483,6 +581,7 @@ PLAYER_MISS_CHANGE_GAME_STATE_L1:
 
 ; ====================================================================================================
 ; プレイヤーミス状態かを判定して返却する
+; 呼び出し元では、CALL後にキャリーフラグを判定でも可(ON=ミス状態ではない、OFF=ミス状態)
 ; IN  : NONE
 ; OUT : A 0=ミス状態でない、1=ミス状態である
 ; ====================================================================================================
@@ -501,7 +600,7 @@ IS_PLAYER_MISS:
 ; OUT : NONE
 ; ====================================================================================================
 SET_PLAYER_MISS_EXPLOSION:
-    LD A,PLAYERMODE_EXPLOSION       ; プレイヤー操作状態を爆発に変更
+    LD A,PLAYERMODE_EXPLOSION_INIT  ; プレイヤー操作状態を爆発初期化に変更
     LD (PLAYER_CONTROL_MODE),A
     RET
 
@@ -527,21 +626,6 @@ SECTION bss_user
 ; ワークエリア
 ; プログラム起動時にcrtでゼロでramに設定される 
 ; ====================================================================================================
-
-; ■プレイヤー初期値
-; ラウンド開始時にラウンドデータから設定される
-; Y座標
-PLAYER_INIT_VALUE:
-PLAYER_INIT_VALUE_Y:
-    DEFS 1
-
-; X座標
-PLAYER_INIT_VALUE_X:
-    DEFS 1
-
-; 方向
-PLAYER_INIT_VALUE_DIRECTION:
-    DEFS 1
 
 ; ■プレイヤー操作モード
 ; 0=CONTROL,1=TURN LEFT,2=TURN RIGHT,3=CHARGE,4=MOVE,5=MISS

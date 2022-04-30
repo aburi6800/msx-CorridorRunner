@@ -8,7 +8,7 @@
 ; ====================================================================================================
 SECTION code_user
 
-CHRNO_ENEMY1:           EQU 3       ; キャラクター番号
+CHRNO_ENEMY1:           EQU 5       ; キャラクター番号
 
 ; ====================================================================================================
 ; テキ1初期化
@@ -20,12 +20,10 @@ INIT_ENEMY1:
     ; ■Y座標設定
     LD A,(HL)
     CP $FF
-    JR Z,INIT_ENEMY1_L1             ; $FFならランダム設定とする
-    JP INIT_ENEMY1_L2
+    JR NZ,INIT_ENEMY1_L1            ; $FF以外ならランダム設定しない
+    CALL GET_RND_SPR_Y              ; A <- Y座標(ランダム)
 
 INIT_ENEMY1_L1:
-    CALL GET_RND_SPR_Y              ; A <- Y座標(ランダム)
-INIT_ENEMY1_L2:
     LD (IX+1),0                     ; Y座標(下位)
     LD (IX+2),A                     ; Y座標(上位)
 
@@ -33,55 +31,43 @@ INIT_ENEMY1_L2:
     INC HL
     LD A,(HL)
     CP $FF
-    JR Z,INIT_ENEMY1_L3
-    JP INIT_ENEMY1_L4
-
-INIT_ENEMY1_L3:
+    JR NZ,INIT_ENEMY1_L2            ; $FF以外ならランダム設定しない
     CALL GET_RND_SPR_X              ; A <- X座標(ランダム)
-INIT_ENEMY1_L4:
+
+INIT_ENEMY1_L2:
     LD (IX+3),0                     ; X座標(下位)
     LD (IX+4),A                     ; X座標(上位)
 
-    ; ■パターンNo設定
-    LD (IX+5),3                     ; パターンNo=3(テキ1)
-    
-INIT_ENEMY1_L5:
-    ; ■カラーコード設定
-    LD (IX+6),$B                     ; カラーコード
+    LD (IX+5),3                     ; スプライトパターンNo=3(テキ1)    
+    LD (IX+6),$0B                   ; カラーコード
 
     ; ■方向設定
     INC HL
     LD A,(HL)
     CP $FF
-    JR Z,INIT_ENEMY1_L6
-    JP INIT_ENEMY1_L7
-
-INIT_ENEMY1_L6:
+    JR NZ,INIT_ENEMY1_L3            ; $FF以外ならランダム設定しない
     CALL GET_RND                    ; 乱数取得(0〜255)
     AND @00000111                   ; 取得した乱数から0〜7の値を取得する
     ADD A,2                         ; A=A+2
     AND @00001110                   ; 下位1ビットを0にする(=2,4,6,8の値にする)
-INIT_ENEMY1_L7:
+
+INIT_ENEMY1_L3:
     LD (IX+7),A                     ; 方向
+    LD (IX+8),1                     ; 移動量
+    LD (IX+10),0                    ; アニメーションカウンタ=0
 
     ; ■キャラクタアニメーションテーブル番号設定
-    ; 移動方向が1～4は右向き(ANIM_PTN_ENEMY1)
-    ;           5～8は左向き(ANIM_PTN_ENEMY2)を設定する
+    ; 移動方向が1～4は右向き(ANIM_PTN_ENEMY1_R)
+    ;           5～8は左向き(ANIM_PTN_ENEMY1_L)を設定する
+    LD HL,ANIM_PTN_ENEMY1_R         ; 右向きの設定
     CP 5
-    JR NC,INIT_ENEMY1_L8            ; 5～8はキャリーフラグが立たないのでENEMY_BOUND_L5へ
+    JR C,INIT_ENEMY1_L4             ; 5～8以外はキャリーフラグが立つのでINIT_ENEMY_L4へ    
+    LD HL,ANIM_PTN_ENEMY1_L         ; 左向きの設定
 
-    ; 右向きの設定
-    LD (IX+8),1                     ; アニメーションテーブル番号=1(ANIM_PTN_ENEMY1_R)
-    LD (IX+9),0                     ; アニメーションカウンタ=0
-    RET
-
-INIT_ENEMY1_L8:
-    ; 左向きの設定
-    LD (IX+8),2                     ; アニメーションテーブル番号=2(ANIM_PTN_ENEMY1_L)
-    LD (IX+9),0                     ; アニメーションカウンタ=0
-
-INIT_ENEMY1_EXIT:
-	RET
+INIT_ENEMY1_L4:
+    LD (IX+9),L                     ; アニメーションテーブルのアドレス(L)
+    LD (IX+10),H                    ; アニメーションテーブルのアドレス(H)
+ 	RET
 
 
 ; ====================================================================================================
@@ -105,10 +91,6 @@ UPDATE_ENEMY1:
 
     CALL SET_PLAYER_MISS_EXPLOSION  ; プレイヤーミス状態（爆発）に設定
 
-    ; ■SFX再生
-;    LD HL,SFX_02
-;    CALL SOUNDDRV_SFXPLAY
-
 UPDATE_ENEMY1_L1:
     RET 
 
@@ -128,27 +110,6 @@ ENEMY_BOUND:
     ; ■テキバウンド処理（水平方向）
     CALL ENEMY_BOUND_HOLIZONTAL
 
-;ENEMY_BOUND_L5:
-;    ; ■キャラクタアニメーションテーブル番号設定
-;    ; 移動方向が1～4は右向き(ANIM_PTN_ENEMY1)
-;    ;          5～8は左向き(ANIM_PTN_ENEMY2)を設定する
-;    LD A,(HL)                       ; A <- 移動方法
-;    CP 5
-;    JR NC,ENEMY_BOUND_L6            ; 5～8はキャリーフラグが立たないのでENEMY_BOUND_L4へ
-;
-;    INC HL
-;    LD (HL),1                       ; アニメーションテーブル番号=1(ANIM_PTN_ENEMY1)
-;    INC HL
-;    LD (HL),0                       ; アニメーションカウンタ=0
-;    JR ENEMY_BOUND_EXIT
-;
-;ENEMY_BOUND_L6:
-;    INC HL
-;    LD (HL),2                       ; アニメーションテーブル番号=2(ANIM_PTN_ENEMY2)
-;    INC HL
-;    LD (HL),0                       ; アニメーションカウンタ=0
-;
-ENEMY_BOUND_EXIT:
     RET
 
 ; ----------------------------------------------------------------------------------------------------

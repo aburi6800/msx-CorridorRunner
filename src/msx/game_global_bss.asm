@@ -35,3 +35,7 @@ TARGET_LEFT:
 ; ■残機
 LEFT:
     DEFS 1
+
+; ■プレイヤー座標(Y,X)
+PLAYER_POS:
+    DEFS 2

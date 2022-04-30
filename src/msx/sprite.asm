@@ -5,6 +5,11 @@
 ; included from main.asm
 ;
 ; ====================================================================================================
+
+INCLUDE "player.asm"
+INCLUDE "enemy.asm"
+INCLUDE "explosion.asm"
+
 SECTION code_user
 
 ; ■移動方向の定数
@@ -17,11 +22,6 @@ DIRECTION_DOWNLEFT:                 EQU 6
 DIRECTION_LEFT:                     EQU 7
 DIRECTION_UPLEFT:                   EQU 8
 
-INCLUDE "player.asm"
-INCLUDE "enemy.asm"
-INCLUDE "enemy1.asm"
-INCLUDE "enemy2.asm"
-
 
 ; ====================================================================================================
 ; スプライトキャラクターワークテーブル初期化
@@ -32,8 +32,21 @@ INIT_SPR_CHR_WK_TBL:
 INIT_SPR_CHR_WK_TBL_L1:
     LD A,B
     CALL GET_SPR_WK_ADDR            ; スプライトキャラクターワークテーブルのアドレスを取得
+    CALL INIT_SPR_CHR_WK            ; スプライトキャラクターワーク初期化
+    DJNZ INIT_SPR_CHR_WK_TBL_L1
 
-    LD (IX),0                       ; キャラクター番号
+INIT_SPR_CHR_WK_TBL_EXIT:
+    RET 
+
+
+; ====================================================================================================
+; スプライトキャラクターワーク初期化
+; IN  : IX = 対象のワークアドレス（GET_SPR_WK_ADDRで取得済を前提）
+; OUT : none
+; ====================================================================================================
+INIT_SPR_CHR_WK:
+
+    LD (IX),$FF                     ; キャラクター番号
     LD (IX+1),0                     ; Y座標(小数)
     LD (IX+2),-16                   ; Y座標(整数)
     LD (IX+3),0                     ; X座標(小数)
@@ -41,12 +54,12 @@ INIT_SPR_CHR_WK_TBL_L1:
     LD (IX+5),0                     ; スプライトパターンNo
     LD (IX+5),0                     ; カラーコード
     LD (IX+7),0                     ; 移動方向
-    LD (IX+8),0                     ; アニメーションテーブル番号
-    LD (IX+9),0                     ; アニメーションカウンタ
+    LD (IX+8),0                     ; 移動量
+    LD (IX+8),0                     ; アニメーションテーブルアドレス
+    LD (IX+9),0                     ; アニメーションテーブルアドレス
+    LD (IX+10),0                    ; アニメーションカウンタ
 
-    DJNZ INIT_SPR_CHR_WK_TBL_L1
-
-INIT_SPR_CHR_WK_TBL_EXIT:
+INIT_SPR_CHR_WK_EXIT:
     RET 
 
 
@@ -57,8 +70,6 @@ INIT_SPR_CHR_WK_TBL_EXIT:
 ; ====================================================================================================
 GET_RND_SPR_Y:
     CALL GET_RND                    ; 乱数取得(0〜255)
-;    SUB A,8                         ; Y座標を最低でも8にする措置
-;                                    ; - Aが8未満だったら$EF～になる
     CP 192-8-16                     ; A=A-192-8-16
     JR NC,GET_RND_SPR_Y             ; Aが16～192の範囲外だったら再度乱数取得
     ADD A,8                         ; オフセット加算
@@ -85,6 +96,8 @@ GET_RND_SPR_X:
 ; USE : DE, HL
 ; ====================================================================================================
 GET_SPR_WK_ADDR:
+    PUSH AF
+
     ; ■スプライトキャラクターワークテーブルの先頭アドレス
     LD IX,SPR_CHR_WK_TBL            ; IXに設定
 
@@ -112,6 +125,7 @@ GET_SPR_WK_ADDR:
     POP IX
 
 GET_SPR_WK_ADDR_EXIT:
+    POP AF
     RET 
 
 
@@ -137,10 +151,10 @@ SPRITE_MOVE:
     POP IY
 
     ; ■Y座標計算
-    LD H,(IY+1)                     ; BC <- 移動量データ(Y方向)
+    LD H,(IY+1)                     ; HL <- 移動量データ小数部(Y方向)
     LD L,(IY)
-    LD A,(IX+8)                     ; A <- 移動量データ
-    CALL CALCULATE_MOVE_VALUE       ; 移動量計算
+    LD A,(IX+8)                     ; A <- 移動量増分
+;    CALL CALCULATE_MOVE_VALUE       ; 移動量計算
 
     LD B,(IX+2)                     ; BC <- Y座標
     LD C,(IX+1)
@@ -168,10 +182,10 @@ SPRITE_MOVE_L1:
     LD (IX+1),L                     ; L -> Y座標(小数部)
 
     ; ■X座標計算
-    LD H,(IY+3)                     ; BC <- 移動量データ(X方向)
+    LD H,(IY+3)                     ; HL <- 移動量データ(X方向)
     LD L,(IY+2)
-    LD A,(IX+8)                     ; A <- 移動量データ
-    CALL CALCULATE_MOVE_VALUE       ; 移動量計算
+    LD A,(IX+8)                     ; A <- 移動量増分
+;    CALL CALCULATE_MOVE_VALUE       ; 移動量計算
 
     LD B,(IX+4)                     ; BC <- X座標
     LD C,(IX+3)
@@ -216,11 +230,21 @@ CALCULATE_MOVE_VALUE:
 
  ALCULATE_MOVE_VALUE_MULTIPLE:
     ; ■Aレジスタの値をBレジスタに設定
-    POP BC
+    POP AF
+    AND %01111111
+
+    OR A
+    RET Z
+
+    ; ■Aレジスタの値をBレジスタに設定
+    LD B,A
 
 CALCULATE_MOVE_VALUE_MULTIPLE_L1:
-    ADD HL,HL
-
+;    ADD HL,HL
+    SRA H
+    JR NC,CALCULATE_MOVE_VALUE_MULTIPLE_L2
+    INC L
+CALCULATE_MOVE_VALUE_MULTIPLE_L2:
     DJNZ CALCULATE_MOVE_VALUE_MULTIPLE_L1
 
     RET
@@ -230,13 +254,18 @@ CALCULATE_MOVE_VALUE_DIVIDE:
     POP AF
     AND %01111111
 
+    OR A
+    RET Z
+
     ; ■Aレジスタの値をBレジスタに設定
     LD B,A
 
 CALCULATE_MOVE_VALUE_DIVIDE_L1:
     SRL H
-    RR L
-
+    JR NC,CALCULATE_MOVE_VALUE_DIVIDE_L2
+;    RR L
+    DEC L
+CALCULATE_MOVE_VALUE_DIVIDE_L2:
     DJNZ CALCULATE_MOVE_VALUE_DIVIDE_L1
 
     RET
@@ -289,15 +318,12 @@ HIT_CHECK_EXIT:
 ; スプライトパターン番号更新サブルーチン
 ; ====================================================================================================
 SPRITE_ANIM:
-    ; ■アニメーションパターンテーブルのアドレス取得
-    LD HL,ANIM_PTN_TBL              ; HL <- アニメーションパターンアドレステーブル
-    LD A,(IX+8)                     ; A <- アニメーションテーブル番号
-    CALL GET_ADDR_TBL               ; アドレステーブルからデータ取得
-    LD HL,DE                        ; HL <- DE
-                                    ; - DEはパターンリセット用に保持しておくためにEXしない
+    ; ■アニメーションテーブルのアドレスを取得
+    LD L,(IX+9)
+    LD H,(IX+10)
 
     ; ■アニメーションカウンタからアニメーションパターン番号のアドレス算出
-    LD A,(IX+9)                     ; A <- アニメーションカウンタ
+    LD A,(IX+11)                     ; A <- アニメーションカウンタ
     INC A                           ; アニメーションカウンタを１つ進める
     PUSH AF                         ; アニメーションカウンタは一旦スタックに保存
 
@@ -315,7 +341,7 @@ SPRITE_ANIM:
 	LD (IX+5),A		                ; A -> スプライトパターン番号
 
     POP AF                          ; アニメーションカウンタをスタックから取得
-    LD (IX+9),A			            ; アニメーションカウンタ保存
+    LD (IX+11),A                    ; アニメーションカウンタ保存
     JR SPRITE_ANIM_EXIT
 
 SPRITE_ANIM_L2:
@@ -326,7 +352,7 @@ SPRITE_ANIM_L2:
 
     POP AF                          ; アニメーションカウンタをスタックから取得
     XOR A                           ; A=0
-    LD (IX+9),A			            ; アニメーションカウンタ保存
+    LD (IX+11),A			        ; アニメーションカウンタ保存
 
 SPRITE_ANIM_EXIT:
     RET
@@ -355,6 +381,8 @@ ADD_CHARACTER_L1:
     LD A,(HL)                       ; A <- キャラクター番号
     OR A
     JR Z,ADD_CHARACTER_L2           ; キャラクター番号がゼロなら登録処理へ
+    CP $FF
+    JR Z,ADD_CHARACTER_L2           ; キャラクター番号が$FFでも登録処理へ
 
     ADD HL,DE                       ; HL=HL+16
     DJNZ ADD_CHARACTER_L1
@@ -380,16 +408,31 @@ ADD_CHARACTER_EXIT:
 
 ; ====================================================================================================
 ; キャラクター削除サブルーチン
-; IN  : A = 対象のスプライトキャラクターワークテーブルのインデックス
+; IN  : IX = 対象のスプライトキャラクターワークテーブルの先頭アドレス
 ; ====================================================================================================
 DEL_CHARACTER:
-    ; ■対象のキャラクター番号からスプライトキャラクターワークテーブルのアドレスを取得
-    CALL GET_SPR_WK_ADDR
-
-    ; ■スプライトキャラクターワークテーブルの属性をゼロにする
-    LD (IX),0                       
+    ; ■属性を$FFにする
+    LD (IX),$FF
+    ; ■座標値を画面外に設定
+    LD (IX+2),-16
+    LD (IX+4),-16
 
 DEL_CHARACTER_EXIT:
+    RET
+
+
+; ====================================================================================================
+; キャラクターワークテーブル除去サブルーチン
+; 属性が$FFのものについて、$00に更新する
+; この処理を単独で実行してもスプライトの表示は残るので注意。
+; DEL_CHARACTERを使用すること。
+; IN  : IX = 対象のスプライトキャラクターワークテーブルの先頭アドレス
+; ====================================================================================================
+REMOVE_CHARACTER:
+    ; ■属性を$00にする
+    LD (IX),$00
+
+REMOVE_CHARACTER_EXIT:
     RET
 
 
@@ -467,9 +510,8 @@ MAX_CHR_CNT:            EQU 32      ; 最大キャラクター数
 SPR_CHR_WK_SIZE:        EQU 16      ; スプライトキャラクターワークエリアのサイズ
 
 ; ■移動量データ
+; 上位：、下位：小数部の加算値
 ; Y座標、X座標の移動量をSTICKの値の順に定義
-; 計算時の座標値は10倍とし、計算後の座標は1/10とする必要がある
-; STICKの値は、キーボードとパッドの入力の OR を取る
 ; 9以降は両方同時に入力された時のためのダミーデータ(最大15となる)
 MOVE_DATA:
     DW $0000,$0000                  ; STICK=0(未入力)
@@ -490,24 +532,24 @@ MOVE_DATA:
     DW $0000,$0000                  ; STICK=15
 
 ; ■キャラクター初期化テーブル
+;   キャラクター番号に対応
 CHARACTER_INIT_TABLE:
     DW INIT_PLAYER                  ; PLAYER
     DW INIT_PLAYER2                 ; PLAYER2
+    DW INIT_EXPLOSION               ; EXPLOSION
+    DW $0000                        ;
     DW INIT_ENEMY1                  ; ENEMY1
     DW INIT_ENEMY2                  ; ENEMY2
 
 ; ■キャラクターロジックテーブル
+;   キャラクター番号に対応
 CHARACTER_UPDATE_TABLE:
     DW UPDATE_PLAYER                ; PLAYER
     DW UPDATE_PLAYER2               ; PLAYER2
+    DW UPDATE_EXPLOSION             ; EXPLOSION
+    DW $0000                        ;
     DW UPDATE_ENEMY1                ; ENEMY1
     DW UPDATE_ENEMY2                ; ENEMY2
-
-; ■アニメーションパターンアドレステーブル
-ANIM_PTN_TBL:
-    DW ANIM_PTN_ENEMY1_R
-    DW ANIM_PTN_ENEMY1_L
-    DW ANIM_PTN_ENEMY2
 
 
 SECTION bss_user
@@ -525,10 +567,9 @@ SECTION bss_user
 ; +5:スプライトパターンNo(1～64)
 ; +6:カラーコード(0=非表示)
 ; +7:移動方向(STICKの値に対応)  
-; +8:移動量(ビット7＝0:左シフト、1:右シフト、ビット6〜0＝シフト量)
-; +9:アニメーションテーブル番号
-; +10:アニメーションカウンタ
-; +11:汎用
+; +8:移動量増分(ビット7＝0:左シフト、1:右シフト、ビット6〜0＝シフト量)
+; +9〜10:アニメーションテーブルアドレス
+; +11:アニメーションカウンタ
 ; +12:汎用
 ; +13:汎用
 ; +14:汎用
