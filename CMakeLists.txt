@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
-# target name "example.rom"
-project(example.rom C ASM)
+# target name "c-runner.rom"
+project(c-runner.rom C ASM)
 
 enable_language(ASM)
 
