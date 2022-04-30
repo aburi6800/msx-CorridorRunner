@@ -343,15 +343,7 @@ UPDATE_PLAYER_MOVE_L2:
 UPDATE_PLAYER_MOVE_L3:
     ; ■マップチップ判定
     ; ここでアイテムがあれば取得する
-    LD B,(IX+2)                     ; B <- Y座標(整数部)
-    LD A,B
-    LD (PLAYER_POS),A               ; ワークに設定
-    LD C,(IX+4)                     ; C <- X座標(整数部)
-    LD A,C
-    LD (PLAYER_POS+1),A             ; ワークに設定
-    CALL GET_MAPDATA_OFFSET         ; A <- マップデータオフセット
-    CALL GET_MAPDATA                ; A <- マップデータ
-
+    CALL UPDATE_PLAYER_MOVE_GET_MAPDATA ; A <- マップデータ
     CP 2
     JR NZ,UPDATE_PLAYER_MOVE_L4
 
@@ -367,14 +359,7 @@ UPDATE_PLAYER_MOVE_L4:
 UPDATE_PLAYER_MOVE_END:
     ; ■マップチップ判定
     ; ここで床がなければミスにする
-    LD B,(IX+2)                     ; B <- Y座標(整数部)
-    LD A,B
-    LD (PLAYER_POS),A               ; ワークに設定
-    LD C,(IX+4)                     ; C <- X座標(整数部)
-    LD A,C
-    LD (PLAYER_POS+1),A             ; ワークに設定
-    CALL GET_MAPDATA_OFFSET         ; A <- マップデータオフセット
-    CALL GET_MAPDATA                ; A <- マップデータ
+    CALL UPDATE_PLAYER_MOVE_GET_MAPDATA ; A <- マップデータ
     OR A
     JR NZ,UPDATE_PLAYER_MOVE_END_L2 ; マップデータがゼロでなければ、プレイヤー操作に状態遷移
 
@@ -399,6 +384,20 @@ UPDATE_PLAYER_MOVE_END_L2:
     ; ■プレイヤー操作に状態遷移
     LD A,PLAYERMODE_CONTROL
     LD (PLAYER_CONTROL_MODE),A
+    RET
+
+; ----------------------------------------------------------------------------------------------------
+; プレイヤー移動時のマップデータ取得サブルーチン
+; ----------------------------------------------------------------------------------------------------
+UPDATE_PLAYER_MOVE_GET_MAPDATA:
+    LD B,(IX+2)                     ; B <- Y座標(整数部)
+    LD A,B
+    LD (PLAYER_POS),A               ; ワークに設定
+    LD C,(IX+4)                     ; C <- X座標(整数部)
+    LD A,C
+    LD (PLAYER_POS+1),A             ; ワークに設定
+    CALL GET_MAPDATA_OFFSET         ; A <- マップデータオフセット
+    CALL GET_MAPDATA                ; A <- マップデータ
     RET
 
 ; ----------------------------------------------------------------------------------------------------
