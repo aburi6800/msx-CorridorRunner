@@ -135,11 +135,30 @@ GET_SPR_WK_ADDR_EXIT:
 ; @ToDo:IXレジスタの使用を最小限に抑えたい
 ; ====================================================================================================
 SPRITE_MOVE:
+
+    ; ■移動量増分を取得
+    LD A,(IX+8)                     ; D <- 移動量増分
+    OR A
+    RET Z                           ; 移動量増分=ゼロなら移動不要のため処理終了
+    CP $FF
+    JR NZ,SPRITE_MOVE_L1            ; 移動量増分<>$FFなら移動処理を行う
+
+    ; ■移動量1/2の処理    
+    LD A,(TICK1)                    ; TICKカウントを取得
+    AND @00000001                   ; 下位1ビットを取得
+    RET Z                           ; ゼロ(偶数フレーム)の時は処理終了
+
+SPRITE_MOVE_L1:
+    ; ■移動量増分をループカウンタとしてBレジスタに設定
+    LD B,A
+
+SPRITE_MOVE_L2:
     ; ■対象スプライトキャラクターの移動方向から移動量データのアドレス算出
     LD A,(IX+7)                     ; A=移動方向
     OR A                            ; 移動方向が0(=移動しない)場合は終了
-    JR Z,SPRITE_MOVE_EXIT
+    RET Z
 
+SPRITE_MOVE_L3:
     ; ■移動量データの取得
     RLCA                            ; A=A*2
     RLCA                            ; A=A*2、ここで移動量データのオフセットがAに設定される
@@ -153,30 +172,28 @@ SPRITE_MOVE:
     ; ■Y座標計算
     LD H,(IY+1)                     ; HL <- 移動量データ小数部(Y方向)
     LD L,(IY)
-    LD A,(IX+8)                     ; A <- 移動量増分
-;    CALL CALCULATE_MOVE_VALUE       ; 移動量計算
 
-    LD B,(IX+2)                     ; BC <- Y座標
-    LD C,(IX+1)
-    ADC HL,BC                       ; HL=HL+BC
+    LD D,(IX+2)                     ; DE <- Y座標
+    LD E,(IX+1)
+    ADC HL,DE                       ; HL=HL+DE
 
     ; ■Y座標画面下限チェック
     LD A,H                          ; A <- Y座標(整数部)
     CP 192-8-16                     ; 画面下限を超えたか
-    JR C,SPRITE_MOVE_L0             ; キャリーフラグがONの場合は画面内なのでSPRITE_MOVE_L0へ
+    JR C,SPRITE_MOVE_L4             ; キャリーフラグがONの場合は画面内なのでSPRITE_MOVE_L0へ
  
     LD H,192-8-16                   ; Y座標(整数部)=(192-8-16)
     LD L,0                          ; Y座標(小数部)=0
-    JR C,SPRITE_MOVE_L1             ; 上限の判定は不要なので次のチェックへ
+    JR C,SPRITE_MOVE_L5             ; 上限の判定は不要なので次のチェックへ
 
-SPRITE_MOVE_L0:
+SPRITE_MOVE_L4:
     ; ■Y座標画面上限チェック
     CP 8                            ; 画面上限を超えたか
-    JR NC,SPRITE_MOVE_L1            ; キャリーフラグがOFFの場合は画面内なのでSPRITE_MOVE_L1へ
+    JR NC,SPRITE_MOVE_L5            ; キャリーフラグがOFFの場合は画面内なのでSPRITE_MOVE_L1へ
     LD H,8                          ; Y座標(整数部)=8
     LD L,0                          ; Y座標(小数部)=0
 
-SPRITE_MOVE_L1:
+SPRITE_MOVE_L5:
     ; ■Y座標を保存
     LD (IX+2),H                     ; H -> Y座標(整数部)
     LD (IX+1),L                     ; L -> Y座標(小数部)
@@ -184,17 +201,15 @@ SPRITE_MOVE_L1:
     ; ■X座標計算
     LD H,(IY+3)                     ; HL <- 移動量データ(X方向)
     LD L,(IY+2)
-    LD A,(IX+8)                     ; A <- 移動量増分
-;    CALL CALCULATE_MOVE_VALUE       ; 移動量計算
 
-    LD B,(IX+4)                     ; BC <- X座標
-    LD C,(IX+3)
-    ADC HL,BC                       ; HL=HL+BC
+    LD D,(IX+4)                     ; DE <- X座標
+    LD E,(IX+3)
+    ADC HL,DE                       ; HL=HL+DE
 
     ; ■X座標画面端チェック
     LD A,H                          ; 座標値チェック
     CP 256-16                       ; A=A-(256-16)
-    JR C,SPRITE_MOVE_L2             ; キャリーフラグがONの場合は画面内なのでSPRITE_MOVE_L2へ
+    JR C,SPRITE_MOVE_L6             ; キャリーフラグがONの場合は画面内なのでSPRITE_MOVE_L2へ
 
     ; ■一旦右端として座標値を設定する
     LD H,256-16                     ; X座標(整数部)=256-16
@@ -202,17 +217,17 @@ SPRITE_MOVE_L1:
 
     OR A
     CP 256-8                        ; 最大移動量を4と仮定した比較
-    JR C,SPRITE_MOVE_L2             ; キャリーフラグがOFF(=画面左部にはみ出てた場合)はHはそのままで良いのでSPRITE_MOVE_L2へ
+    JR C,SPRITE_MOVE_L6             ; キャリーフラグがOFF(=画面左部にはみ出てた場合)はHはそのままで良いのでSPRITE_MOVE_L2へ
 
     LD H,0                          ; X座標(整数部)=0
     LD L,0                          ; X座標(小数部)=0
 
-SPRITE_MOVE_L2:
+SPRITE_MOVE_L6:
     ; ■X座標を保存
     LD (IX+4),H
     LD (IX+3),L
 
-SPRITE_MOVE_EXIT:
+    DJNZ SPRITE_MOVE_L2
     RET
 
 
@@ -567,7 +582,7 @@ SECTION bss_user
 ; +5:スプライトパターンNo(1～64)
 ; +6:カラーコード(0=非表示)
 ; +7:移動方向(STICKの値に対応)  
-; +8:移動量増分(ビット7＝0:左シフト、1:右シフト、ビット6〜0＝シフト量)
+; +8:移動量($00=移動なし、$01=1倍速、$02=2倍速,$03=3倍速…、$FF=1/2倍速)
 ; +9〜10:アニメーションテーブルアドレス
 ; +11:アニメーションカウンタ
 ; +12:汎用

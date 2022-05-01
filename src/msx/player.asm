@@ -325,7 +325,7 @@ UPDATE_PLAYER_MOVE:
     JR NC,UPDATE_PLAYER_MOVE_L1
 
     ; 1〜4のときの移動量
-    LD (IX+8),1
+    LD (IX+8),2
     JR UPDATE_PLAYER_MOVE_L3
 
 UPDATE_PLAYER_MOVE_L1:
@@ -333,12 +333,12 @@ UPDATE_PLAYER_MOVE_L1:
     JR NC,UPDATE_PLAYER_MOVE_L2
 
     ; 5〜10のときの移動量
-    LD (IX+8),2
+    LD (IX+8),4
     JR UPDATE_PLAYER_MOVE_L3
 
 UPDATE_PLAYER_MOVE_L2:
     ; 11〜のときの移動量
-    LD (IX+8),3
+    LD (IX+8),6
 
 UPDATE_PLAYER_MOVE_L3:
     ; ■マップチップ判定
