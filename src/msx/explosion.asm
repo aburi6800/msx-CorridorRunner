@@ -28,7 +28,7 @@ INIT_EXPLOSION:
 
     LD A,(INIT_EXPLOSION_DIRECTION)
     LD (IX+7),A                     ; 移動方向
-    LD (IX+8),@10000001             ; 移動量（右1ビットシフト＝1/2）
+    LD (IX+8),$FF                   ; 移動量
     LD (IX+9),0                     ; アニメーションテーブルアドレス
     LD (IX+10),0                    ; アニメーションテーブルアドレス
     LD (IX+11),12                   ; アニメーションカウンタ
