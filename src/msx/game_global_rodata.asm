@@ -59,25 +59,25 @@ ENEMY_PTN_TBL:
 ; 2byte : 予備
 ENEMY_PTN_ROUND1:
     DW $0000
-    DB CHRNO_ENEMY1, $20, $38, $07, $00, $00
+    DB CHRNO_ENEMY1, $20, $30, $08, $00, $00
     DW $0000
-    DB CHRNO_ENEMY1, $20, $B8, $01, $00, $00
+    DB CHRNO_ENEMY1, $20, $C0, $02, $00, $00
     DW $0000
-    DB CHRNO_ENEMY1, $90, $38, $06, $00, $00
+    DB CHRNO_ENEMY1, $90, $30, $06, $00, $00
     DW $0000
-    DB CHRNO_ENEMY1, $90, $B8, $04, $00, $00
-    DW $00A0
-    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-    DW $0140
-    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-    DW $01E0
-    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-    DW $0280
-    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-    DW $0320
-    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-    DW $03C0
-    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
+    DB CHRNO_ENEMY1, $90, $C0, $04, $00, $00
+;    DW $00A0
+;    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
+;    DW $0140
+;    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
+;    DW $01E0
+;    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
+;    DW $0280
+;    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
+;    DW $0320
+;    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
+;    DW $03C0
+;    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
     DW $FFFF
     DB $00, $FF, $FF, $FF, $00, $00
 

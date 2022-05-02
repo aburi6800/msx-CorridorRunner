@@ -76,7 +76,7 @@ INIT_ENEMY1_L4:
 UPDATE_ENEMY1:
     ; ■移動
     CALL SPRITE_MOVE                ; スプライトキャラクター移動処理
-    CALL ENEMY_BOUND                ; テキバウンド処理
+    CALL ENEMY1_BOUND               ; テキバウンド処理
     CALL SPRITE_ANIM                ; スプライトパターン番号更新
 
     ; ■ヒット判定
@@ -97,103 +97,40 @@ UPDATE_ENEMY1_L1:
 ; ----------------------------------------------------------------------------------------------------
 ; テキバウンド処理
 ; ----------------------------------------------------------------------------------------------------
-ENEMY_BOUND:
-    ; ■移動方向のアドレスをHLレジスタに設定
-    PUSH IX                         ; IX -> HL
-    POP HL
-    LD DE,7                         ; HL=HL+7
-    ADD HL,DE                       ; HL=移動方向のアドレス
-
-    ; ■テキバウンド処理（垂直方向）
-    CALL ENEMY_BOUND_VERTICAL
-
-    ; ■テキバウンド処理（水平方向）
-    CALL ENEMY_BOUND_HOLIZONTAL
-
-    RET
-
-; ----------------------------------------------------------------------------------------------------
-; 敵バウンド処理（垂直方向）
-; IN  : IX = 対象キャラクターのスプライトキャラクターワークテーブルの先頭アドレス
-;       HL = 移動方向のアドレス
-; ----------------------------------------------------------------------------------------------------
-ENEMY_BOUND_VERTICAL:
-    ; ■Y座標をDレジスタに取得
-    LD D,(IX+2)                     ; D <- Y座標(整数部)
-
-    ; ■画面上端チェック
-    LD A,D
-    CP 8+1                          ; Y座標が8以下だと、ここでキャリーが立つ
-    JR NC,ENEMY_BOUND_VERTICAL_L1   ; 画面上端でなければ画面下端チェックへ
-
-    ; ■Y座標が上端の場合の跳ね返りの方向決定
-    ; - V=DIRECTION_UPRIGHT の時：V = DIRECTION_DOWNRIGHT
-    ; - V=DIRECTION_UPLEFT の時 ：V = DIRECTION_DOWNLEFT
-    LD A,(HL)                       ; A <- 現在の移動方向
-    LD (HL),DIRECTION_DOWNRIGHT     ; まずは次の移動方向をDIRECTION_DOWNRIGHTとする
-    CP DIRECTION_UPRIGHT
+ENEMY1_BOUND:
+    LD A,(TICK1)
+    AND @00000001
     RET Z
 
-    LD (HL),DIRECTION_DOWNLEFT      ; 次の移動方向をDIRECTION_DOWNLEFTにする
-    RET
+    ; ■画面上端か
+    LD HL,ENEMY_BOUNDDATA_VERTICAL  ; 参照先デーブルデータのアドレス
+    LD A,(IX+2)                     ; A <- Y座標(整数部)
+    CP Y_MIN+1
+    JR C,ENEMY1_BOUND_L4            ; バウンド処理
 
-ENEMY_BOUND_VERTICAL_L1:
-    ; ■画面下端チェック
-    LD A,D
-    CP 192-8-16-1
-    RET C                           ; 画面下端でなければ終了
+ENEMY1_BOUND_L1:
+    ; ■画面下端か
+    CP Y_MAX-1
+    JR NC,ENEMY1_BOUND_L4            ; バウンド処理
 
-    ; ■Y座標が下端の場合の跳ね返りの方向決定
-    ; - V=DIRECTION_DOWNRIGHT の時：V = DIRECTION_UPRIGHT
-    ; - V=DIRECTION_DOWNLEFT の時 ：V = DIRECTION_UPLEFT
-    LD A,(HL)                       ; A <- 現在の移動方向
-    LD (HL),DIRECTION_UPRIGHT       ; まずは次の移動方向をDIRECTION_UPRIGHTとする
-    CP DIRECTION_DOWNRIGHT
-    RET Z                           ; 移動方向=DIRECTION_DOWNRIGHTの場合はこのままでいいので、終了
+ENEMY1_BOUND_L2:
+    ; ■画面左端か
+    LD HL,ENEMY_BOUNDDATA_HOLIZONAL ; 参照先デーブルデータのアドレス
+    LD A,(IX+4)                     ; A <- X座標(整数部)
+    OR A
+    JR Z,ENEMY1_BOUND_L4            ; バウンド処理
 
-    LD (HL),DIRECTION_UPLEFT        ; 次の移動方向をDIRECTION_UPLEFTにする
-    RET
+ENEMY1_BOUND_L3:
+    ; ■画面右端か
+    CP X_MAX - 1
+    RET C                           ; 画面右端でなければここで終了
 
-; ----------------------------------------------------------------------------------------------------
-; 敵バウンド処理（水平方向）
-; IN  : IX = 対象キャラクターのスプライトキャラクターワークテーブルの先頭アドレス
-;       HL = 移動方向のアドレス
-; ----------------------------------------------------------------------------------------------------
-ENEMY_BOUND_HOLIZONTAL:
-    ; ■X座標をDレジスタに取得
-    LD D,(IX+4)                     ; D <- X座標(整数部)
-
-    ; ■X座標が画面左端か調べる
-    LD A,D
-    CP 0+1
-    JR NC,ENEMY_BOUND_HOLIZONTAL_L1 ; 画面左端でなければ画面右端チェックへ
-
-    ; ■跳ね返りの方向決定
-    ; - V=DIRECTION_UPLEFT の時  ：V = DIRECTION_UPRIGHT
-    ; - V=DIRECTION_DOWNLEFT の時：V = DIRECTION_DOWNRIGHT
-    LD A,(HL)                       ; A <- 現在の移動方向
-    LD (HL),DIRECTION_UPRIGHT       ; まずは次の移動方向をDIRECTION_UPRIGHTとする
-    CP DIRECTION_UPLEFT
-    RET Z
-
-    LD (HL),DIRECTION_DOWNRIGHT     ; 次の移動方向をDIRECTION_DOWNRIGHTにする
-    RET
-
-ENEMY_BOUND_HOLIZONTAL_L1:
-    ; ■X座標が右端か調べる
-    LD A,D
-    CP 256-16-1
-    RET C                           ; 画面右端でなければ終了
-
-    ; ■跳ね返りの方向決定
-    ; - V = DIRECTION_UPRIGHT の時  ：V = DIRECTION_UPLEFT
-    ; - V = DIRECTION_DOWNRIGHT の時：V = DIRECTION_DOWNLEFT
-    LD A,(HL)                       ; A <- 現在の移動方向
-    LD (HL),DIRECTION_UPLEFT        ; まずは次の移動方向をDIRECTION_UPLEFTとする
-    CP DIRECTION_UPRIGHT
-    RET Z
-
-    LD (HL),DIRECTION_DOWNLEFT      ; 次の移動方向をDIRECTION_DOWNLEFTにする
+ENEMY1_BOUND_L4:
+    LD A,(IX+7)                     ; A <- 移動方向
+    DEC A                           ; テーブル検索用に-1する
+    CALL ADD_HL_A                   ; HL = HL + A
+    LD A,(HL)
+    LD (IX+7),A
     RET
 
 
@@ -208,3 +145,17 @@ ANIM_PTN_ENEMY1_R:
 	DB 2,2,2,2,6,6,6,6,10,10,10,10,14,14,14,14,0
 ANIM_PTN_ENEMY1_L:
 	DB 2,2,2,2,6,6,6,6,10,10,10,10,14,14,14,14,0
+
+; ■バウンド方向データ
+ENEMY_BOUNDDATA_VERTICAL:
+    ; - DIRECTION_UPRIGHT(2)   の時：DIRECTION_DOWNRIGHT(4)
+    ; - DIRECTION_UPLEFT(8)    の時：DIRECTION_DOWNLEFT(6)
+    ; - DIRECTION_DOWNRIGHT(4) の時：DIRECTION_UPRIGHT(2)
+    ; - DIRECTION_DOWNLEFT(6)  の時：DIRECTION_UPLEFT(8)
+    DB 0,4,0,2,0,8,0,6
+ENEMY_BOUNDDATA_HOLIZONAL:
+    ; - DIRECTION_UPLEFT(8)    の時：DIRECTION_UPRIGHT(2)
+    ; - DIRECTION_DOWNLEFT(6)  の時：DIRECTION_DOWNRIGHT(4)
+    ; - DIRECTION_UPRIGHT(2)   の時：DIRECTION_UPLEFT(8)
+    ; - DIRECTION_DOWNRIGHT(4) の時：DIRECTION_DOWNLEFT(6)
+    DB 0,8,0,6,0,4,0,2

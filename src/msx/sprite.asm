@@ -12,6 +12,12 @@ INCLUDE "explosion.asm"
 
 SECTION code_user
 
+; ■座標リミット値
+X_MAX:                              EQU 256-16
+X_MIN:                              EQU 0
+Y_MAX:                              EQU 192-16-8
+Y_MIN:                              EQU 8
+
 ; ■移動方向の定数
 DIRECTION_UP:                       EQU 1
 DIRECTION_UPRIGHT:                  EQU 2
@@ -66,24 +72,24 @@ INIT_SPR_CHR_WK_EXIT:
 ; ====================================================================================================
 ; スプライトキャラクターY座標ランダム値取得処理
 ; IN  : none
-; OUT : A = X座標(8〜168)
+; OUT : A = Y座標(Y_MIN〜Y_MAX)
 ; ====================================================================================================
 GET_RND_SPR_Y:
     CALL GET_RND                    ; 乱数取得(0〜255)
-    CP 192-8-16                     ; A=A-192-8-16
-    JR NC,GET_RND_SPR_Y             ; Aが16～192の範囲外だったら再度乱数取得
-    ADD A,8                         ; オフセット加算
+    CP Y_MAX+Y_MIN                  ; Y座標リミット値と比較
+    JR NC,GET_RND_SPR_Y             ; Aが範囲外だったら再度乱数取得
+    ADD A,Y_MIN                     ; オフセット加算
     RET
 
 
 ; ====================================================================================================
 ; スプライトキャラクターX座標ランダム値取得処理
 ; IN  : none
-; OUT : A = X座標(0〜239)
+; OUT : A = X座標(X_MIN〜X_MAX)
 ; ====================================================================================================
 GET_RND_SPR_X:
     CALL GET_RND                    ; A <- 乱数(0〜255)
-    CP 255-16                       ; A=A-(255-16)
+    CP X_MAX                        ; X座標リミット値と比較
     JR NC,GET_RND_SPR_X             ; Aが(255-16)を超えていたら再度乱数取得
     RET
 
@@ -147,6 +153,7 @@ SPRITE_MOVE:
     LD A,(TICK1)                    ; TICKカウントを取得
     AND @00000001                   ; 下位1ビットを取得
     RET Z                           ; ゼロ(偶数フレーム)の時は処理終了
+                                    ; なお、ゼロでない場合は、直前のAND演算でAレジスタは1となっている
 
 SPRITE_MOVE_L1:
     ; ■移動量増分をループカウンタとしてBレジスタに設定
@@ -179,18 +186,18 @@ SPRITE_MOVE_L3:
 
     ; ■Y座標画面下限チェック
     LD A,H                          ; A <- Y座標(整数部)
-    CP 192-8-16                     ; 画面下限を超えたか
+    CP Y_MAX                        ; 画面下限を超えたか
     JR C,SPRITE_MOVE_L4             ; キャリーフラグがONの場合は画面内なのでSPRITE_MOVE_L0へ
  
-    LD H,192-8-16                   ; Y座標(整数部)=(192-8-16)
+    LD H,Y_MAX                      ; Y座標(整数部)=Y_MAX
     LD L,0                          ; Y座標(小数部)=0
     JR C,SPRITE_MOVE_L5             ; 上限の判定は不要なので次のチェックへ
 
 SPRITE_MOVE_L4:
     ; ■Y座標画面上限チェック
-    CP 8                            ; 画面上限を超えたか
+    CP Y_MIN                        ; 画面上限を超えたか
     JR NC,SPRITE_MOVE_L5            ; キャリーフラグがOFFの場合は画面内なのでSPRITE_MOVE_L1へ
-    LD H,8                          ; Y座標(整数部)=8
+    LD H,Y_MIN                      ; Y座標(整数部)=Y_MIN
     LD L,0                          ; Y座標(小数部)=0
 
 SPRITE_MOVE_L5:
@@ -208,18 +215,18 @@ SPRITE_MOVE_L5:
 
     ; ■X座標画面端チェック
     LD A,H                          ; 座標値チェック
-    CP 256-16                       ; A=A-(256-16)
+    CP X_MAX                        ; A=A-X_MAX
     JR C,SPRITE_MOVE_L6             ; キャリーフラグがONの場合は画面内なのでSPRITE_MOVE_L2へ
 
     ; ■一旦右端として座標値を設定する
-    LD H,256-16                     ; X座標(整数部)=256-16
+    LD H,X_MAX                      ; X座標(整数部)=X_MAX
     LD L,0                          ; X座標(小数部)=0
 
     OR A
-    CP 256-8                        ; 最大移動量を4と仮定した比較
+    CP 256-8                        ; 最大移動量を8と仮定した比較
     JR C,SPRITE_MOVE_L6             ; キャリーフラグがOFF(=画面左部にはみ出てた場合)はHはそのままで良いのでSPRITE_MOVE_L2へ
 
-    LD H,0                          ; X座標(整数部)=0
+    LD H,X_MIN                      ; X座標(整数部)=0
     LD L,0                          ; X座標(小数部)=0
 
 SPRITE_MOVE_L6:
