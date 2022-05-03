@@ -66,18 +66,14 @@ ENEMY_PTN_ROUND1:
     DB CHRNO_ENEMY1, $90, $30, $06, $00, $00
     DW $0000
     DB CHRNO_ENEMY1, $90, $C0, $04, $00, $00
-;    DW $00A0
-;    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-;    DW $0140
-;    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-;    DW $01E0
-;    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-;    DW $0280
-;    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-;    DW $0320
-;    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-;    DW $03C0
-;    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
+    DW $0200
+    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
+    DW $0200
+    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
+    DW $0200
+    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
+    DW $0200
+    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
     DW $FFFF
     DB $00, $FF, $FF, $FF, $00, $00
 
