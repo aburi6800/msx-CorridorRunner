@@ -54,7 +54,8 @@ INIT_ENEMY1_L2:
 INIT_ENEMY1_L3:
     LD (IX+7),A                     ; 方向
     LD (IX+8),$FF                   ; 移動量
-    LD (IX+10),0                    ; アニメーションカウンタ=0
+    LD (IX+11),0                    ; アニメーションカウンタ=0
+    LD (IX+12),ENEMY_FLASHING_CNT   ; 出現中カウンタ
 
     ; ■キャラクタアニメーションテーブル番号設定
     ; 移動方向が1～4は右向き(ANIM_PTN_ENEMY1_R)
@@ -74,19 +75,10 @@ INIT_ENEMY1_L4:
 ; テキ1処理サブルーチン
 ; ====================================================================================================
 UPDATE_ENEMY1:
-    ; ■移動
+
     CALL SPRITE_MOVE                ; スプライトキャラクター移動処理
     CALL ENEMY1_BOUND               ; テキバウンド処理
-    CALL SPRITE_ANIM                ; スプライトパターン番号更新
-
-    ; ■ヒット判定
-    CALL IS_PLAYER_MISS
-    OR A
-    JR NZ,UPDATE_ENEMY1_L1          ; プレイヤーミス状態なら衝突判定せずに終了
-
-    LD C,0                          ; C <- 衝突判定用の相手キャラクター番号
-                                    ;      0 = プレイヤー
-    CALL HIT_CHECK                  ; 衝突判定
+    CALL HIT_CHECK_FROM_ENEMY       ; 衝突判定
     JR NC,UPDATE_ENEMY1_L1          ; ヒットしてなかったら終了
 
     CALL SET_PLAYER_MISS_EXPLOSION  ; プレイヤーミス状態（爆発）に設定
@@ -98,6 +90,7 @@ UPDATE_ENEMY1_L1:
 ; テキバウンド処理
 ; ----------------------------------------------------------------------------------------------------
 ENEMY1_BOUND:
+
     LD A,(TICK1)
     AND @00000001
     RET Z
