@@ -60,15 +60,16 @@ ROUND_START_INIT:
 
     ; ■ラウンド数をBCD変換してワークに設定
     LD A,(ROUND)
+    INC A
     DAA
-    LD (BCD_ROUND_NO),A
+    LD (ROUND_BCD),A
 
     ; ■ラウンド開始メッセージ表示
     LD HL,STRING_ROUND_START
     CALL PRTSTR
 
     LD B,1
-    LD DE,BCD_ROUND_NO
+    LD DE,ROUND_BCD
     LD HL,$0115
     CALL PRTBCD
 
@@ -87,13 +88,3 @@ SECTION rodata_user
 STRING_ROUND_START:
     DW $0109
 	DB "READY ROUND",0
-
-SECTION bss_user
-; ====================================================================================================
-; ワークエリア
-; プログラム起動時にcrtでゼロでramに設定される 
-; ====================================================================================================
-
-; ■ラウンド数（BCD値）
-BCD_ROUND_NO:
-    DEFS 1

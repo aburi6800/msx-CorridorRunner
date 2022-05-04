@@ -20,6 +20,10 @@ GAME_STATE:
 ROUND:
     DEFS 1
 
+; ■ラウンド数（BCD値）
+ROUND_BCD:
+    DEFS 1
+
 ; ■スコア
 SCORE:
     DEFS 3
@@ -35,7 +39,3 @@ TARGET_LEFT:
 ; ■残機
 LEFT:
     DEFS 1
-
-; ■プレイヤー座標(Y,X)
-PLAYER_POS:
-    DEFS 2

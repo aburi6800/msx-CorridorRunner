@@ -21,7 +21,6 @@ ENEMY_APPEARANCE_INIT:
 
     ; ■ROUNDに対応するテキ出現パターンデータのアドレスをENEMY_PTN_TBLから取得し、ENEMY_PTN_ADDRに設定
     LD A,(ROUND)
-    SUB A
     LD HL,ENEMY_PTN_TBL
     CALL GET_ADDR_TBL
     LD (ENEMY_PTN_ADDR),DE
