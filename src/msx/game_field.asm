@@ -73,14 +73,33 @@ COPY_MAP_DATA:
     LD HL,MAP_TBL
     CALL GET_ADDR_TBL               ; DE <- マップデータの先頭アドレス
 
-    ; ■マップデータの先頭アドレスから176byteをマップワークにブロック転送する
-    LD H,D                          ; HL=転送元アドレス(DE)
-    LD L,E
-    LD DE,MAP_WK                    ; DE=転送先アドレス(MAP_WK)
-    LD BC,176                       ; BC=転送データ数(byte)
-    LDIR                            ; ブロック転送(HL->DE * BC)
+;    ; ■マップデータの先頭アドレスから176byteをマップワークにブロック転送する
+;    LD H,D                          ; HL=転送元アドレス(DE)
+;    LD L,E
+;    LD DE,MAP_WK                    ; DE=転送先アドレス(MAP_WK)
+;    LD BC,176                       ; BC=転送データ数(byte)
+;    LDIR                            ; ブロック転送(HL->DE * BC)
 
-COPY_MAP_DATA_EXIT:
+    LD HL,MAP_WK                    ; マップワークの先頭アドレス
+    LD B,MAPDATA_SIZE/2             ; 繰り返し数（元データが半分なので、1/2とする）
+COPY_MAP_DATA_L1:
+    ; ■マップデータの上位4ビットを取得してワークに設定
+    LD A,(DE)
+    SRA A
+    SRA A
+    SRA A
+    SRA A
+    LD (HL),A
+    INC HL
+    ; ■マップデータの下位4ビットを取得してワークに設定
+    LD A,(DE)
+    AND @00001111
+    LD (HL),A
+    INC HL
+
+    INC DE
+    DJNZ COPY_MAP_DATA_L1
+
     RET
 
 
