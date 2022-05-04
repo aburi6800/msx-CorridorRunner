@@ -204,8 +204,8 @@ ROUND_CLEAR_MESSAGE1_L7:
     LD A,5                          ; 500pts
 ROUND_CLEAR_MESSAGE1_L71:
     ADD A,5                         ; 500pts
-    DJNZ ROUND_CLEAR_MESSAGE1_L71
     DAA                             ; BCD値変換
+    DJNZ ROUND_CLEAR_MESSAGE1_L71
     LD (ROUND_CLEAR_BONUS_BCD),A
 
     LD HL,STRING_ROUND_CLEAR_MSG6
