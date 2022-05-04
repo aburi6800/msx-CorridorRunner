@@ -360,6 +360,9 @@ UPDATE_PLAYER_MOVE_END:
     ; ■マップチップ判定
     ; ここで床がなければミスにする
     CALL UPDATE_PLAYER_MOVE_GET_MAPDATA ; A <- マップデータ
+    CP 3
+    JR Z,UPDATE_PLAYER_MOVE_END_L1  ; マップデータが3(出口)の場合、ゲーム状態をラウンドクリアに変更
+
     OR A
     JR NZ,UPDATE_PLAYER_MOVE_END_L2 ; マップデータがゼロでなければ、プレイヤー操作に状態遷移
 
@@ -380,6 +383,11 @@ UPDATE_PLAYER_MOVE_END:
     CALL SOUNDDRV_BGMPLAY
     RET
 
+UPDATE_PLAYER_MOVE_END_L1:
+    ; ■ゲーム状態をラウンドクリアに変更
+    LD A,STATE_ROUND_CLEAR
+    CALL CHANGE_STATE
+    
 UPDATE_PLAYER_MOVE_END_L2:
     ; ■プレイヤー操作に状態遷移
     LD A,PLAYERMODE_CONTROL
