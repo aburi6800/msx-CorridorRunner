@@ -185,7 +185,7 @@ ROUND_CLEAR_MESSAGE1_L4:
 
 ROUND_CLEAR_MESSAGE1_L5:
     LD B,1
-    LD DE,BCD_ROUND_NO
+    LD DE,ROUND_BCD
     LD HL,$0112
     CALL PRTBCD
 
@@ -197,9 +197,10 @@ ROUND_CLEAR_MESSAGE1_L6:
 
 ROUND_CLEAR_MESSAGE1_L7:
     ; ■ボーナス点計算
-    ;   基点(500)からラウンド数*500を加算
+    ;   基点(500)にラウンド数*500を加算
     LD A,(ROUND)
-    LD B,A
+    INC A
+    LD B,A                          ; ループ回数として設定
     LD A,5                          ; 500pts
 ROUND_CLEAR_MESSAGE1_L71:
     ADD A,5                         ; 500pts

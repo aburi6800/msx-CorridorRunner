@@ -61,7 +61,6 @@ INIT_PLAYER2:
     ; ■プレイヤー初期位置データのアドレス取得
     LD HL,PLAYER_INIT_TBL
     LD A,(ROUND)
-    DEC A
     CALL GET_ADDR_TBL               ; DE=初期値データの取得先アドレス
 
     LD (IX),CHRNO_PLAYER2           ; キャラクター番号=プレイヤー(2)
@@ -646,6 +645,10 @@ PLAYER_CONTROL_MODE:
 ; ■チャージパワー
 PLAYER_CHARGE_POWER:
     DEFS 1
+
+; ■プレイヤー座標(Y,X)
+PLAYER_POS:
+    DEFS 2
 
 ; ■汎用カウンタワーク
 PLAYER_CNT_WK1:
