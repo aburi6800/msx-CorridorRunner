@@ -160,7 +160,7 @@ ROUND_CLEAR_MESSAGE1:
     JR Z,ROUND_CLEAR_MESSAGE1_L4
     CP $66
     JR Z,ROUND_CLEAR_MESSAGE1_L5
-    CP $B0
+    CP $C0
     JR Z,ROUND_CLEAR_MESSAGE1_L7
     CP $FF
     JR Z,ROUND_CLEAR_MESSAGE1_L8
@@ -283,8 +283,8 @@ ROUND_CLEAR_MESSAGE2:
     RET NZ
 
     ; ■次のラウンドに進める
-    LD HL,(ROUND)
-;    INC (HL)                       ; データがないので一旦保留
+    LD HL,ROUND
+    INC (HL)                       ; データがないので一旦保留
 
     ; ■ゲーム状態を変更
     LD A,(HL)
