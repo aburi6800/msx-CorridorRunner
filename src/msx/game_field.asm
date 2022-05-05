@@ -81,23 +81,38 @@ COPY_MAP_DATA:
 ;    LDIR                            ; ブロック転送(HL->DE * BC)
 
     LD HL,MAP_WK                    ; マップワークの先頭アドレス
-    LD B,MAPDATA_SIZE/2             ; 繰り返し数（元データが半分なので、1/2とする）
-COPY_MAP_DATA_L1:
-    ; ■マップデータの上位4ビットを取得してワークに設定
-    LD A,(DE)
-    SRA A
-    SRA A
-    SRA A
-    SRA A
-    LD (HL),A
-    INC HL
-    ; ■マップデータの下位4ビットを取得してワークに設定
-    LD A,(DE)
-    AND @00001111
-    LD (HL),A
-    INC HL
+    LD B,MAPDATA_SIZE/4             ; 繰り返し数（マップデータが1/4なので、4で割る）
 
-    INC DE
+COPY_MAP_DATA_L1:
+    LD A,(DE)                       ; A <- マップデータ(1byte=4チップ分)
+    RLCA
+    RLCA
+    AND @00000011
+    LD (HL),A
+    INC HL                          ; 設定先のマップワークのアドレスを+1
+
+    LD A,(DE)                       ; A <- マップデータ(1byte=4チップ分)
+    SRA A
+    SRA A
+    SRA A
+    SRA A
+    AND @00000011
+    LD (HL),A
+    INC HL                          ; 設定先のマップワークのアドレスを+1
+
+    LD A,(DE)                       ; A <- マップデータ(1byte=4チップ分)
+    SRA A
+    SRA A
+    AND @00000011
+    LD (HL),A
+    INC HL                          ; 設定先のマップワークのアドレスを+1
+
+    LD A,(DE)                       ; A <- マップデータ(1byte=4チップ分)
+    AND @00000011
+    LD (HL),A
+    INC HL                          ; 設定先のマップワークのアドレスを+1
+
+    INC DE                          ; 設定元のマップデータのアドレスを+1
     DJNZ COPY_MAP_DATA_L1
 
     RET
