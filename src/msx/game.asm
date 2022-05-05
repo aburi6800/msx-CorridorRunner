@@ -263,24 +263,25 @@ DRAW_INFO_INIT:
     LD HL,$0012
     CALL PRTBCD
 
+    ; ■ラウンド数表示
+    LD B,1
+    LD DE,ROUND_BCD
+    LD HL,$02FE
+    CALL PRTBCD
+
     ; ■残機表示
     LD A,(LEFT)
     OR A
-    JR Z,DRAW_INFO_INIT_L2          ; ゼロなら表示不要のため処理を抜ける
+    RET Z                           ; ゼロなら表示不要のため処理を抜ける
 
     LD HL,OFFSCREEN
     LD BC,$001C
     ADD HL,BC
     LD B,A
-
 DRAW_INFO_INIT_L1:
     LD (HL),$88
     INC HL
     DJNZ DRAW_INFO_INIT_L1
-
-DRAW_INFO_INIT_L2:
-
-DRAW_INFO_INIT_EXIT:
     RET
 
 
@@ -372,7 +373,7 @@ INFO_STRING1:
 ; ■画面下部表示内容
 INFO_STRING2:
     DW $02E0
-    DB $B1,$B2,$B3,"                ",$B4,"    ROUND 00",0
+    DB $B1,$B2,$B3,"                ",$B4,"    ROUND",0
 
 ; ■カラーテーブル変更データ 6,6,8,8,9,9,8,8,6,6,1
 COLOR_TBL_CHG_DATA:

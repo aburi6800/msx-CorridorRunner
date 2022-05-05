@@ -21,7 +21,6 @@ ROUND_START:
     JR NZ,ROUND_START_EXIT
 
     ; ■フィールド初期化処理
-    ; ここの前にチップセットとBGMの初期設定をしておく…？
     CALL INIT_FIELD
 
     ; ■スプライトキャラクターワークテーブル初期化
@@ -52,22 +51,24 @@ ROUND_START_EXIT:
 ; ラウンド開始時の初回処理
 ; ----------------------------------------------------------------------------------------------------
 ROUND_START_INIT:
+
+    ; ■ラウンド数をBCD変換してワークに設定
+    LD A,(ROUND)
+    INC A                           ; ワークの値は0〜なので、表示用に+1する
+    DAA
+    LD (ROUND_BCD),A
+
     ; ■スプライトキャラクターワークテーブル初期化
     CALL INIT_SPR_CHR_WK_TBL
 
     ; ■オフスクリーンリセット
     CALL RESET_OFFSCREEN
 
-    ; ■ラウンド数をBCD変換してワークに設定
-    LD A,(ROUND)
-    INC A
-    DAA
-    LD (ROUND_BCD),A
-
     ; ■ラウンド開始メッセージ表示
     LD HL,STRING_ROUND_START
     CALL PRTSTR
 
+    ; ■ラウンド数表示
     LD B,1
     LD DE,ROUND_BCD
     LD HL,$0115
