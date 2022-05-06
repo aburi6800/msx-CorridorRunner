@@ -13,13 +13,24 @@ CHRNO_EXPLOSION:        EQU 3       ; キャラクター番号
 ; バクハツ初期化
 ; ====================================================================================================
 INIT_EXPLOSION:
+    PUSH IX
+    XOR A
+    CALL GET_SPR_WK_ADDR
+    PUSH IX
+    POP HL
+    POP IX
+
     LD (IX),CHRNO_EXPLOSION         ; キャラクター番号=バクハツ
 
-    LD A,(PLAYER_POS)
+    INC HL
+    INC HL
+    LD A,(HL)
     LD (IX+1),0                     ; Y座標(小数部)
     LD (IX+2),A                     ; Y座標(整数部)
 
-    LD A,(PLAYER_POS+1)
+    INC HL
+    INC HL
+    LD A,(HL)
     LD (IX+3),0                     ; X座標(小数部)
     LD (IX+4),A                     ; X座標(整数部)
 
