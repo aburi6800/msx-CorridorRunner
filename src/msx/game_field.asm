@@ -42,6 +42,7 @@ SET_CHIPSET_BGMDATA_ADDR:
     LD A,(ROUND)                    ; A <- ラウンド数(0〜)
     SRA A                           ; 右に2ビットシフト
     SRA A
+    PUSH AF
 
     ; ■チップセットテーブルのアドレスをワークに設定する
     LD HL,CHIPSET_TBL
@@ -52,6 +53,7 @@ SET_CHIPSET_BGMDATA_ADDR:
     LD (HL),D
 
     ; ■BGMテーブルのアドレスをワークに設定する
+    POP AF
     LD HL,BGM_TBL
     CALL GET_ADDR_TBL               ; DE <- BGMデータの先頭アドレス
     LD HL,BGM_WK                    ; BGMデータのアドレスをワークへ設定
