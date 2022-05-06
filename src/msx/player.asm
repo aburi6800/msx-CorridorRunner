@@ -397,12 +397,7 @@ UPDATE_PLAYER_MOVE_END_L2:
 ; プレイヤー移動時のマップデータ取得サブルーチン
 ; ----------------------------------------------------------------------------------------------------
 UPDATE_PLAYER_MOVE_GET_MAPDATA:
-    LD B,(IX+2)                     ; B <- Y座標(整数部)
-    LD A,B
-    LD (PLAYER_POS),A               ; ワークに設定
-    LD C,(IX+4)                     ; C <- X座標(整数部)
-    LD A,C
-    LD (PLAYER_POS+1),A             ; ワークに設定
+
     CALL GET_MAPDATA_OFFSET         ; A <- マップデータオフセット
     CALL GET_MAPDATA                ; A <- マップデータ
     RET
@@ -413,20 +408,16 @@ UPDATE_PLAYER_MOVE_GET_MAPDATA:
 UPDATE_PLAYER_GETITEM:
 
     ; ■マップデータオフセット取得
-    LD B,(IX+2)                     ; B <- Y座標(整数部)
-    LD C,(IX+4)                     ; C <- X座標(整数部)
     CALL GET_MAPDATA_OFFSET         ; A <- マップデータオフセット
+    LD B,A
 
     ; ■マップデータ更新
-    LD H,0
-    LD L,A
-    LD DE,MAP_WK
-    ADD HL,DE
+    LD HL,MAP_WK
+    CALL ADD_HL_A
     LD (HL),1    
 
     ; ■仮想画面更新
     ; マップデータのオフセットに該当するマップチップを書き換える
-    LD B,A
     CALL DRAW_MAPCHIP
 
     ; ■スコア追加
