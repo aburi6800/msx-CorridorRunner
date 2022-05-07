@@ -366,12 +366,18 @@ UPDATE_PLAYER_MOVE_END:
     JR NZ,UPDATE_PLAYER_MOVE_END_L2 ; マップデータがゼロでなければ、プレイヤー操作に状態遷移
 
     ; ■ミス時の初期設定
-    ; - 時間経過カウントをリセット
-    LD A,1
-    LD (PLAYER_MISS_TIME_CNT),A
     ; - パターンテーブルのインデックス
-    LD A,0
+    XOR A
     LD (PLAYER_MISS_PTN_CNT),A
+
+    ; - 時間経過カウントをリセット
+    ;   最初に必ずDECするので、1を設定しておく
+    INC A
+    LD (PLAYER_MISS_TIME_CNT),A
+
+    ; - ミスの全体の時間
+    LD A,$60
+    LD (PLAYER_CNT_WK1),A
 
     ; ■ミスの状態に遷移
     LD A,PLAYERMODE_MISS
@@ -432,9 +438,14 @@ UPDATE_PLAYER_GETITEM_EXIT:
     RET
 
 ; ----------------------------------------------------------------------------------------------------
-; プレイヤーミスサブルーチン
+; プレイヤーミス（落下）サブルーチン
 ; ----------------------------------------------------------------------------------------------------
 UPDATE_PLAYER_MISS:
+    ; ■ミスの処理時間カウントダウン
+    LD HL,PLAYER_CNT_WK1
+    DEC (HL)
+    JP Z,PLAYER_MISS_CHANGE_GAME_STATE
+
     ; ■ミスカウント減算
     LD HL,PLAYER_MISS_TIME_CNT
     DEC (HL)
@@ -442,15 +453,16 @@ UPDATE_PLAYER_MISS:
     
     ; ■カウントゼロ時の処理
     ; - スプライトパターン番号を取得する
-    ; - ゼロの場合はゲーム状態変更処理へ
+    ; - ゼロの場合はスプライト表示消去
     LD HL,PLAYER_MISS_PTN_CNT
     LD B,0
     LD C,(HL)
     LD HL,PLAYER_MISS_PTN1
     ADD HL,BC
+
     LD A,(HL)
     OR A
-    JP Z,PLAYER_MISS_CHANGE_GAME_STATE
+    JP Z,UPDATE_PLAYER_MISS_L1
 
     ; - スプライトパターン番号を更新する
     LD (IX+5),A
@@ -460,6 +472,11 @@ UPDATE_PLAYER_MISS:
     ; - パターンカウントを+1
     LD HL,PLAYER_MISS_PTN_CNT
     INC (HL)
+    RET
+
+UPDATE_PLAYER_MISS_L1:
+    LD (IX+2),-16
+    LD (IX+4),-16
     RET
 
 ; ----------------------------------------------------------------------------------------------------
