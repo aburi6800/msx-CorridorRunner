@@ -1,5 +1,8 @@
 build/*
-dist/*
+dist/*.bin
+dist/*.lis
+dist/*.map
+dist/*.sym
 src/msx/*.lis
 src/msx/*.map
 src/msx/*.sym
