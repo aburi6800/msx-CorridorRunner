@@ -317,37 +317,6 @@ INCLUDE "game_field.asm"
 
 
 ; ====================================================================================================
-; BGMデータ
-; ====================================================================================================
-; - タイトル
-INCLUDE "assets/00.asm"
-; - スタート
-INCLUDE "assets/01.asm"
-; - BGM1
-INCLUDE "assets/02.asm"
-; - BGM2
-INCLUDE "assets/03.asm"
-; - BGM3
-INCLUDE "assets/04.asm"
-; - BGM4
-INCLUDE "assets/05.asm"
-; - MISS
-INCLUDE "assets/06.asm"
-; - GAME OVER
-INCLUDE "assets/07.asm"
-; - CLEAR
-INCLUDE "assets/08.asm"
-
-
-; ====================================================================================================
-; SFXデータ
-; ====================================================================================================
-INCLUDE "assets/sfx_01.asm"
-INCLUDE "assets/sfx_02.asm"
-INCLUDE "assets/sfx_03.asm"
-
-
-; ====================================================================================================
 ; ゲーム共通ワークエリア
 ; ====================================================================================================
 INCLUDE "game_global_rodata.asm"
@@ -389,6 +358,33 @@ COLOR_TBL_CHG_DATA:
 	DB $41, $41, $D1, $D1, $C1, $C1, $11, $E1
 	DB $41, $41, $D1, $D1, $C1, $C1, $11, $E1
 	DB $41, $41, $D1, $D1, $C1, $C1, $11, $E1
+
+
+; ■BGMデータ
+; - タイトル
+INCLUDE "assets/00.asm"
+; - スタート
+INCLUDE "assets/01.asm"
+; - BGM1
+INCLUDE "assets/02.asm"
+; - BGM2
+INCLUDE "assets/03.asm"
+; - BGM3
+INCLUDE "assets/04.asm"
+; - BGM4
+INCLUDE "assets/05.asm"
+; - MISS
+INCLUDE "assets/06.asm"
+; - GAME OVER
+INCLUDE "assets/07.asm"
+; - CLEAR
+INCLUDE "assets/08.asm"
+
+
+; ■SFXデータ
+INCLUDE "assets/sfx_01.asm"
+INCLUDE "assets/sfx_02.asm"
+INCLUDE "assets/sfx_03.asm"
 
 
 SECTION bss_user
