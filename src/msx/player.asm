@@ -424,6 +424,9 @@ UPDATE_PLAYER_GETITEM:
     LD DE,$0001                     ; 100pts
     CALL ADDSCORE                   ; スコア加算
 
+    LD HL,SFX_03
+    CALL SOUNDDRV_SFXPLAY
+
 UPDATE_PLAYER_GETITEM_EXIT:
     RET
 
