@@ -42,7 +42,7 @@ INIT_PLAYER:
     LDIR                            ; ブロック転送
 
     POP IX
-    LD (IX),CHRNO_PLAYER1           ; キャラクター番号=プレイヤー(2)
+    LD (IX),CHRNO_PLAYER1           ; キャラクター番号=プレイヤー(1)
     LD (IX+5),0                     ; スプライトパターンNo
     LD (IX+6),1                     ; カラーコード
 
@@ -356,14 +356,29 @@ UPDATE_PLAYER_MOVE_L4:
     RET
 
 UPDATE_PLAYER_MOVE_END:
+    ; ■スコア倍率のリセット判定
+    ;   移動中にアイテムを取得していない場合、スコアのキャラクター番号を0に、スコア倍率を1にリセットする
+    LD A,(ITEM_GET_FLG)
+    OR A
+    JR NZ,UPDATE_PLAYER_MOVE_END_L1
+
+    XOR A
+    LD (SCORE_CHRNO),A
+    INC A
+    LD (SCORE_ADDVALUE_BCD),A
+
+UPDATE_PLAYER_MOVE_END_L1:
+    XOR A                           ; アイテム崇徳フラグをOFF
+    LD (ITEM_GET_FLG),A
+
     ; ■マップチップ判定
     ; ここで床がなければミスにする
     CALL UPDATE_PLAYER_MOVE_GET_MAPDATA ; A <- マップデータ
     CP 3
-    JR Z,UPDATE_PLAYER_MOVE_END_L1  ; マップデータが3(出口)の場合、ゲーム状態をラウンドクリアに変更
+    JR Z,UPDATE_PLAYER_MOVE_END_L2  ; マップデータが3(出口)の場合、ゲーム状態をラウンドクリアに変更
 
     OR A
-    JR NZ,UPDATE_PLAYER_MOVE_END_L2 ; マップデータがゼロでなければ、プレイヤー操作に状態遷移
+    JR NZ,UPDATE_PLAYER_MOVE_END_L3 ; マップデータがゼロでなければ、プレイヤー操作に状態遷移
 
     ; ■ミス時の初期設定
     ; - パターンテーブルのインデックス
@@ -388,12 +403,12 @@ UPDATE_PLAYER_MOVE_END:
     CALL SOUNDDRV_BGMPLAY
     RET
 
-UPDATE_PLAYER_MOVE_END_L1:
+UPDATE_PLAYER_MOVE_END_L2:
     ; ■ゲーム状態をラウンドクリアに変更
     LD A,STATE_ROUND_CLEAR
     CALL CHANGE_STATE
     
-UPDATE_PLAYER_MOVE_END_L2:
+UPDATE_PLAYER_MOVE_END_L3:
     ; ■プレイヤー操作に状態遷移
     LD A,PLAYERMODE_CONTROL
     LD (PLAYER_CONTROL_MODE),A
@@ -426,13 +441,40 @@ UPDATE_PLAYER_GETITEM:
     ; マップデータのオフセットに該当するマップチップを書き換える
     CALL DRAW_MAPCHIP
 
-    ; ■スコア追加
-    LD DE,$0001                     ; 100pts
-    CALL ADDSCORE                   ; スコア加算
+    ; ■アイテム取得フラグON
+    LD A,1
+    LD (ITEM_GET_FLG),A
 
     ; ■効果音再生
     LD HL,SFX_01
     CALL SOUNDDRV_SFXPLAY
+
+    ; ■スコア加算
+    LD A,(SCORE_ADDVALUE_BCD)       ; スコア倍率
+    LD D,0                          ; DE <- 加算スコア
+    LD E,A
+    CALL ADDSCORE                   ; スコア加算
+
+    ; ■スコアのキャラクター表示
+;    PUSH IX
+    LD A,CHRNO_SCORE                ; スコアのキャラクターを追加する
+    CALL ADD_CHARACTER
+;    POP IX
+
+    LD A,(SCORE_ADDVALUE_BCD)       ; スコア倍率
+    CP $16
+    JR Z,UPDATE_PLAYER_GETITEM_L1   ; 既に4(=16倍)なら次の処理へ
+
+    ADD A,A                         ; スコア倍率を２倍
+    DAA
+    LD (SCORE_ADDVALUE_BCD),A
+
+    LD A,(SCORE_CHRNO)              ; 得点のキャラクター番号を設定
+    INC A
+    LD (SCORE_CHRNO),A
+
+UPDATE_PLAYER_GETITEM_L1:
+
 
 UPDATE_PLAYER_GETITEM_EXIT:
     RET
@@ -674,4 +716,8 @@ PLAYER_MISS_TIME_CNT:
 
 ; ■プレイヤーミス時のスプライトパターンカウント
 PLAYER_MISS_PTN_CNT:
+    DEFS 1
+
+; ■アイテム取得フラグ
+ITEM_GET_FLG:
     DEFS 1

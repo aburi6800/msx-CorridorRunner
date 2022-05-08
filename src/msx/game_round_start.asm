@@ -36,6 +36,12 @@ ROUND_START:
     ; ■テキ初期化
     CALL ENEMY_APPEARANCE_INIT
 
+    ; ■ワーク初期化
+    XOR A
+    LD (SCORE_CHRNO),A
+    INC A
+    LD (SCORE_ADDVALUE_BCD),A
+
     ; ■ゲーム状態変更
     LD A,STATE_GAME_MAIN            ; ゲーム状態をゲームメインへ
     CALL CHANGE_STATE

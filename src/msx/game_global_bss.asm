@@ -20,13 +20,17 @@ GAME_STATE:
 ROUND:
     DEFS 1
 
-; ■ラウンド数（BCD値）
+; ■ラウンド数(BCD値)
 ROUND_BCD:
     DEFS 1
 
 ; ■スコア
 SCORE:
     DEFS 3
+
+; ■スコア加算値(BCD)
+SCORE_ADDVALUE_BCD:
+    DEFS 1
 
 ; ■ハイスコア
 HISCORE:

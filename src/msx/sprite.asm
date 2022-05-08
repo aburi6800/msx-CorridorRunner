@@ -7,8 +7,9 @@
 ; ====================================================================================================
 
 INCLUDE "player.asm"
-INCLUDE "enemy.asm"
 INCLUDE "explosion.asm"
+INCLUDE "score.asm"
+INCLUDE "enemy.asm"
 
 SECTION code_user
 
@@ -449,8 +450,11 @@ SPRITE_ANIM_EXIT:
 ; IN  : A = 対象のキャラクター番号(1〜)
 ; ====================================================================================================
 ADD_CHARACTER:
-    PUSH BC                         ; BCレジスタをスタックに退避
-    PUSH AF                         ; AFレジスタ(=キャラクター番号)をスタックに退避
+    ; ■レジスタ退避
+    PUSH HL
+    PUSH DE
+    PUSH BC
+    PUSH AF
 
     LD B,MAX_CHR_CNT                ; B=最大キャラクター数
     LD HL,SPR_CHR_WK_TBL            ; HL <- スプライトキャラクターワークテーブル
@@ -466,8 +470,12 @@ ADD_CHARACTER_L1:
     ADD HL,DE                       ; HL=HL+16
     DJNZ ADD_CHARACTER_L1
 
+    ; ■レジスタ復帰
     POP AF
+ADD_CHARACTER_EXIT:
     POP BC
+    POP DE
+    POP HL
     RET
 
 ADD_CHARACTER_L2:
@@ -479,10 +487,7 @@ ADD_CHARACTER_L2:
     CALL TBL_JP                     ; 各キャラクタの初期処理を呼び出す
                                     ; 各初期処理では、IXレジスタの指すアドレスに
                                     ; 各値を設定していく
-
-ADD_CHARACTER_EXIT:
-    POP BC
-    RET
+    JP ADD_CHARACTER_EXIT
 
 
 ; ====================================================================================================
@@ -616,7 +621,7 @@ CHARACTER_INIT_TABLE:
     DW INIT_PLAYER                  ; PLAYER
     DW INIT_PLAYER2                 ; PLAYER2
     DW INIT_EXPLOSION               ; EXPLOSION
-    DW $0000                        ;
+    DW INIT_SCORE                   ; SCORE
     DW INIT_ENEMY1                  ; ENEMY1
     DW INIT_ENEMY2                  ; ENEMY2
 
@@ -626,7 +631,7 @@ CHARACTER_UPDATE_TABLE:
     DW UPDATE_PLAYER                ; PLAYER
     DW UPDATE_PLAYER2               ; PLAYER2
     DW UPDATE_EXPLOSION             ; EXPLOSION
-    DW $0000                        ;
+    DW UPDATE_SCORE                 ; SCORE
     DW UPDATE_ENEMY1                ; ENEMY1
     DW UPDATE_ENEMY2                ; ENEMY2
 
