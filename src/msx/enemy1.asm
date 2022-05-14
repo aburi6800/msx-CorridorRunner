@@ -15,7 +15,9 @@ CHRNO_ENEMY1:           EQU 5       ; キャラクター番号
 ; ====================================================================================================
 INIT_ENEMY1:
     LD HL,(ENEMY_PARAM_ADDR)        ; HL <- パラメータのアドレス
-    LD (IX),CHRNO_ENEMY1            ; キャラクター番号=テキ1
+    PUSH IX
+    POP DE
+    LD (DE),CHRNO_ENEMY1            ; キャラクター番号=テキ1
 
     ; ■Y座標設定
     LD A,(HL)
@@ -24,8 +26,10 @@ INIT_ENEMY1:
     CALL GET_RND_SPR_Y              ; A <- Y座標(ランダム)
 
 INIT_ENEMY1_L1:
-    LD (IX+1),0                     ; Y座標(下位)
-    LD (IX+2),A                     ; Y座標(上位)
+    INC DE                          ; +1
+    LD (DE),0                     ; Y座標(下位)
+    INC DE                          ; +2
+    LD (DE),A                     ; Y座標(上位)
 
     ; ■X座標設定
     INC HL
@@ -35,11 +39,15 @@ INIT_ENEMY1_L1:
     CALL GET_RND_SPR_X              ; A <- X座標(ランダム)
 
 INIT_ENEMY1_L2:
-    LD (IX+3),0                     ; X座標(下位)
-    LD (IX+4),A                     ; X座標(上位)
+    INC DE                          ; +3
+    LD (DE),0                       ; X座標(下位)
+    INC DE                          ; +4
+    LD (DE),A                       ; X座標(上位)
 
-    LD (IX+5),3                     ; スプライトパターンNo=3(テキ1)    
-    LD (IX+6),$0B                   ; カラーコード
+    INC DE                          ; +5
+    LD (DE),33                      ; スプライトパターンNo=33(テキ1)    
+    INC DE                          ; +6
+    LD (DE),14                      ; カラーコード
 
     ; ■方向設定
     INC HL
@@ -52,22 +60,20 @@ INIT_ENEMY1_L2:
     AND @00001110                   ; 下位1ビットを0にする(=2,4,6,8の値にする)
 
 INIT_ENEMY1_L3:
-    LD (IX+7),A                     ; 方向
-    LD (IX+8),$FF                   ; 移動量
-    LD (IX+11),0                    ; アニメーションカウンタ=0
-    LD (IX+12),ENEMY_FLASHING_CNT   ; 出現中カウンタ
+    INC DE                          ; +7
+    LD (DE),A                       ; 方向
+    INC DE                          ; +8
+    LD (DE),$FF                     ; 移動量
+    LD HL,ANIM_PTN_ENEMY1           ; キャラクタアニメーションテーブルアドレス
+    INC DE                          ; +9
+    LD (DE),L                       ; アニメーションテーブルのアドレス(L)
+    INC DE                          ; +10
+    LD (DE),H                       ; アニメーションテーブルのアドレス(H)
+    INC DE                          ; +11
+    LD (DE),0                       ; アニメーションカウンタ=0
+    INC DE                          ; +12
+    LD (DE),ENEMY_FLASHING_CNT      ; 出現中カウンタ
 
-    ; ■キャラクタアニメーションテーブル番号設定
-    ; 移動方向が1～4は右向き(ANIM_PTN_ENEMY1_R)
-    ;           5～8は左向き(ANIM_PTN_ENEMY1_L)を設定する
-    LD HL,ANIM_PTN_ENEMY1_R         ; 右向きの設定
-    CP 5
-    JR C,INIT_ENEMY1_L4             ; 5～8以外はキャリーフラグが立つのでINIT_ENEMY_L4へ    
-    LD HL,ANIM_PTN_ENEMY1_L         ; 左向きの設定
-
-INIT_ENEMY1_L4:
-    LD (IX+9),L                     ; アニメーションテーブルのアドレス(L)
-    LD (IX+10),H                    ; アニメーションテーブルのアドレス(H)
  	RET
 
 
@@ -134,10 +140,8 @@ SECTION rodata_user
 ; ====================================================================================================
 
 ; ■アニメーションパターン
-ANIM_PTN_ENEMY1_R:
-	DB 2,2,2,2,6,6,6,6,10,10,10,10,14,14,14,14,0
-ANIM_PTN_ENEMY1_L:
-	DB 2,2,2,2,6,6,6,6,10,10,10,10,14,14,14,14,0
+ANIM_PTN_ENEMY1:
+	DB 33,33,33,33,34,34,34,34,35,35,35,35,36,36,36,36,35,35,35,35,34,34,34,34,$FF
 
 ; ■バウンド方向データ
 ENEMY_BOUNDDATA_VERTICAL:
