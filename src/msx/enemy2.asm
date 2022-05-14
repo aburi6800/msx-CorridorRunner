@@ -16,15 +16,27 @@ INIT_ENEMY2:
     CALL INIT_ENEMY1                ; まずはテキ１と同じ初期化を行う
 
     LD (IX),CHRNO_ENEMY2            ; キャラクター番号=テキ2
-    LD (IX+5),7
-    LD (IX+8),0                     ; 移動量
-    LD HL,ANIM_PTN_ENEMY2
-    LD (IX+9),L                     ; アニメーションテーブルアドレス
-    LD (IX+10),H
-    LD (IX+11),0                    ; アニメーションカウンタ=0
+    LD (IX+5),33                    ; スプライトパターンNo=33(テキ1)
+    LD (IX+6),6                     ; カラーコード
+    LD (IX+8),1                     ; 移動量
+    LD BC,ANIM_PTN_ENEMY2
+    LD (IX+9),C                     ; アニメーションテーブルアドレス
+    LD (IX+10),B
 
-    ; テキ2の独自のプロパティ
-    LD (IX+12),20                   ; カウンタ(20フレーム)
+    ; ■テキ2の独自のプロパティ
+    LD (IX+13),16                   ; 方向変更するまでのカウンタ
+
+    LD HL,(ENEMY_PARAM_ADDR)        ; HL <- パラメータのアドレス
+    INC HL
+    INC HL
+    INC HL
+    LD A,(HL)
+    OR A
+    JR Z,INIT_ENEMY2_L2
+    LD A,1
+
+INIT_ENEMY2_L2:
+    LD (IX+14),A                    ; 方向 0=右回り()方向+1)、1=左回り(方向-1)
 
     RET
 
@@ -33,36 +45,40 @@ INIT_ENEMY2:
 ; テキ2処理サブルーチン
 ; ====================================================================================================
 UPDATE_ENEMY2:
-    ; ■移動
+
     CALL SPRITE_MOVE                ; スプライトキャラクター移動処理
-    CALL SPRITE_ANIM                ; スプライトパターン番号更新
 
-    ; ■カウンタ減算
-;    LD A,(IX+12)                    ; A <- カウンタ
-;    DEC A                           ; A=A-1
-;    OR A                            ; ゼロかどうか判定(ゼロならZフラグがONになる)
-;    JR NZ,UPDATE_ENEMY2_L2          ; ゼロでなければL2へ
-
-    SUB (IX+12)                     ; カウンタ -1
+    ; ■方向変換カウンタ
+    DEC (IX+13)                     ; カウンタ -1
     RET NZ                          ; ゼロでなければ終了
+    LD (IX+13),16                   ; カウンタリセット
+    LD A,(IX+14)                    ; 方向
+    OR A
+    JR NZ,UPDATE_ENEMY2_L1          ; ゼロでなければ左回り
 
-    ; ■カウンタリセット
-    LD (IX+12),20
+    ;   右回り
+    LD A,(IX+7)                     ; A <- 方向
+    INC A                           ; A=A+1
+    CP 9                            ; 結果が9か
+    JR NZ,UPDATE_ENEMY2_L2
+    LD A,1                          ; 移動方向を1に設定
+    JP UPDATE_ENEMY2_L2
 
-    ; ■移動方向を変更する
+UPDATE_ENEMY2_L1:
+    ;   左回り
     LD A,(IX+7)                     ; A <- 方向
     DEC A                           ; A=A-1
     OR A                            ; ゼロかどうか判定(ゼロならZフラグがONになる)
-    JR NZ,UPDATE_ENEMY2_L1
+    JR NZ,UPDATE_ENEMY2_L2
     LD A,8                          ; 移動方向を8に設定
 
-UPDATE_ENEMY2_L1:
+UPDATE_ENEMY2_L2:
     LD (IX+7),A                     ; A -> 方向
-    RET
 
-;UPDATE_ENEMY2_L2:
-;    LD (IX+12),A
-;    RET
+    CALL HIT_CHECK_FROM_ENEMY       ; 衝突判定
+    RET NC                          ; ヒットしてなかったら終了
+    CALL SET_PLAYER_MISS_EXPLOSION  ; プレイヤーミス状態（爆発）に設定
+    RET
 
 
 SECTION rodata_user
@@ -73,4 +89,4 @@ SECTION rodata_user
 
 ; ■アニメーションパターン
 ANIM_PTN_ENEMY2:
-	DB 8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9,0
+	DB 33,33,33,33,34,34,34,34,35,35,35,35,36,36,36,36,35,35,35,35,34,34,34,34,$FF
