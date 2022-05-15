@@ -1,5 +1,27 @@
 # Corridor Runner for MSX
 
+
+## How to play
+
+### WebMSX
+
+https://webmsx.org/?MACHINE=MSX1J&ROM=https://github.com/aburi6800/msx-CorridorRunner/raw/main/dist/c-runner.rom&FAST_BOOT
+
+### Control
+
+- Cursor key Left & Right :
+    - Change player direction
+- Cursor key Down :
+    - Press to charge power, release to move forward.
+
+### Rules (tentative)
+
+- Score points when you take an item chip.
+- Score is increased if you take them consecutively.
+- Misses when falling from the floor.
+- Misses if it falls off the floor or touches an enemy.
+- When you get to the exit, the round is clear.
+
 ## Build
 
 z88dk and cmake are required. Install in advance.  
