@@ -258,6 +258,10 @@ ROUND_CLEAR_ADDBONUS_L1:
     DEC (HL)
     RET NZ
 
+    LD A,(ROUND)
+    CP MAX_ROUND
+    JR Z,ROUND_CLEAR_ADDBONUS_L2    ; クリアしたラウンドが最大ラウンドだったらL2へ
+
     ; ■カウンタ設定
     LD A,$80
     LD (ROUND_CLEAR_CNT),A
@@ -265,6 +269,14 @@ ROUND_CLEAR_ADDBONUS_L1:
     ; ■ラウンドクリア処理状態を進める
     LD A,ROUND_CLEAR_STS_MESSAGE2
     LD (ROUND_CLEAR_STS),A
+
+    RET
+
+ROUND_CLEAR_ADDBONUS_L2:
+
+    ; ■ゲーム状態を変更
+    LD A,STATE_ALL_CLEAR            ; ゲーム状態 <- オールクリア
+    CALL CHANGE_STATE
 
     RET
 
@@ -287,14 +299,9 @@ ROUND_CLEAR_MESSAGE2:
     INC (HL)                       ; データがないので一旦保留
 
     ; ■ゲーム状態を変更
-    LD A,(HL)
-    CP 17
     LD A,STATE_ROUND_START          ; ゲーム状態 <- ラウンド開始
-    JP NZ,ROUND_CLEAR_MESSAGE2_L2
-    LD A,STATE_ALL_CLEAR            ; ゲーム状態 <- オールクリア
-
-ROUND_CLEAR_MESSAGE2_L2:
     CALL CHANGE_STATE
+
     RET
 
 
