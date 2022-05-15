@@ -371,8 +371,7 @@ UPDATE_PLAYER_MOVE_END_L1:
     XOR A                           ; アイテム崇徳フラグをOFF
     LD (ITEM_GET_FLG),A
 
-    ; ■マップチップ判定
-    ; ここで床がなければミスにする
+    ; ■停止地点のマップチップ判定
     CALL UPDATE_PLAYER_MOVE_GET_MAPDATA ; A <- マップデータ
     CP 3
     JR Z,UPDATE_PLAYER_MOVE_END_L2  ; マップデータが3(出口)の場合、ゲーム状態をラウンドクリアに変更

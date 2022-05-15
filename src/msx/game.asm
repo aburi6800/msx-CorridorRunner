@@ -8,6 +8,9 @@
 
 SECTION code_user
 
+; ■最大ラウンド数
+MAX_ROUND               EQU 3       ; 最大ラウンド数 - 1 を設定する
+
 ; ■ゲーム状態の定数
 STATE_INIT:             EQU 0       ; ゲーム状態:初期処理
 STATE_TITLE:            EQU 1       ; ゲーム状態:タイトル
