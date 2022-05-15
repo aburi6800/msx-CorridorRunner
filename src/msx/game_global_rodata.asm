@@ -12,6 +12,12 @@ SECTION rodata_user
 ; romに格納される
 ; ====================================================================================================
 
+; ■マップデータ
+include "mapdata.asm"
+
+; ■ラウンドデータ
+include "rounddata.asm"
+
 ; ■マップデータテーブル
 MAP_TBL:
     DW MAP_ROUND01
@@ -75,138 +81,6 @@ ENEMY_PTN_TBL:
     DW ENEMY_PTN_ROUND14
     DW ENEMY_PTN_ROUND15
     DW ENEMY_PTN_ROUND16
-
-; ■マップデータ
-include "mapdata.asm"
-
-; ■ラウンド1
-PLAYER_INIT_ROUND01:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND01:
-    DW $0000
-    DB CHRNO_ENEMY1, $20, $30, $08, $00, $00
-    DW $0000
-    DB CHRNO_ENEMY1, $20, $C0, $02, $00, $00
-    DW $0000
-    DB CHRNO_ENEMY1, $90, $30, $06, $00, $00
-    DW $0000
-    DB CHRNO_ENEMY1, $90, $C0, $04, $00, $00
-    DW $0200
-    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-    DW $0200
-    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-    DW $0200
-    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-    DW $0200
-    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド2
-PLAYER_INIT_ROUND02:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND02:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド3
-PLAYER_INIT_ROUND03:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND03:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド4
-PLAYER_INIT_ROUND04:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND04:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド5
-PLAYER_INIT_ROUND05:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND05:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド6
-PLAYER_INIT_ROUND06:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND06:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド7
-PLAYER_INIT_ROUND07:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND07:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド8
-PLAYER_INIT_ROUND08:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND08:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド9
-PLAYER_INIT_ROUND09:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND09:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド10
-PLAYER_INIT_ROUND10:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND10:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド11
-PLAYER_INIT_ROUND11:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND11:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド12
-PLAYER_INIT_ROUND12:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND12:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド13
-PLAYER_INIT_ROUND13:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND13:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド14
-PLAYER_INIT_ROUND14:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND14:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド15
-PLAYER_INIT_ROUND15:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND15:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
-; ■ラウンド16
-PLAYER_INIT_ROUND16:
-    DB $A0,$78,$01
-ENEMY_PTN_ROUND16:
-    DW $FFFF
-    DB $00, $FF, $FF, $FF, $00, $00
-
 
 ; ■チップセットテーブル
 CHIPSET_TBL:
