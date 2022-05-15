@@ -5,7 +5,7 @@
 
 ### WebMSX
 
-https://webmsx.org/?MACHINE=MSX1J&ROM=https://github.com/aburi6800/msx-CorridorRunner/raw/main/dist/c-runner.rom&FAST_BOOT
+https://webmsx.org/?MACHINE=MSX1J&ROM=https://github.com/aburi6800/msx-CorridorRunner/raw/v0.1.0/dist/c-runner.rom&FAST_BOOT
 
 ### Control
 
