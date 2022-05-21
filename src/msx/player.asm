@@ -174,20 +174,22 @@ UPDATE_PLAYER_CONTROL:
     JP NZ,UPDATE_PLAYER_CONTROL_L1
 
     LD A,PLAYERMODE_LEFTTURN
-    LD (PLAYER_CONTROL_MODE),A      ; プレイヤー状態を左回転に変更
-    LD A,3
-    LD (PLAYER_CNT_WK1),A           ; WK1:処理繰り返し回数
-    LD A,1
-    LD (PLAYER_CNT_WK2),A           ; WK2:ウェイトカウンタ
-    RET
+    JP UPDATE_PLAYER_CONTROL_L11
+;    LD (PLAYER_CONTROL_MODE),A      ; プレイヤー状態を左回転に変更
+;    LD A,2
+;    LD (PLAYER_CNT_WK1),A           ; WK1:処理繰り返し回数
+;    LD A,1
+;    LD (PLAYER_CNT_WK2),A           ; WK2:ウェイトカウンタ
+;    RET
 
 UPDATE_PLAYER_CONTROL_L1:
     CP 3
     JP NZ,UPDATE_PLAYER_CONTROL_L2
 
     LD A,PLAYERMODE_RIGHTTURN
+UPDATE_PLAYER_CONTROL_L11:
     LD (PLAYER_CONTROL_MODE),A      ; プレイヤー状態を右回転に変更
-    LD A,3
+    LD A,2
     LD (PLAYER_CNT_WK1),A           ; WK1:処理繰り返し回数
     LD A,1
     LD (PLAYER_CNT_WK2),A           ; WK2:ウェイトカウンタ
