@@ -41,9 +41,14 @@ INIT_PLAYER:
     LD BC,$0010                     ; 転送サイズ=16byte
     LDIR                            ; ブロック転送
 
+    LD A,5
+    CALL ADD_HL_A                   ; HL=HL+5 → PLAYER2のスプライトパターンNo1のアドレス
+    LD A,(HL)                       ; A <- PLAYER2のスプライトパターンNo
+    DEC A                           ; -1する
+
     POP IX
     LD (IX),CHRNO_PLAYER1           ; キャラクター番号=プレイヤー(1)
-    LD (IX+5),0                     ; スプライトパターンNo
+    LD (IX+5),A                     ; スプライトパターンNo
     LD (IX+6),1                     ; カラーコード
 
     ; ■ワークエリア初期化
@@ -77,10 +82,14 @@ INIT_PLAYER2:
     LD (IX+4),A                     ; X座標(整数部)
     LD (PLAYER_POS+1),A             ; ワークに設定
 
-    LD (IX+5),1                     ; スプライトパターンNo
+    INC DE
+    LD A,(DE)
+    DEC A
+    ADD A,A
+    INC A
+    LD (IX+5),A                     ; スプライトパターンNo
     LD (IX+6),7                     ; カラーコード
 
-    INC DE
     LD A,(DE)
     LD (IX+7),A                     ; 移動方向
     LD (IX+8),0                     ; 移動量
