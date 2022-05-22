@@ -138,7 +138,6 @@ UPDATE_PLAYER_L1:
 UPDATE_PLAYER_EXIT:
     RET
 
-
 UPDATE_PLAYER2:
     ; キャラクター番号2にキャラクター番号1の内容をコピーする
     ; 現在のIXは転送先(DE)に設定
@@ -352,13 +351,13 @@ UPDATE_PLAYER_MOVE_L2:
 
 UPDATE_PLAYER_MOVE_L3:
     ; ■マップチップ判定
-    ; ここでアイテムがあれば取得する
+    ; ここでターゲットがあれば取得する
     CALL UPDATE_PLAYER_MOVE_GET_MAPDATA ; A <- マップデータ
     CP 2
     JR NZ,UPDATE_PLAYER_MOVE_L4
 
-    ; ■アイテム取得
-    CALL UPDATE_PLAYER_GETITEM
+    ; ■ターゲット取得
+    CALL UPDATE_PLAYER_GETTARGET
 
 UPDATE_PLAYER_MOVE_L4:
     ; ■スプライトキャラクター移動
@@ -368,8 +367,8 @@ UPDATE_PLAYER_MOVE_L4:
 
 UPDATE_PLAYER_MOVE_END:
     ; ■スコア倍率のリセット判定
-    ;   移動中にアイテムを取得していない場合、スコアのキャラクター番号を0に、スコア倍率を1にリセットする
-    LD A,(ITEM_GET_FLG)
+    ;   移動中にターゲットを取得していない場合、スコアのキャラクター番号を0に、スコア倍率を1にリセットする
+    LD A,(TARGET_GET_FLG)
     OR A
     JR NZ,UPDATE_PLAYER_MOVE_END_L1
 
@@ -379,8 +378,8 @@ UPDATE_PLAYER_MOVE_END:
     LD (SCORE_ADDVALUE_BCD),A
 
 UPDATE_PLAYER_MOVE_END_L1:
-    XOR A                           ; アイテム崇徳フラグをOFF
-    LD (ITEM_GET_FLG),A
+    XOR A                           ; ターゲット取得フラグをOFF
+    LD (TARGET_GET_FLG),A
 
     ; ■停止地点のマップチップ判定
     CALL UPDATE_PLAYER_MOVE_GET_MAPDATA ; A <- マップデータ
@@ -434,10 +433,26 @@ UPDATE_PLAYER_MOVE_GET_MAPDATA:
     RET
 
 ; ----------------------------------------------------------------------------------------------------
-; アイテム取得サブルーチン
+; ターゲット取得サブルーチン
 ; ----------------------------------------------------------------------------------------------------
-UPDATE_PLAYER_GETITEM:
+UPDATE_PLAYER_GETTARGET:
 
+    ; ■ターゲット残数デクリメント
+    LD A,(TARGET_LEFT)
+    OR A
+    JR Z,UPDATE_PLAYER_GETITEM_L1   ; ゼロなら何もしない
+
+    DEC A
+    LD (TARGET_LEFT),A
+    OR A
+    JR NZ,UPDATE_PLAYER_GETITEM_L1  ; ゼロ以外なら次の処理へ
+
+    ; ■ターゲット残数がゼロなら出口を表示する
+    LD A,(MAPWK_EXIT_OFFSET)
+    LD B,A
+    CALL DRAW_MAPCHIP
+
+UPDATE_PLAYER_GETITEM_L1:
     ; ■マップデータオフセット取得
     CALL GET_MAPDATA_OFFSET         ; A <- マップデータオフセット
     LD B,A
@@ -451,9 +466,9 @@ UPDATE_PLAYER_GETITEM:
     ; マップデータのオフセットに該当するマップチップを書き換える
     CALL DRAW_MAPCHIP
 
-    ; ■アイテム取得フラグON
+    ; ■ターゲット取得フラグON
     LD A,1
-    LD (ITEM_GET_FLG),A
+    LD (TARGET_GET_FLG),A
 
     ; ■効果音再生
     LD HL,SFX_01
@@ -466,15 +481,14 @@ UPDATE_PLAYER_GETITEM:
     CALL ADDSCORE                   ; スコア加算
 
     ; ■スコアのキャラクター表示
-;    PUSH IX
     LD A,CHRNO_SCORE                ; スコアのキャラクターを追加する
     CALL ADD_CHARACTER
-;    POP IX
 
     LD A,(SCORE_ADDVALUE_BCD)       ; スコア倍率
     CP $16
-    JR Z,UPDATE_PLAYER_GETITEM_L1   ; 既に4(=16倍)なら次の処理へ
+    RET Z                           ; 既に16倍なら抜ける
 
+    ; ■次の表示に向けた準備
     ADD A,A                         ; スコア倍率を２倍
     DAA
     LD (SCORE_ADDVALUE_BCD),A
@@ -482,9 +496,6 @@ UPDATE_PLAYER_GETITEM:
     LD A,(SCORE_CHRNO)              ; 得点のキャラクター番号を設定
     INC A
     LD (SCORE_CHRNO),A
-
-UPDATE_PLAYER_GETITEM_L1:
-
 
 UPDATE_PLAYER_GETITEM_EXIT:
     RET
@@ -603,7 +614,6 @@ UPDATE_PLAYER_EXPLOSION_L2:
 
     RET
 
-
 ; ----------------------------------------------------------------------------------------------------
 ; プレイヤーミス（爆発2）サブルーチン
 ; 64flame経過まで待つ。
@@ -616,9 +626,6 @@ UPDATE_PLAYER_EXPLOSION2:
     LD A,(HL)
     OR A
     RET NZ
-
-;    ; ■プレイヤーミス時のゲーム状態変更
-;    CALL PLAYER_MISS_CHANGE_GAME_STATE
 
 
 ; ====================================================================================================
@@ -695,6 +702,7 @@ CHARGE_WAIT_VALUE:
 PLAYER_MISS_PTN1:
     DB 16,18,20,22,0
 
+
 SECTION bss_user
 ; ====================================================================================================
 ; ワークエリア
@@ -728,6 +736,6 @@ PLAYER_MISS_TIME_CNT:
 PLAYER_MISS_PTN_CNT:
     DEFS 1
 
-; ■アイテム取得フラグ
-ITEM_GET_FLG:
+; ■ターゲット取得フラグ
+TARGET_GET_FLG:
     DEFS 1

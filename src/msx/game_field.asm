@@ -62,8 +62,8 @@ SET_CHIPSET_BGMDATA_ADDR:
     LD (HL),D
 
     RET
-    
 
+    
 ; ====================================================================================================
 ; マップデータコピールーチン
 ; 対象ラウンドのマップデータをマップワークにコピーする
@@ -71,16 +71,12 @@ SET_CHIPSET_BGMDATA_ADDR:
 ; IN  : A = ラウンド数(0〜)
 ; ====================================================================================================
 COPY_MAP_DATA:
+    LD HL,TARGET_LEFT
+    LD (HL),0                       ; ターゲットの残数をクリア
+
     LD A,(ROUND)
     LD HL,MAP_TBL
     CALL GET_ADDR_TBL               ; DE <- マップデータの先頭アドレス
-
-;    ; ■マップデータの先頭アドレスから176byteをマップワークにブロック転送する
-;    LD H,D                          ; HL=転送元アドレス(DE)
-;    LD L,E
-;    LD DE,MAP_WK                    ; DE=転送先アドレス(MAP_WK)
-;    LD BC,176                       ; BC=転送データ数(byte)
-;    LDIR                            ; ブロック転送(HL->DE * BC)
 
     LD HL,MAP_WK                    ; マップワークの先頭アドレス
     LD B,MAPDATA_SIZE/4             ; 繰り返し数（マップデータが1/4なので、4で割る）
@@ -91,6 +87,7 @@ COPY_MAP_DATA_L1:
     RLCA
     AND @00000011
     LD (HL),A
+    CALL COPY_MAP_DATA_S1           ; ターゲット残数カウント、出口オフセット値退避
     INC HL                          ; 設定先のマップワークのアドレスを+1
 
     LD A,(DE)                       ; A <- マップデータ(1byte=4チップ分)
@@ -100,6 +97,7 @@ COPY_MAP_DATA_L1:
     SRA A
     AND @00000011
     LD (HL),A
+    CALL COPY_MAP_DATA_S1           ; ターゲット残数カウント、出口オフセット値退避
     INC HL                          ; 設定先のマップワークのアドレスを+1
 
     LD A,(DE)                       ; A <- マップデータ(1byte=4チップ分)
@@ -107,16 +105,57 @@ COPY_MAP_DATA_L1:
     SRA A
     AND @00000011
     LD (HL),A
+    CALL COPY_MAP_DATA_S1           ; ターゲット残数カウント、出口オフセット値退避
     INC HL                          ; 設定先のマップワークのアドレスを+1
 
     LD A,(DE)                       ; A <- マップデータ(1byte=4チップ分)
     AND @00000011
     LD (HL),A
+    CALL COPY_MAP_DATA_S1           ; ターゲット残数カウント、出口オフセット値退避
     INC HL                          ; 設定先のマップワークのアドレスを+1
 
     INC DE                          ; 設定元のマップデータのアドレスを+1
     DJNZ COPY_MAP_DATA_L1
 
+    RET
+
+COPY_MAP_DATA_S1:
+    ; ■各マップデータ設定時の共通処理
+    ;   A = マップチップ番号
+    PUSH BC
+    PUSH DE    
+    PUSH HL
+
+    LD B,A                          ; マップチップ番号をBレジスタに退避
+
+    LD A,(ROUND)
+    CP 3                            ; ROUNDは0からなので、0,1,2の時に非表示にする
+    JR C,COPY_MAP_DATA_SL2
+
+    LD A,B
+    CP 3
+    JR NZ,COPY_MAP_DATA_SL1
+
+    ;   出口のマップワークアドレス退避
+    LD DE,MAP_WK
+    SBC HL,DE                       ; HLに設定先のマップワークアドレスが設定されている前提で
+                                    ; MAP_WKのアドレスを減算＝オフセット値を求める
+    LD A,L
+    LD (MAPWK_EXIT_OFFSET),A
+
+COPY_MAP_DATA_SL1:
+    ;   ターゲット残数カウント
+    LD A,B
+    CP 2
+    JR NZ,COPY_MAP_DATA_SL2
+
+    LD HL,TARGET_LEFT
+    INC (HL)                        ; ターゲット残りをインクリメント
+
+COPY_MAP_DATA_SL2:
+    POP HL
+    POP DE
+    POP BC
     RET
 
 
@@ -126,10 +165,6 @@ COPY_MAP_DATA_L1:
 ; 予め、マップデータコピールーチン(COPY_MAP_DATA)を実行してMAP_WKにデータを展開しておくこと
 ; ====================================================================================================
 DRAW_MAP:
-    ; ■ターゲット残りをゼロに初期化
-    LD HL,TARGET_LEFT
-    LD (HL),0
-
     ; ■マップデータループ回数設定
     LD B,MAPDATA_SIZE               ; B <- マップデータ長 (176byte)
     
@@ -139,13 +174,6 @@ DRAW_MAP_L1:
 
     LD A,B                          ; A <- マップデータオフセット
     CALL GET_MAPDATA                ; A <- マップデータ
-    CP 2
-    JR NZ,DRAW_MAP_L2               ; マップデータが"2"でなければL2へ
-
-    LD HL,TARGET_LEFT
-    INC (HL)                        ; ターゲット残りをインクリメント
-
-DRAW_MAP_L2:
     CALL DRAW_MAPCHIP               ; マップチップ描画
     POP BC                          ; BC <- スタック(マップデータループ回数)
     DJNZ DRAW_MAP_L1
@@ -162,9 +190,22 @@ DRAW_MAPCHIP:
     ; ■マップデータ取得
     LD A,B                          ; A <- マップデータオフセット
     CALL GET_MAPDATA                ; A <- マップデータ
-    PUSH AF                         ; マップデータをスタックに退避
+
+    LD D,A                          ; D <- A
+    CP 3
+    JR NZ,DRAW_MAPCHIP_L1           ; 3(出口)以外はそのまま表示
+
+    ;   4面以降でターゲット残数がゼロ出ない場合は、出口を表示させない
+    LD A,(TARGET_LEFT)              ; A <- ターゲット残数
+    OR A
+    JR Z,DRAW_MAPCHIP_L1            ; ターゲット残数がゼロならそのまま表示するのでL1へ
+    LD D,1                          ; D(マップデータ)を1(床)にする
+
+DRAW_MAPCHIP_L1:
+    LD A,D                          ; D -> A
 
     ; ■チップパターンテーブルのアドレスオフセット値を求める
+    PUSH AF                         ; マップデータをスタックに退避
     ADD A,A                         ; A=A*4
     ADD A,A                         ;
     LD H,0
@@ -362,3 +403,11 @@ CHIPSET_WK:
 ; ■BGMのアドレス(2byte)
 BGM_WK:
     DEFS 2
+
+; ■ターゲット残り
+TARGET_LEFT:
+    DEFS 1
+
+; ■出口のマップワークアドレス
+MAPWK_EXIT_OFFSET:
+    DEFS 1

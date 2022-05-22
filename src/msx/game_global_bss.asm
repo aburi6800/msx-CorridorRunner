@@ -36,10 +36,6 @@ SCORE_ADDVALUE_BCD:
 HISCORE:
     DEFS 3
 
-; ■ターゲット残り
-TARGET_LEFT:
-    DEFS 1
-
 ; ■残機
 LEFT:
     DEFS 1
