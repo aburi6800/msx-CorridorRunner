@@ -82,9 +82,20 @@ CHANGE_STATE:
 ; 経過時間リセット
 ; ====================================================================================================
 TICK_RESET:
-    LD A,0                          ; A <- 0
+    XOR A                           ; A <- 0
     LD (TICK1+0),A
     LD (TICK1+1),A
+
+    LD (TICK2_WK+0),A
+    LD (TICK2_WK+1),A
+    LD (TICK2+0),A
+    LD (TICK2+1),A
+
+    LD (TICK3_WK+0),A
+    LD (TICK3_WK+1),A
+    LD (TICK3+0),A
+    LD (TICK3+1),A
+
     RET
 
 
@@ -103,25 +114,57 @@ TICK_COUNT:
     CALL PRTHEX
     ; DEBUGここまで
 
+    ; ■TTICK2の処理
+    ;   TICK1の処理で設定したゼロフラグの状態を買えたくないので先に処理する
+    LD A,(TICK2_WK)
+    INC A
+    CP 6
+    JR NZ,TICK_COUNT_L1
+
+    ; - TICK2_WKが6になったらTICK2をカウントアップし、TICK2_WKをゼロにリセット
+    XOR A
+    LD HL,TICK2
+    INC (HL)
+
+TICK_COUNT_L1:
+    LD (TICK2_WK),A
+
+    ; ■TICK3の処理
+    ;   TICK1の処理で設定したゼロフラグの状態を買えたくないので先に処理する
+    LD A,(TICK3_WK)
+    INC A
+    CP 60
+    JR NZ,TICK_COUNT_L2
+
+    ; - TICK3_WKが60になったらTICK3をカウントアップし、TICK3_WKをゼロにリセット
+    XOR A
+    LD HL,TICK3
+    INC (HL)
+
+TICK_COUNT_L2:
+    LD (TICK3_WK),A
+
+    ; ■TICK1の処理
     LD HL,(TICK1)                   ; HL <- TICKの値
 
+    ; - TICK1=ゼロの場合、初回処理のためにゼロフラグを立てる
     LD A,H                          ; HL=0の場合、ゼロフラグが立つ
     OR L
 
     INC HL                          ; TICKをカウントアップ(フラグは変化しない)
-    JR Z,TICK_COUNT_L1              ; ゼロフラグが立っていたら次の処理へ
+    JR Z,TICK_COUNT_L3              ; ゼロフラグが立っていたら次の処理へ
 
+    ; - インクリメントした結果、一巡した場合はゼロフラグを立てなくないので1に設定する
     LD A,H                          ; ゼロでなければ次の処理へ
     OR L
-    JR NZ,TICK_COUNT_L1
+    JR NZ,TICK_COUNT_L3
 
     LD L,1                          ; 1にリセット
     LD H,0
 
-TICK_COUNT_L1:
+TICK_COUNT_L3:
     LD (TICK1),HL
 
-TICK_COUNT_EXIT:
     RET
 
 
@@ -136,6 +179,7 @@ RESET_OFFSCREEN:
 
 ; ====================================================================================================
 ; 画面更新
+; @ToDo ここは本来はVSYNCの処理の中でやるべきか？
 ; ====================================================================================================
 DRAW:
     DI
@@ -202,6 +246,12 @@ DRAW_INFO:
     LD HL,$0006
     CALL PRTBCD
 
+    ; ■タイム表示
+    LD B,1
+    LD DE,TIME_BCD
+    LD HL,$02FE
+    CALL PRTBCD
+
     ; ■パワーチャージメーター
     LD B,16                         ; B <- チャージパワー値
 DRAW_INFO_L1:
@@ -264,12 +314,6 @@ DRAW_INFO_INIT:
     LD B,3
     LD DE,HISCORE
     LD HL,$0012
-    CALL PRTBCD
-
-    ; ■ラウンド数表示
-    LD B,1
-    LD DE,ROUND_BCD
-    LD HL,$02FE
     CALL PRTBCD
 
     ; ■残機表示
@@ -345,7 +389,7 @@ INFO_STRING1:
 ; ■画面下部表示内容
 INFO_STRING2:
     DW $02E0
-    DB $B1,$B2,$B3,"                ",$B4,"    ROUND",0
+    DB $B1,$B2,$B3,"                ",$B4,"     TIME",0
 
 ; ■カラーテーブル変更データ 6,6,8,8,9,9,8,8,6,6,1
 COLOR_TBL_CHG_DATA:
@@ -399,8 +443,12 @@ SECTION bss_user
 ; ■経過時間カウンタ
 TICK1:
     DEFS 2                      ; 1/60のタイマー
+TICK2_WK:
+    DEFS 1                      ; 1/10のタイマー加算判定用
 TICK2:
     DEFS 2                      ; 1/10のタイマー、TICK=6ごとにインクリメント
+TICK3_WK:
+    DEFS 1                      ; 1秒のタイマー加算判定用
 TICK3:
     DEFS 2                      ; 1秒のタイマー、TICK1=60ごとにインクリメント
 

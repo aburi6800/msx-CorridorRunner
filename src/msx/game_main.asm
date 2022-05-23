@@ -60,5 +60,38 @@ GAME_MAIN_L5:
     POP BC
     DJNZ GAME_MAIN_L2
 
+    ; ■タイム減算
+    LD A,(TICK3_WK)
+    OR A
+    RET NZ
+
+    LD A,(TIME_BCD)
+    OR A
+    JR Z,GAME_MAIN_TIMEOUT          ; タイムがゼロならタイムアウト処理へ
+
+    DEC A
+    DAA
+    LD (TIME_BCD),A
+
 GAME_MAIN_EXIT:
+    RET
+
+
+; -----------------------------------------------------------------------------------------------------
+; タイムアウト処理
+; -----------------------------------------------------------------------------------------------------
+GAME_MAIN_TIMEOUT:
+
+    LD HL,TIMEOUTENEMY_APPEARANCE_CNT
+    LD A,(HL)
+    OR A    
+    JR NZ,GAME_MAIN_TIMEOUT_L1
+
+    LD A,10                         ; 次に出現するまで10秒
+    LD (HL), A
+    CALL ADD_ENEMY_TIMEOUT
+    RET
+
+GAME_MAIN_TIMEOUT_L1:
+    DEC (HL)
     RET
