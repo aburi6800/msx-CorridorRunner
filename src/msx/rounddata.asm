@@ -113,3 +113,8 @@ PLAYER_INIT_ROUND16:
     DB $A0,$78,$01
 ENEMY_PTN_ROUND16:
     DW $FFFF
+
+; ■タイムアウト時のテキ
+ENEMY_TIMEOUT:
+    DW $0000                        ; ダミー
+    DB CHRNO_ENEMY1, $FF, $FF, $FF, $00, $00

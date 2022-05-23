@@ -39,3 +39,11 @@ HISCORE:
 ; ■残機
 LEFT:
     DEFS 1
+
+; ■タイム(BCD)
+TIME_BCD:
+    DEFS 1
+
+; ■タイムアウト時のテキ出現カウンタ
+TIMEOUTENEMY_APPEARANCE_CNT:
+    DEFS 1
