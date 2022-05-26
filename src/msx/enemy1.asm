@@ -17,21 +17,26 @@ INIT_ENEMY1:
     LD HL,(ENEMY_PARAM_ADDR)        ; HL <- パラメータのアドレス
     PUSH IX
     POP DE
-    LD (DE),CHRNO_ENEMY1            ; キャラクター番号=テキ1
+    LD A,CHRNO_ENEMY1
+    LD (DE),A                       ; キャラクター番号=テキ1
 
     ; ■Y座標設定
+    INC DE                          ; +1
+    XOR A
+    LD (DE),A                       ; Y座標(下位)
     LD A,(HL)
     CP $FF
     JR NZ,INIT_ENEMY1_L1            ; $FF以外ならランダム設定しない
     CALL GET_RND_SPR_Y              ; A <- Y座標(ランダム)
 
 INIT_ENEMY1_L1:
-    INC DE                          ; +1
-    LD (DE),0                     ; Y座標(下位)
     INC DE                          ; +2
-    LD (DE),A                     ; Y座標(上位)
+    LD (DE),A                       ; Y座標(上位)
 
     ; ■X座標設定
+    INC DE                          ; +3
+    XOR A
+    LD (DE),A                       ; X座標(下位)
     INC HL
     LD A,(HL)
     CP $FF
@@ -39,15 +44,15 @@ INIT_ENEMY1_L1:
     CALL GET_RND_SPR_X              ; A <- X座標(ランダム)
 
 INIT_ENEMY1_L2:
-    INC DE                          ; +3
-    LD (DE),0                       ; X座標(下位)
     INC DE                          ; +4
     LD (DE),A                       ; X座標(上位)
 
     INC DE                          ; +5
-    LD (DE),33                      ; スプライトパターンNo=33(テキ1)    
+    LD A,33
+    LD (DE),A                       ; スプライトパターンNo=33(テキ1)    
     INC DE                          ; +6
-    LD (DE),14                      ; カラーコード
+    LD A,14
+    LD (DE),A                       ; カラーコード
 
     ; ■方向設定
     INC HL
@@ -63,16 +68,21 @@ INIT_ENEMY1_L3:
     INC DE                          ; +7
     LD (DE),A                       ; 方向
     INC DE                          ; +8
-    LD (DE),$FF                     ; 移動量
+    LD A,$FF
+    LD (DE),A                       ; 移動量
     LD HL,ANIM_PTN_ENEMY1           ; キャラクタアニメーションテーブルアドレス
     INC DE                          ; +9
-    LD (DE),L                       ; アニメーションテーブルのアドレス(L)
+    LD A,L
+    LD (DE),A                       ; アニメーションテーブルのアドレス(L)
     INC DE                          ; +10
-    LD (DE),H                       ; アニメーションテーブルのアドレス(H)
+    LD A,H
+    LD (DE),A                       ; アニメーションテーブルのアドレス(H)
     INC DE                          ; +11
-    LD (DE),0                       ; アニメーションカウンタ=0
+    XOR A
+    LD (DE),A                       ; アニメーションカウンタ=0
     INC DE                          ; +12
-    LD (DE),ENEMY_FLASHING_CNT      ; 出現中カウンタ
+    LD A,ENEMY_FLASHING_CNT
+    LD (DE),A                       ; 出現中カウンタ
 
  	RET
 
