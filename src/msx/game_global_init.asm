@@ -11,6 +11,9 @@ SECTION code_user
 ; ゲーム全体初期化処理
 ; ====================================================================================================
 GAME_GLOBAL_INIT:
+    ; ■H.TIMIハンドラ初期化
+    CALL INIT_H_TIMI_HANDLER
+
     ; ■画面初期化
     CALL SCREEN_INIT
 
@@ -28,9 +31,6 @@ GAME_GLOBAL_INIT:
 
     ; ■スプライトキャラクターワークテーブル初期化
     CALL INIT_SPR_CHR_WK_TBL
-
-    ; ■サウンドドライバ初期化
-    CALL SOUNDDRV_INIT
 
     ; ■ゲーム状態をタイトルに変更
     LD A,STATE_TITLE
