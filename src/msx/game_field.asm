@@ -378,11 +378,16 @@ GET_MAPDATA_OFFSET:
     ADD A,D                         ; A=A+D
 
 ;DEBUG
+    PUSH AF
+    LD A,(IS_DEBUG)
+    OR A
+    JR Z,GET_MAPDATA_OFFSET_EXIT
     LD HL,32+30
     CALL PRTHEX
 ;DEBUG END
 
 GET_MAPDATA_OFFSET_EXIT:
+    POP AF
     RET
 
 

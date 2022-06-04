@@ -105,15 +105,19 @@ TICK_RESET:
 ; ====================================================================================================
 TICK_COUNT:
     ; DEBUG
+    LD A,(IS_DEBUG)
+    OR A
+    JR Z,TICK_COUNT_L0
+
     LD HL,28
     LD A,(TICK1+1)
     CALL PRTHEX
-
     LD HL,30
     LD A,(TICK1)
     CALL PRTHEX
     ; DEBUGここまで
 
+TICK_COUNT_L0:
     ; ■TTICK2の処理
     ;   TICK1の処理で設定したゼロフラグの状態を買えたくないので先に処理する
     LD A,(TICK2_WK)
