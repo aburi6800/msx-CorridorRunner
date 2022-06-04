@@ -19,13 +19,13 @@ INIT_ENEMY2:
     LD (IX),CHRNO_ENEMY2            ; キャラクター番号=テキ2
     LD (IX+5),33                    ; スプライトパターンNo=33(テキ1)
     LD (IX+6),6                     ; カラーコード
-    LD (IX+8),1                     ; 移動量
+    LD (IX+8),$FF                   ; 移動量
     LD BC,ANIM_PTN_ENEMY2
     LD (IX+9),C                     ; アニメーションテーブルアドレス
     LD (IX+10),B
 
     ; ■テキ2の独自のプロパティ
-    LD (IX+13),16                   ; 方向変更するまでのカウンタ
+    LD (IX+13),32                   ; 方向変更するまでのカウンタ
 
     LD HL,(ENEMY_PARAM_ADDR)        ; HL <- パラメータのアドレス
     INC HL
@@ -52,7 +52,7 @@ UPDATE_ENEMY2:
     ; ■方向変換カウンタ
     DEC (IX+13)                     ; カウンタ -1
     RET NZ                          ; ゼロでなければ終了
-    LD (IX+13),16                   ; カウンタリセット
+    LD (IX+13),32                   ; カウンタリセット
     LD A,(IX+14)                    ; 方向
     OR A
     JR NZ,UPDATE_ENEMY2_L1          ; ゼロでなければ左回り
