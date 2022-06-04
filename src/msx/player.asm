@@ -413,6 +413,11 @@ UPDATE_PLAYER_MOVE_END_L1:
     RET
 
 UPDATE_PLAYER_MOVE_END_L2:
+    ; ■ターゲット残数チェック
+    LD A,(TARGET_LEFT)
+    OR A
+    JR NZ,UPDATE_PLAYER_MOVE_END_L3 ; ターゲット残数がゼロでなければ、状態遷移のみ実施
+
     ; ■ゲーム状態をラウンドクリアに変更
     LD A,STATE_ROUND_CLEAR
     CALL CHANGE_STATE
