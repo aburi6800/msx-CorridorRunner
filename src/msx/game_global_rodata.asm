@@ -18,6 +18,10 @@ include "mapdata.asm"
 ; ■ラウンドデータ
 include "rounddata.asm"
 
+; ■Debugモード
+IS_DEBUG:
+    DB $00
+
 ; ■マップデータテーブル
 MAP_TBL:
     DW MAP_ROUND01
