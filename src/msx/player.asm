@@ -181,6 +181,9 @@ UPDATE_PLAYER_CONTROL:
     CP 7
     JP NZ,UPDATE_PLAYER_CONTROL_L1
 
+    ; ■STICK=7(左)のときの処理
+    XOR A
+    LD (PLAYER_CONTROL_MODE_SV),A   ; プレイヤー操作モード退避(ゼロ)
     LD A,PLAYERMODE_LEFTTURN
     JP UPDATE_PLAYER_CONTROL_L11
 ;    LD (PLAYER_CONTROL_MODE),A      ; プレイヤー状態を左回転に変更
@@ -194,8 +197,12 @@ UPDATE_PLAYER_CONTROL_L1:
     CP 3
     JP NZ,UPDATE_PLAYER_CONTROL_L2
 
+    ; ■STICK=3(右)のときの処理
+    XOR A
+    LD (PLAYER_CONTROL_MODE_SV),A   ; プレイヤー操作モード退避(ゼロ)
     LD A,PLAYERMODE_RIGHTTURN
 UPDATE_PLAYER_CONTROL_L11:
+    ; ここは右、左共通
     LD (PLAYER_CONTROL_MODE),A      ; プレイヤー状態を右回転に変更
     LD A,2
     LD (PLAYER_CNT_WK1),A           ; WK1:処理繰り返し回数
@@ -270,8 +277,10 @@ UPDATE_PLAYER_TURN_EXIT:
 
 UPDATE_PLAYER_TURN_END:
     ; ■プレイヤー操作状態をリセット
-    LD A,PLAYERMODE_CONTROL
+    LD A,(PLAYER_CONTROL_MODE_SV)   ; 左右ターン前の状態に戻す
     LD (PLAYER_CONTROL_MODE),A
+    XOR A
+    LD (PLAYER_CONTROL_MODE_SV),A   ; 退避値をゼロにリセット
     RET
 
 ; ----------------------------------------------------------------------------------------------------
@@ -285,6 +294,24 @@ UPDATE_PLAYER_CHARGE:
     CP 4
     JP C,UPDATE_PLAYER_CHARGE_END   ; STICKの値が1〜3の場合はキャリーが立つので、次の状態に遷移させる
 
+;    CP 4
+    JR NZ,UPDATE_PLAYER_CHARGE_L01
+    ; ■STICK=4（右下）の場合
+    LD A,(PLAYER_CONTROL_MODE)
+    LD (PLAYER_CONTROL_MODE_SV),A   ; プレイヤー操作モード退避
+    LD A,PLAYERMODE_RIGHTTURN
+    JP UPDATE_PLAYER_CONTROL_L11
+
+UPDATE_PLAYER_CHARGE_L01:
+    CP 6
+    JR NZ,UPDATE_PLAYER_CHARGE_L02
+    ; ■STICK=6（左下）の場合
+    LD A,(PLAYER_CONTROL_MODE)
+    LD (PLAYER_CONTROL_MODE_SV),A   ; プレイヤー操作モード退避
+    LD A,PLAYERMODE_LEFTTURN
+    JP UPDATE_PLAYER_CONTROL_L11
+
+UPDATE_PLAYER_CHARGE_L02:
     ; ■上記以外の時はチャージ
     ;   カウンタ＝０の時は、チャージパワーを+1してパワー値に対応したカウンタを取得
     ;   ただしチャージパワーが16の時は加算しない
@@ -323,6 +350,55 @@ UPDATE_PLAYER_CHARGE_END:
 ; プレイヤー移動サブルーチン
 ; ----------------------------------------------------------------------------------------------------
 UPDATE_PLAYER_MOVE:
+    LD A,(TICK1)
+    AND @00000001
+    RET Z
+
+    ; ■STICK値を取得
+    LD A,(PLAYER_CNT_WK2)
+    OR A
+    JR Z,UPDATE_PLAYER_MOVE_L00
+
+    LD HL,PLAYER_CNT_WK2
+    DEC (HL)
+    JP UPDATE_PLAYER_MOVE_L03
+
+UPDATE_PLAYER_MOVE_L00:
+    LD A,(INPUT_BUFF_STICK)
+    CP 3
+    JR Z,UPDATE_PLAYER_MOVE_L01
+    CP 4
+    JR Z,UPDATE_PLAYER_MOVE_L01
+    CP 6
+    JR Z,UPDATE_PLAYER_MOVE_L02
+    CP 7
+    JR Z,UPDATE_PLAYER_MOVE_L02
+    JP UPDATE_PLAYER_MOVE_L03
+
+UPDATE_PLAYER_MOVE_L01:
+    ; ■右回転に方向変更
+    LD A,(IX+7)
+    INC A
+    CP 9
+    JR NZ,UPDATE_PLAYER_MOVE_L021
+    LD A,1
+    JR UPDATE_PLAYER_MOVE_L021
+
+UPDATE_PLAYER_MOVE_L02:
+    ; ■左回転に方向変更
+    LD A,(IX+7)
+    DEC A
+    JR NZ,UPDATE_PLAYER_MOVE_L021
+    LD A,8
+UPDATE_PLAYER_MOVE_L021:
+    LD (IX+7),A                     ; 方向を設定
+    DEC A                           ; (方向-1)*2をスプライトパターン番号にする(0,2,4,6,8,10,12,14)
+    ADD A,A
+    LD (IX+5),A
+    LD A,2
+    LD (PLAYER_CNT_WK2),A
+
+UPDATE_PLAYER_MOVE_L03:
     ; ■チャージパワー減算
     LD HL,PLAYER_CHARGE_POWER
     DEC (HL)
@@ -365,6 +441,9 @@ UPDATE_PLAYER_MOVE_L4:
 
     RET
 
+; ----------------------------------------------------------------------------------------------------
+; プレイヤー移動終了サブルーチン
+; ----------------------------------------------------------------------------------------------------
 UPDATE_PLAYER_MOVE_END:
     ; ■スコア倍率のリセット判定
     ;   移動中にターゲットを取得していない場合、スコアのキャラクター番号を0に、スコア倍率を1にリセットする
@@ -717,6 +796,10 @@ SECTION bss_user
 ; ■プレイヤー操作モード
 ; 0=CONTROL,1=TURN LEFT,2=TURN RIGHT,3=CHARGE,4=MOVE,5〜=MISS
 PLAYER_CONTROL_MODE:
+    DEFS 1
+
+; ■プレイヤー操作モード退避用
+PLAYER_CONTROL_MODE_SV:
     DEFS 1
 
 ; ■チャージパワー
