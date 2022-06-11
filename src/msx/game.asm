@@ -324,6 +324,12 @@ DRAW_INFO_INIT:
     LD HL,$0012
     CALL PRTBCD
 
+    ; ■ラウンド数表示
+    LD B,1
+    LD DE,ROUND_BCD
+    LD HL,$02F6
+    CALL PRTBCD
+
     ; ■残機表示
     LD A,(LEFT)
     OR A
@@ -337,6 +343,7 @@ DRAW_INFO_INIT_L1:
     LD (HL),$88
     INC HL
     DJNZ DRAW_INFO_INIT_L1
+
     RET
 
 
@@ -401,7 +408,7 @@ INFO_STRING1:
 ; ■画面下部表示内容
 INFO_STRING2:
     DW $02E0
-    DB $B1,$B2,$B3,"                ",$B4,"     TIME",0
+    DB $B1,$B2,$B3,"                ",$B4,"R    TIME",0
 
 ; ■カラーテーブル変更データ 6,6,8,8,9,9,8,8,6,6,1
 COLOR_TBL_CHG_DATA:
