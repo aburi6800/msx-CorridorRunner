@@ -330,22 +330,26 @@ DRAW_INFO_INIT:
     LD HL,$02F6
     CALL PRTBCD
 
+DRAW_INFO_INIT_L1:
     ; ■残機表示
+    ;   エクステンド時の処理からも呼ばれるので、この処理の後には何も処理しないこと
     LD A,(LEFT)
     OR A
     RET Z                           ; ゼロなら表示不要のため処理を抜ける
 
     LD HL,OFFSCREEN
-    LD BC,$001C
+    LD BC,$001B
     ADD HL,BC
     LD B,A
-DRAW_INFO_INIT_L1:
+    CP 5
+    JR C,DRAW_INFO_INIT_L2
+    LD B,5                          ; 表示上は最大5機までとする
+
+DRAW_INFO_INIT_L2:
     LD (HL),$88
     INC HL
-    DJNZ DRAW_INFO_INIT_L1
-
+    DJNZ DRAW_INFO_INIT_L2
     RET
-
 
 ; ====================================================================================================
 ; モジュール
@@ -403,7 +407,7 @@ SECTION rodata_user
 ; ■画面上部表示内容
 INFO_STRING1:
     DW $0000
-    DB "SCORE 00000000 HI 00000000    ",0
+    DB "SCORE 00000000 HI 00000000      ",0
 
 ; ■画面下部表示内容
 INFO_STRING2:
