@@ -24,16 +24,20 @@ ROUND:
 ROUND_BCD:
     DEFS 1
 
-; ■スコア
+; ■スコア(BCD値)
 SCORE:
     DEFS 3
 
-; ■スコア加算値(BCD)
+; ■スコア加算値(BCD値)
 SCORE_ADDVALUE_BCD:
     DEFS 1
 
-; ■ハイスコア
+; ■ハイスコア(BCD値)
 HISCORE:
+    DEFS 3
+
+; ■次回エクステンドスコア(BCD値)
+NEXT_EXTEND_SCORE:
     DEFS 3
 
 ; ■残機

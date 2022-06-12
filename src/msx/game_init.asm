@@ -15,16 +15,24 @@ GAME_INIT:
     CALL INIT_RND
 
     ; ■各変数初期化
-    ; - ラウンド数
+    ;   - ラウンド数
     XOR A
     LD (ROUND),A
-    ; - スコア
+    ;   - スコア
     LD (SCORE),A
     LD (SCORE+1),A
     LD (SCORE+2),A
-    ; - 残機
+    ;   - 残機
     LD A,2
     LD (LEFT),A
+    ;   - 次回エクステンドスコア
+    LD A,$00
+    LD (NEXT_EXTEND_SCORE),A
+    LD A,$02
+    LD (NEXT_EXTEND_SCORE+1),A
+    LD A,$00
+;    XOR A
+    LD (NEXT_EXTEND_SCORE+2),A
 
     ; ■ゲーム状態変更
     LD A,STATE_ROUND_START          ; ゲーム状態 <- ラウンド開始
