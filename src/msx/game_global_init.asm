@@ -76,7 +76,7 @@ SCREEN_INIT:
 SET_FONT_PATTERN:
 	LD HL,FONT_PTN_DATA			    ; HLレジスタに転送元データの先頭アドレスを設定
     LD DE,PTN_GEN_ADDR+32*8         ; DEレジスタに転送先アドレスを設定
-	LD BC,8*64					    ; BCレジスタにデータサイズを指定
+	LD BC,8*65					    ; BCレジスタにデータサイズを指定
     CALL LDIRVM					    ; BIOS VRAMブロック転送
 
     RET

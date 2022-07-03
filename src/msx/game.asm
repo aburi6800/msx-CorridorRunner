@@ -250,6 +250,10 @@ DRAW_INFO:
     LD HL,$0006
     CALL PRTBCD
 
+    LD A,(GAME_STATE)
+    CP STATE_TITLE
+    RET Z
+
     ; ■タイム表示
     LD B,1
     LD DE,TIME_BCD
@@ -314,15 +318,19 @@ DRAW_INFO_INIT:
     LD HL,INFO_STRING1
     CALL PRTSTR
 
-    ; ■画面下部表示内容
-    LD HL,INFO_STRING2
-    CALL PRTSTR
-
     ; ■ハイスコア表示
     LD B,3
     LD DE,HISCORE
     LD HL,$0012
     CALL PRTBCD
+
+    LD A,(GAME_STATE)
+    CP STATE_TITLE
+    JP Z,DRAW_INFO_INIT_L1
+
+    ; ■画面下部表示内容
+    LD HL,INFO_STRING2
+    CALL PRTSTR
 
     ; ■ラウンド数表示
     LD B,1

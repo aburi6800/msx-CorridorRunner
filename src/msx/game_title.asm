@@ -37,12 +37,6 @@ GAME_TITLE_INIT:
     CALL RESET_OFFSCREEN
 
     ; ■タイトル画面作成
-;    XOR A
-;    LD (ROUND),A                    ; ラウンド数 <- 0
-
-;    CALL COPY_MAP_DATA
-;    CALL DRAW_MAP                   ; フィールド描画
-
     LD HL,TITLE1
     CALL PRTSTR
     LD HL,TITLE2
@@ -54,6 +48,8 @@ GAME_TITLE_INIT:
     LD HL,TITLE5
     CALL PRTSTR
     LD HL,TITLE6
+    CALL PRTSTR
+    LD HL,TITLE7
     CALL PRTSTR
 
     ; ■BGM再生
@@ -73,20 +69,23 @@ SECTION rodata_user
 ; dw : 表示先のVRAMアドレスのオフセット値    
 ; db : 表示文字列、最後に0を設定すること
 TITLE1:
-    DW $00A4
+    DW $0084
     DB $a0,$a2,$a1,$a1,$a1,$a1,$ab,$a1,$a4,$a1,$a1,$a1,$a0,$a2,$a1,$a1,$a1,$a1,$a1,$a1,$a1,$a1,$a1,$a2,0
 TITLE2:
-    DW $00C4
+    DW $00A4
 	DB $a3,$20,$a0,$a2,$a0,$a0,$a8,$a0,$a4,$a0,$a2,$a0,$a3,$a7,$a3,$a4,$a0,$a2,$a0,$a2,$a9,$aa,$a0,$a4,0
 TITLE3:
-    DW $00E4
+    DW $00C4
 	DB $a3,$20,$a5,$a7,$a3,$a3,$a8,$a5,$a7,$a5,$a7,$a3,$a3,$a2,$a5,$a7,$a3,$a4,$a3,$a4,$a5,$a6,$a3,$a4,0
 TITLE4:
-    DW $0104
+    DW $00E4
 	DB $a5,$a7,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a3,$ac,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a6,$a7,0
 TITLE5:
-    DW $0205
+    DW $01C5
 	DB "PUSH SPACE OR TRIGGER.",0
 TITLE6:
-    DW $0282
-	DB "PROGRAMMED BY ABURI6800 2022",0
+    DW $0267
+	DB $5F,"ABURI GAMES 2022",0
+TITLE7:
+    DW $02A6
+	DB "ALL RIGHTS RESERVED.",0
