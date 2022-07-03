@@ -346,7 +346,7 @@ DRAW_INFO_INIT_L1:
     LD B,5                          ; 表示上は最大5機までとする
 
 DRAW_INFO_INIT_L2:
-    LD (HL),$88
+    LD (HL),$B8
     INC HL
     DJNZ DRAW_INFO_INIT_L2
     RET
