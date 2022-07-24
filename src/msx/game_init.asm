@@ -31,12 +31,12 @@ GAME_INIT:
     LD A,$02
     LD (NEXT_EXTEND_SCORE+1),A
     LD A,$00
-;    XOR A
     LD (NEXT_EXTEND_SCORE+2),A
 
     ; ■ゲーム状態変更
     LD A,STATE_ROUND_START          ; ゲーム状態 <- ラウンド開始
     CALL CHANGE_STATE
+
 
 GAME_INIT_EXIT:
     RET

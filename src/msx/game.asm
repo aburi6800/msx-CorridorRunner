@@ -457,6 +457,8 @@ INCLUDE "assets/06.asm"
 INCLUDE "assets/07.asm"
 ; - CLEAR
 INCLUDE "assets/08.asm"
+; - ENDING
+INCLUDE "assets/09.asm"
 
 
 ; ■SFXデータ
