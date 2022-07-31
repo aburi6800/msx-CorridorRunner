@@ -23,9 +23,6 @@ INIT_FIELD:
     ; ■マップデータをワークにコピー
     CALL COPY_MAP_DATA
 
-    ; ■オフスクリーンリセット
-    CALL RESET_OFFSCREEN
-
     ; ■オフスクリーン描画
     CALL DRAW_MAP
 
@@ -165,6 +162,13 @@ COPY_MAP_DATA_SL2:
 ; 予め、マップデータコピールーチン(COPY_MAP_DATA)を実行してMAP_WKにデータを展開しておくこと
 ; ====================================================================================================
 DRAW_MAP:
+
+    ; ■オフスクリーン初期化
+    CALL RESET_OFFSCREEN
+
+    ; ■背景の星描画
+    CALL DRAW_STAR
+
     ; ■マップデータループ回数設定
     LD B,MAPDATA_SIZE               ; B <- マップデータ長 (176byte)
     
@@ -172,14 +176,48 @@ DRAW_MAP_L1:
     PUSH BC                         ; マップデータループ回数をスタックに退避
     DEC B
 
-    LD A,B                          ; A <- マップデータオフセット
-    CALL GET_MAPDATA                ; A <- マップデータ
     CALL DRAW_MAPCHIP               ; マップチップ描画
     POP BC                          ; BC <- スタック(マップデータループ回数)
     DJNZ DRAW_MAP_L1
 
 DRAW_MAP_EXIT:
     RET
+
+DRAW_STAR:
+    ; ■背景の星描画
+    ;   オフスクリーンの$0020(32)〜$02DF(735)までの0〜704までの乱数値を取得し、オフスクリーンに描画する
+    LD B,21                         ; 21行繰り返し
+    LD HL,OFFSCREEN+$0020                     ; HL <- オフスクリーンの描画開始オフセットアドレス
+
+DRAW_STAR_L1:
+    PUSH BC
+    PUSH HL
+
+    LD B,4                         ; 4回繰り返し
+DRAW_STAR_L2:
+    PUSH HL
+    CALL GET_RND
+    AND %00011111                   ; 0〜31を取り出す
+    LD D,0
+    LD E,A
+    ADD HL,DE
+    LD (HL),$E8
+    LD A,B
+    AND %00000001
+    JR Z,DRAW_STAR_L3
+    LD (HL),$F0
+DRAW_STAR_L3:
+    POP HL
+    DJNZ DRAW_STAR_L2
+
+    POP HL
+    POP BC
+
+    ADD HL,$0020
+    DJNZ DRAW_STAR_L1
+
+    RET
+
 
 ; ====================================================================================================
 ; マップチップ描画
@@ -190,6 +228,8 @@ DRAW_MAPCHIP:
     ; ■マップデータ取得
     LD A,B                          ; A <- マップデータオフセット
     CALL GET_MAPDATA                ; A <- マップデータ
+    OR A
+    RET Z                           ; マップデータがゼロなら抜ける
 
     LD D,A                          ; D <- A
     CP 3
@@ -263,9 +303,15 @@ DRAW_MAPCHIP_L1:
     LD DE,31
     ADD HL,DE
     LD A,(HL)
-    CP $20                          ; A > $20(空白)か
-    RET NZ                          ; ゼロでなければ抜ける
+    CP $20
+    JR Z,DRAW_MAPCHIP_L2            ; 空白の場合は描画へ
+    CP $E8
+    JR Z,DRAW_MAPCHIP_L2            ; 星の場合は描画へ
+    CP $F0
+    JR Z,DRAW_MAPCHIP_L2            ; 星の場合は描画へ
+    RET
 
+DRAW_MAPCHIP_L2:
     ; 描画キャラクターのアドレス取得
     PUSH HL                         ; HL(描画先のVRAMアドレス)をスタックに退避
     LD HL,(CHIPSET_WK)              ; HL <- チップセットテーブルのアドレス

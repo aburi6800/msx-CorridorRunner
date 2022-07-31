@@ -21,7 +21,8 @@ STATE_GAME_OVER:        EQU 5       ; ゲーム状態:ゲームオーバー
 STATE_ROUND_CLEAR:      EQU 6       ; ゲーム状態:ラウンドクリアー
 STATE_ALL_CLEAR:        EQU 7       ; ゲーム状態:オールクリアー
 
-COLOR_TBL_CHG_DATA_CNT  EQU 12      ; カラーテーブルパターン数
+COLOR_TBL_CHG_DATA1_CNT EQU 12      ; カラーテーブル1パターン数
+COLOR_TBL_CHG_DATA2_CNT EQU 6       ; カラーテーブル2パターン数
 
 ; ====================================================================================================
 ; ゲーム処理
@@ -206,34 +207,63 @@ DRAW_EXIT:
 ; カラーテーブル更新
 ; -----------------------------------------------------------------------------------------------------
 UPDATE_COLOR_TBL:
-    LD A,(TICK1)
+    LD A,(TICK1)                    ; TICK1が16ごとに処理する
     AND %00001111
     CP 1
     RET NZ
 
-    LD A,(COLOR_TBL_CNT)
+    LD A,(COLOR_TBL_CNT1)           ; カウンタ1チェック
     OR A
     JR NZ,UPDATE_COLOR_TBL_L1
 
-    LD A,COLOR_TBL_CHG_DATA_CNT
-    LD (COLOR_TBL_CNT),A
+    LD A,COLOR_TBL_CHG_DATA1_CNT    ; カウンタ1がゼロのときはリセットする
+    LD (COLOR_TBL_CNT1),A
 
 UPDATE_COLOR_TBL_L1:
-    LD HL,COLOR_TBL_CNT
+    LD HL,COLOR_TBL_CNT1            ; カウンタ1デクリメント
     DEC (HL)
 
-    LD A,(HL)
-    ADD A,A                         ; A=A*8
+    LD A,(HL)                       ; カウンタ2の値*8
     ADD A,A
     ADD A,A
-    LD C,A
+    ADD A,A
+    LD C,A                          ; BC <- A
     LD B,0
-    LD HL,COLOR_TBL_CHG_DATA
+    LD HL,COLOR_TBL_CHG_DATA1
     ADD HL,BC
 
     LD DE,COLOR_TABLE_ADDR+12
     LD BC,8
     CALL LDIRVM				 	    ; BIOS VRAMブロック転送
+
+UPDATE_COLOR_TBL_L2:
+    LD A,(COLOR_TBL_CNT2)           ; カウンタ2チェック
+    OR A
+    JR NZ,UPDATE_COLOR_TBL_L3
+
+    LD A,COLOR_TBL_CHG_DATA2_CNT    ; カウンタ2がゼロのときはリセットする
+    LD (COLOR_TBL_CNT2),A
+
+UPDATE_COLOR_TBL_L3:
+    LD HL,COLOR_TBL_CNT2            ; カウンタ2デクリメント
+    DEC (HL)
+
+    LD A,(HL)                       ; カウンタ2の値*2
+    ADD A,A
+    LD C,A                          ; BC <- A
+    LD B,0
+    LD HL,COLOR_TBL_CHG_DATA2
+    ADD HL,BC
+    PUSH HL
+    LD A,(HL)
+    LD HL,COLOR_TABLE_ADDR+29
+    CALL WRTVRM				 	    ; BIOS VRAMブロック転送
+
+    POP HL
+    INC HL
+    LD A,(HL)
+    LD HL,COLOR_TABLE_ADDR+30
+    CALL WRTVRM				 	    ; BIOS VRAMブロック転送
 
 UPDATE_COLOR_TBL_EXIT:
     RET
@@ -422,8 +452,9 @@ INFO_STRING2:
     DW $02E0
     DB $B1,$B2,$B3,"                ",$B4,"R    TIME",0
 
-; ■カラーテーブル変更データ 6,6,8,8,9,9,8,8,6,6,1
-COLOR_TBL_CHG_DATA:
+; ■カラーテーブル変更データ1
+;   $60〜$9Fまでの色を変更
+COLOR_TBL_CHG_DATA1:
 	DB $46, $41, $A6, $A1, $C6, $C1, $11, $E1
 	DB $46, $41, $A6, $A1, $C6, $C1, $16, $E1
 	DB $48, $41, $A8, $A1, $C8, $C1, $18, $E1
@@ -437,6 +468,15 @@ COLOR_TBL_CHG_DATA:
 	DB $46, $41, $A6, $A1, $C6, $C1, $11, $E1
 	DB $46, $41, $A6, $A1, $C6, $C1, $11, $E1
 
+; ■カラーテーブル変更データ2
+;   $E7〜$F7までの色を変更
+COLOR_TBL_CHG_DATA2:
+    DB $71, $51
+    DB $51, $41
+    DB $41, $11
+    DB $11, $41
+    DB $41, $51
+    DB $51, $71
 
 ; ■BGMデータ
 ; - タイトル
@@ -474,7 +514,9 @@ SECTION bss_user
 ; ====================================================================================================
 
 ; ■カラーテーブル変更カウンタ
-COLOR_TBL_CNT:
+COLOR_TBL_CNT1:
+    DEFS 1
+COLOR_TBL_CNT2:
     DEFS 1
 
 ; ■経過時間カウンタ
