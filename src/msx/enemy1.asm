@@ -131,7 +131,7 @@ ENEMY1_BOUND_L2:
 
 ENEMY1_BOUND_L3:
     ; ■画面右端か
-    CP X_MAX - 1
+    CP X_MAX
     RET C                           ; 画面右端でなければここで終了
 
 ENEMY1_BOUND_L4:
