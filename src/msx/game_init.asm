@@ -16,8 +16,10 @@ GAME_INIT:
 
     ; ■各変数初期化
     ;   - ラウンド数
-    XOR A
+;    XOR A
+    LD A,2
     LD (ROUND),A
+    XOR A
     ;   - スコア
     LD (SCORE),A
     LD (SCORE+1),A
