@@ -569,8 +569,9 @@ UPDATE_PLAYER_GETITEM_L1:
     CALL ADD_CHARACTER
 
     LD A,(SCORE_ADDVALUE_BCD)       ; スコア倍率
-    CP $16
-    RET Z                           ; 既に16倍なら抜ける
+;    CP $16
+    CP $08
+    RET Z                           ; 既に最高倍率なら抜ける
 
     ; ■次の表示に向けた準備
     ADD A,A                         ; スコア倍率を２倍
