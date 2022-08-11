@@ -14,6 +14,13 @@ GAME_OVER:
     ; ■初回のみの処理実行
     JR Z,GAME_OVER_INIT
 
+    ; ■キーマトリクス読み込み
+    ;   F5キー：A=7でbit1がOFFなら入力
+    LD A,7
+    CALL SNSMAT
+    CP %11111101
+    JP Z,GAME_CONTINUE
+
     ; ■TICKが300カウント(=5秒)経過してなければ抜ける
     LD BC,300
     LD HL,(TICK1)    
@@ -43,6 +50,11 @@ GAME_OVER_INIT:
     ; ■ゲームオーバーメッセージ表示
     LD HL,STRING_GAME_OVER
     CALL PRTSTR
+    LD HL,STRING_CONTINUE
+    CALL PRTSTR
+
+    ; ■キーバッファクリア
+    CALL KILBUF
 
     ; ■BGM再生
     LD HL,_07
@@ -92,6 +104,23 @@ CHECK_HIGHSCORE_UPDATE_L3:
 CHECK_HIGHSCORE_UPDATE_EXIT:
     RET
 
+
+; ---------------------------------------------------------------------------------------------------
+; コンティニュー処理
+; ---------------------------------------------------------------------------------------------------
+GAME_CONTINUE:
+
+    ; ■ゲーム初期化
+    CALL GAME_INIT
+
+    ; ■コンティニュー時の開始ラウンドを設定
+    LD A,(CONTINUE_ROUND)           ; コンティニュー開始ラウンドを取得して設定
+    LD (ROUND),A
+
+GAME_CONTINUE_EXIT:
+    RET
+
+
 SECTION rodata_user
 ; ====================================================================================================
 ; 定数エリア
@@ -101,3 +130,6 @@ SECTION rodata_user
 STRING_GAME_OVER:
     DW $012B
 	DB "GAME OVER",0
+STRING_CONTINUE:
+    DW $0209
+	DB "CONTINUE  [F5]",0
