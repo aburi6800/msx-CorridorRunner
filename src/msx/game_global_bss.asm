@@ -20,6 +20,10 @@ GAME_STATE:
 ROUND:
     DEFS 1
 
+; ■コンティニューラウンド
+CONTINUE_ROUND:
+    DEFS 1
+
 ; ■ラウンド数(BCD値)
 ROUND_BCD:
     DEFS 1

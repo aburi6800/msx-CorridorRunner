@@ -67,6 +67,12 @@ ROUND_START_INIT:
     XOR A
     LD (TIMEOUTENEMY_APPEARANCE_CNT),A
 
+    ; ■コンティニューラウンド設定
+    ;   4面ごとに設定する
+    LD A,(ROUND)
+    AND %11111100
+    LD (CONTINUE_ROUND),A
+
     ; ■ラウンド数をBCD変換してワークに設定
     LD A,(ROUND)
     INC A                           ; ワークの値は0〜なので、表示用に+1する
