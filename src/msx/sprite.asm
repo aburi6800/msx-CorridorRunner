@@ -33,6 +33,7 @@ DIRECTION_DOWN:                     EQU 5
 DIRECTION_DOWNLEFT:                 EQU 6
 DIRECTION_LEFT:                     EQU 7
 DIRECTION_UPLEFT:                   EQU 8
+DIRECTION_RANDOM:                   EQU $FF
 
 
 ; ====================================================================================================
