@@ -79,6 +79,10 @@ ROUND_START_INIT:
     DAA
     LD (ROUND_BCD),A
 
+    ; ■パーフェクト判定フラグ初期設定
+    LD A,1
+    LD (PERFECT_FLG),A
+
     ; ■スプライトキャラクターワークテーブル初期化
     CALL INIT_SPR_CHR_WK_TBL
 

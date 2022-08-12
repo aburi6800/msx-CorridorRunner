@@ -11,7 +11,8 @@ SECTION code_user
 ROUND_CLEAR_STS_WIPE:               EQU 0   ; 画面消去
 ROUND_CLEAR_STS_MESSAGE1:           EQU 1   ; メッセージ表示１
 ROUND_CLEAR_STS_ADDBONUS:           EQU 2   ; ボーナス加算
-ROUND_CLEAR_STS_MESSAGE2:           EQU 3   ; メッセージ表示2
+ROUND_CLEAR_STS_PERFECT:            EQU 3   ; パーフェクトボーナス
+ROUND_CLEAR_STS_MESSAGE2:           EQU 4   ; メッセージ表示2
 
 ; ====================================================================================================
 ; ラウンドクリアー
@@ -41,6 +42,7 @@ ROUND_CLEAR_L1:
     JP ROUND_CLEAR_WIPE             ; ラウンドクリア:画面ワイプ
     JP ROUND_CLEAR_MESSAGE1         ; ラウンドクリア:メッセージ１
     JP ROUND_CLEAR_ADDBONUS         ; ラウンドクリア:ボーナス加算
+    JP ROUND_CLEAR_PERFECT          ; ラウンドクリア:パーフェクトボーナス
     JP ROUND_CLEAR_MESSAGE2         ; ラウンドクリア:メッセージ２
 
 ROUND_CLEAR_RET:
@@ -258,9 +260,43 @@ ROUND_CLEAR_ADDBONUS_L1:
     DEC (HL)
     RET NZ
 
+    ; ■カウンタゼロになったら次の状態へ遷移する
+    ; - オールクリア判定
     LD A,(ROUND)
     CP MAX_ROUND
     JR Z,ROUND_CLEAR_ADDBONUS_L2    ; クリアしたラウンドが最大ラウンドだったらL2へ
+
+    ; - パーフェクト判定
+    LD A,(TARGET_LEFT)
+    OR A
+    JR NZ,ROUND_CLEAR_ADDBONUS_L3   ; ターゲット残数がゼロでなければスキップ
+    LD A,(PERFECT_FLG)
+    OR A
+    JR Z,ROUND_CLEAR_ADDBONUS_L3    ; パーフェクト判定フラグがOFFであればスキップ
+
+    ; ■次の状態をパーフェクトボーナスに遷移
+    LD DE,$0100                     ; ボーナス加算
+    CALL ADDSCORE
+
+    LD HL,SFX_04                    ; パーフェクトファンファーレ
+    CALL SOUNDDRV_SFXPLAY
+
+    LD A,$80                        ; カウンタ設定
+    LD (ROUND_CLEAR_CNT),A
+
+    LD A,ROUND_CLEAR_STS_PERFECT    ; 次の状態をパーフェクトボーナスに設定
+    LD (ROUND_CLEAR_STS),A
+
+    RET
+
+ROUND_CLEAR_ADDBONUS_L2:
+    ; ■ゲーム状態を変更
+    LD A,STATE_ALL_CLEAR            ; ゲーム状態 <- オールクリア
+    CALL CHANGE_STATE
+
+    RET
+
+ROUND_CLEAR_ADDBONUS_L3:
 
     ; ■カウンタ設定
     LD A,$80
@@ -272,13 +308,22 @@ ROUND_CLEAR_ADDBONUS_L1:
 
     RET
 
-ROUND_CLEAR_ADDBONUS_L2:
 
-    ; ■ゲーム状態を変更
-    LD A,STATE_ALL_CLEAR            ; ゲーム状態 <- オールクリア
-    CALL CHANGE_STATE
+; ====================================================================================================
+; パーフェクトボーナス
+; ====================================================================================================
+ROUND_CLEAR_PERFECT:
 
-    RET
+    LD HL,STRING_ROUND_CLEAR_MSG8   ; メッセージ表示
+    CALL PRTSTR
+
+    ; ■カウンタ減算
+    LD HL,ROUND_CLEAR_CNT
+    DEC (HL)
+    RET NZ
+
+    ; ■ラウンドクリア処理状態を進める
+    JP ROUND_CLEAR_ADDBONUS_L3
 
 
 ; ====================================================================================================
@@ -330,8 +375,11 @@ STRING_ROUND_CLEAR_MSG6:
     DW $018A
     DB "BONUS     00",0
 STRING_ROUND_CLEAR_MSG7:
-    DW $0202
+    DW $0242
     DB "GOOD LUCK IN THE NEXT ROUND!",0
+STRING_ROUND_CLEAR_MSG8:
+    DW $01C8
+    DB "PERFECT  10000",0
 
 
 SECTION bss_user

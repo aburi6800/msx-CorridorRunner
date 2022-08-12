@@ -127,7 +127,7 @@ COPY_MAP_DATA_S1:
 
     LD A,(ROUND)
     CP 3                            ; ROUNDは0からなので、0,1,2の時に非表示にする
-    JR C,COPY_MAP_DATA_SL2
+    JR C,COPY_MAP_DATA_SL1
 
     LD A,B
     CP 3
@@ -235,7 +235,11 @@ DRAW_MAPCHIP:
     CP 3
     JR NZ,DRAW_MAPCHIP_L1           ; 3(出口)以外はそのまま表示
 
-    ;   4面以降でターゲット残数がゼロ出ない場合は、出口を表示させない
+    ;   4面以降でターゲット残数がゼロでない場合は、出口を表示させない
+    LD A,(ROUND)
+    CP 3
+    JR C,DRAW_MAPCHIP_L1            ; ラウンド1〜3ならスキップ
+
     LD A,(TARGET_LEFT)              ; A <- ターゲット残数
     OR A
     JR Z,DRAW_MAPCHIP_L1            ; ターゲット残数がゼロならそのまま表示するのでL1へ

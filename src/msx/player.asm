@@ -446,15 +446,22 @@ UPDATE_PLAYER_MOVE_L4:
 ; ----------------------------------------------------------------------------------------------------
 UPDATE_PLAYER_MOVE_END:
     ; ■スコア倍率のリセット判定
-    ;   移動中にターゲットを取得していない場合、スコアのキャラクター番号を0に、スコア倍率を1にリセットする
     LD A,(TARGET_GET_FLG)
     OR A
     JR NZ,UPDATE_PLAYER_MOVE_END_L1
 
+    ;   移動中にターゲットを取得していない場合
     XOR A
-    LD (SCORE_CHRNO),A
+    LD (SCORE_CHRNO),A              ; スコアのキャラクター番号をゼロに設定
     INC A
-    LD (SCORE_ADDVALUE_BCD),A
+    LD (SCORE_ADDVALUE_BCD),A       ; スコア倍率を1に設定
+
+    LD A,(TARGET_LEFT)
+    OR A
+    JR Z,UPDATE_PLAYER_MOVE_END_L1  ; ターゲット残数がゼロならスキップ
+
+    XOR A
+    LD (PERFECT_FLG),A              ; パーフェクト判定フラグをOFF
 
 UPDATE_PLAYER_MOVE_END_L1:
     XOR A                           ; ターゲット取得フラグをOFF
@@ -492,11 +499,17 @@ UPDATE_PLAYER_MOVE_END_L1:
     RET
 
 UPDATE_PLAYER_MOVE_END_L2:
+    ; ■ラウンド1〜3は無条件にラウンドクリアとする
+    LD A,(ROUND)
+    CP 3
+    JR C,UPDATE_PLAYER_MOVE_END_L21
+    
     ; ■ターゲット残数チェック
     LD A,(TARGET_LEFT)
     OR A
     JR NZ,UPDATE_PLAYER_MOVE_END_L3 ; ターゲット残数がゼロでなければ、状態遷移のみ実施
 
+UPDATE_PLAYER_MOVE_END_L21:
     ; ■ゲーム状態をラウンドクリアに変更
     LD A,STATE_ROUND_CLEAR
     CALL CHANGE_STATE
