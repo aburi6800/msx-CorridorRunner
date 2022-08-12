@@ -502,9 +502,12 @@ INCLUDE "assets/09.asm"
 
 
 ; ■SFXデータ
-INCLUDE "assets/sfx_01.asm"
 INCLUDE "assets/sfx_02.asm"
 INCLUDE "assets/sfx_03.asm"
+INCLUDE "assets/sfx_10.asm"
+INCLUDE "assets/sfx_11.asm"
+INCLUDE "assets/sfx_12.asm"
+INCLUDE "assets/sfx_13.asm"
 
 
 SECTION bss_user

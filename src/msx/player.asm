@@ -554,15 +554,18 @@ UPDATE_PLAYER_GETITEM_L1:
     LD A,1
     LD (TARGET_GET_FLG),A
 
-    ; ■効果音再生
-    LD HL,SFX_01
-    CALL SOUNDDRV_SFXPLAY
-
     ; ■スコア加算
     LD A,(SCORE_ADDVALUE_BCD)       ; スコア倍率
     LD D,0                          ; DE <- 加算スコア
     LD E,A
     CALL ADDSCORE                   ; スコア加算
+
+    ; ■効果音再生
+    LD HL,TARGET_GET_SFX_TBL   
+    LD A,(SCORE_CHRNO)
+    CALL GET_ADDR_TBL
+    LD HL,DE
+    CALL SOUNDDRV_SFXPLAY
 
     ; ■スコアのキャラクター表示
     LD A,CHRNO_SCORE                ; スコアのキャラクターを追加する
@@ -787,6 +790,9 @@ CHARGE_WAIT_VALUE:
 PLAYER_MISS_PTN1:
     DB 16,18,20,22,0
 
+; ■ターゲット取得音テーブル
+TARGET_GET_SFX_TBL:
+    DW SFX_10, SFX_11, SFX_12, SFX_13
 
 SECTION bss_user
 ; ====================================================================================================
