@@ -57,7 +57,6 @@ TIMEOUTENEMY_APPEARANCE_CNT:
     DEFS 1
 
 ; ■パーフェクト判定フラグ
-;   bit0 : パーフェクトならゼロ
-;   bit1 : 出口に出れる状態ならゼロ
 PERFECT_FLG:
     DEFS 1
+
