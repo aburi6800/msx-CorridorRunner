@@ -1,8 +1,13 @@
+[ [Engligh](README.md) | [日本語](README.ja.md) ]
+
+---
 # Corridor Runner for MSX
 
-[Play on WebMSX](https://webmsx.org/?MACHINE=MSX1J&ROM=https://github.com/aburi6800/msx-CorridorRunner/raw/v0.3.1/dist/c-runner.rom&FAST_BOOT)
+<img src="images/corridor_title.png">
 
 ## How to play
+
+[Play on WebMSX](https://webmsx.org/?MACHINE=MSX1J&ROM=https://github.com/aburi6800/msx-CorridorRunner/raw/v0.3.1/dist/c-runner.rom&FAST_BOOT)
 
 ### Control
 
@@ -15,9 +20,10 @@
 
 ### Rules (tentative)
 
+<img src="images/corridor_game.png">
+
 - Score points when you take an item chip.
 - Score is increased if you take them consecutively.
-- Misses when falling from the floor.
 - Misses if it falls off the floor or touches an enemy.
 - When you get to the exit, the round is clear.
 
@@ -45,7 +51,7 @@ On the command line, from the project root directory do the following:
 ```
 $ openmsx ./dist/c-runner.rom
 ```
-Or load c-runner.rm from the activated OpenMSX.
+Or load `c-runner.rom` from the activated OpenMSX.
 
 ## License
 
