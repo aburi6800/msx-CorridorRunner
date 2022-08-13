@@ -79,6 +79,10 @@ ROUND_START_INIT:
     DAA
     LD (ROUND_BCD),A
 
+    ; ■ターゲット取得フラグ初期設定
+    LD A,$FF
+    LD (TARGET_GET_FLG),A
+
     ; ■パーフェクト判定フラグ初期設定
     LD A,1
     LD (PERFECT_FLG),A

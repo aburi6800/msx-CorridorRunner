@@ -462,6 +462,10 @@ UPDATE_PLAYER_MOVE_END:
     OR A
     JR Z,UPDATE_PLAYER_MOVE_END_L1  ; ターゲット残数がゼロならスキップ
 
+    LD A,(TARGET_GET_FLG)           ; ターゲット取得フラグが$FF(=初期値)の場合
+    OR $FF
+    JR Z,UPDATE_PLAYER_MOVE_END_L1  ; まだ一度もターゲットを取っていない場合は、処理をスキップ
+
     XOR A
     LD (PERFECT_FLG),A              ; パーフェクト判定フラグをOFF
 
