@@ -401,8 +401,10 @@ UPDATE_PLAYER_MOVE_L021:
 UPDATE_PLAYER_MOVE_L03:
     ; ■チャージパワー減算
     LD HL,PLAYER_CHARGE_POWER
-    DEC (HL)
+    LD A,(HL)
+    OR A
     JP Z,UPDATE_PLAYER_MOVE_END
+    DEC (HL)
 
     ; ■チャージパワーから移動量計算
     LD A,(HL)
