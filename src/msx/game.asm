@@ -63,6 +63,9 @@ GAME_RET:
     ; ■キー入力値取得
     CALL GET_CONTROL
 
+    ; ■キーマトリクス入力値取得
+    CALL GET_KEYMATRIX
+
     ; ■画面更新
     CALL DRAW
 

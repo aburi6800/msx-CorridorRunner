@@ -11,6 +11,32 @@ SECTION code_user
 ; ゲームメイン
 ; ====================================================================================================
 GAME_MAIN:
+    ; ■一時停止判定
+    LD A,(GAME_IS_PAUSE)
+    OR A
+    JR NZ,GAME_MAIN_L0              ; 一時停止フラグが1の場合は一時停止中処理へ
+
+    LD A,(KEYBUFF+5)
+    OR A
+    JR Z,GAME_MAIN_L1               ; [F1]キーが押されていなければ後続の処理へ
+
+    LD A,1
+    LD (GAME_IS_PAUSE),A            ; 一時停止フラグをON
+
+    CALL SOUNDDRV_PAUSE             ; サウンドドライバの一時停止
+    RET
+
+GAME_MAIN_L0:
+    ; ■一時停止中処理
+    ; - キーマトリクス入力値取得
+    LD A,(KEYBUFF+5)
+    OR A
+    RET Z                           ; [F1]キーが押されていなければ抜ける
+
+    XOR A
+    LD (GAME_IS_PAUSE),A            ; 一時停止フラグをOFF
+    CALL SOUNDDRV_RESUME            ; サウンドドライバの一時停止解除
+
     ; ■テキ出現制御処理を呼び出す
     CALL IS_PLAYER_MISS
     JR NC,GAME_MAIN_L1
