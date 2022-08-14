@@ -14,12 +14,11 @@ GAME_OVER:
     ; ■初回のみの処理実行
     JR Z,GAME_OVER_INIT
 
-    ; ■キーマトリクス読み込み
-    ;   F5キー：A=7でbit1がOFFなら入力
-    LD A,7
-    CALL SNSMAT
-    CP %11111101
-    JP Z,GAME_CONTINUE
+    ; ■コンティニュー
+    ; - キーマトリクス入力値取得
+    LD A,(KEYBUFF+9)
+    OR A
+    JP NZ,GAME_CONTINUE
 
     ; ■TICKが300カウント(=5秒)経過してなければ抜ける
     LD BC,300
