@@ -22,6 +22,8 @@ GAME_MAIN:
 
     LD A,1
     LD (GAME_IS_PAUSE),A            ; 一時停止フラグをON
+    LD HL,SFX_01
+    CALL SOUNDDRV_SFXPLAY
 
     CALL SOUNDDRV_PAUSE             ; サウンドドライバの一時停止
     RET
