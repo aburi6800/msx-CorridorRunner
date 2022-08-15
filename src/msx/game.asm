@@ -9,7 +9,7 @@
 SECTION code_user
 
 ; ■最大ラウンド数
-MAX_ROUND               EQU 13      ; 最大ラウンド数 - 1 を設定する
+MAX_ROUND               EQU 11      ; 最大ラウンド数 - 1 を設定する
 
 ; ■ゲーム状態の定数
 STATE_INIT:             EQU 0       ; ゲーム状態:初期処理
@@ -505,6 +505,7 @@ INCLUDE "assets/09.asm"
 
 
 ; ■SFXデータ
+INCLUDE "assets/sfx_01.asm"
 INCLUDE "assets/sfx_02.asm"
 INCLUDE "assets/sfx_03.asm"
 INCLUDE "assets/sfx_04.asm"
