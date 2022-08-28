@@ -94,7 +94,11 @@ ROUND_START_INIT:
     ; - 一時停止フラグ
     XOR A
     LD (GAME_IS_PAUSE),A
-    
+
+    ; - テキ出現カウンタ
+    LD (ENEMY_PTN_CNT),A
+    LD (ENEMY_PTN_CNT+1),A
+
 
     ; ■スプライトキャラクターワークテーブル初期化
     CALL INIT_SPR_CHR_WK_TBL

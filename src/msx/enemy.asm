@@ -49,25 +49,29 @@ ENEMY_APPEARANCE_CTRL:
 
     ; ■出現カウント=$FFFFだったら抜ける
     LD A,D
-    XOR $FF                         ; A=$FFの場合、ここでゼロフラグが立つ
-    JR NZ,ENEMY_APPEARANCE_CTRL_L1  ; ゼロフラグが降りている場合は$FFではないので後続の処理へ
+    CP $FF
+    JR NZ,ENEMY_APPEARANCE_CTRL_L1  ; $FFでない場合は後続の処理へ
     LD A,E
-    XOR $FF                         ; A=$FFの場合、ここでゼロフラグが立つ
-    JR NZ,ENEMY_APPEARANCE_CTRL_L1  ; ゼロフラグが降りている場合は$FFではないので後続の処理へ
+    CP $FF
+    JR NZ,ENEMY_APPEARANCE_CTRL_L1  ; $FFでない場合は後続の処理へ
 
     RET                             ; ここに到達する=$FFFFなので、抜ける
 
 ENEMY_APPEARANCE_CTRL_L1:
-    PUSH DE                         ; 出現カウント(DE) -> HL
-    POP HL
-
-    LD DE,$0000                     ; 初期値 = $0000 とする
+    LD H,D                          ; 出現カウント(DE) -> HL
+    LD L,E
 
     LD A,(GAME_STATE)
     SUB STATE_ROUND_START
-    JR Z,ENEMY_APPEARANCE_CTRL_L3   ; ゲーム状態 = ラウンドスタートの場合はL3へ
+    JR NZ,ENEMY_APPEARANCE_CTRL_L2  ; ゲーム状態 = ラウンドスタート以外の場合はL2へ
 
-    LD DE,(TICK1)                   ; tickを取得
+    LD DE,$0000                     ; 初期値 = $0000 とする
+    JP ENEMY_APPEARANCE_CTRL_L3
+
+ENEMY_APPEARANCE_CTRL_L2:
+    LD DE,(ENEMY_PTN_CNT)           ; テキ出現カウンタ取得
+    INC DE                          ; メモリのテキ出現カウンタカウントアップ
+    LD (ENEMY_PTN_CNT),DE
 
 ENEMY_APPEARANCE_CTRL_L3:
     SBC HL,DE                       ; 出現カウント - tick != ZERO なら抜ける
@@ -158,6 +162,10 @@ SECTION bss_user
 ; ワークエリア
 ; プログラム起動時にcrtでゼロでramに設定される 
 ; ====================================================================================================
+
+; ■テキ出現カウンタ
+ENEMY_PTN_CNT:
+    DEFS 2
 
 ; ■テキ出現パターンデータの参照先アドレス
 ENEMY_PTN_ADDR:
