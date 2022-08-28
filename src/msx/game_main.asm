@@ -39,12 +39,10 @@ GAME_MAIN_L0:
     LD (GAME_IS_PAUSE),A            ; 一時停止フラグをOFF
     CALL SOUNDDRV_RESUME            ; サウンドドライバの一時停止解除
 
+GAME_MAIN_L1:
     ; ■テキ出現制御処理を呼び出す
-    CALL IS_PLAYER_MISS
-    JR NC,GAME_MAIN_L1
     CALL ENEMY_APPEARANCE_CTRL
 
-GAME_MAIN_L1:
     ; ■スプライトキャラクターワークテーブルの全ての要素に対して繰り返し
     LD B,MAX_CHR_CNT
 
@@ -89,6 +87,10 @@ GAME_MAIN_L5:
     DJNZ GAME_MAIN_L2
 
     ; ■タイム減算
+    CALL IS_PLAYER_MISS             ; プレイヤーミス状態を判定
+;    JR NC,GAME_MAIN_EXIT            ; プレイヤーミス状態ならタイム減算はせずに終了
+    RET NC
+
     LD A,(TICK3_WK)
     OR A
     RET NZ

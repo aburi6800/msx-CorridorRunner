@@ -115,9 +115,11 @@ TICK_COUNT:
 
     LD HL,28
     LD A,(TICK1+1)
+;    LD A,(ENEMY_PTN_CNT+1)
     CALL PRTHEX
     LD HL,30
     LD A,(TICK1)
+;    LD A,(ENEMY_PTN_CNT)
     CALL PRTHEX
     ; DEBUGここまで
 
