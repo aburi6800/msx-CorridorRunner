@@ -11,12 +11,14 @@
 
 ### Control
 
-- Cursor key Left & Right :
-    - Change player direction
-- Cursor key Down :
-    - Press to charge power, release to move forward.
-
-- Can change direction while moving forward.
+- Cursor key :
+    - Left & Right : Change player direction
+    - Down : Press to charge power, release to move forward.
+    - Can change direction while moving forward.
+- [F1] :
+    - Pause
+- [F5] :
+    - Continue (Press when the game is over)
 
 ### Rules (tentative)
 
