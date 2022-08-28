@@ -501,8 +501,8 @@ DEL_CHARACTER:
     ; ■属性を$FFにする
     LD (IX),$FF
     ; ■座標値を画面外に設定
-    LD (IX+2),-16
-    LD (IX+4),-16
+    LD (IX+2),-17               ; Y座標
+    LD (IX+4),-16               ; X座標
 
 DEL_CHARACTER_EXIT:
     RET
