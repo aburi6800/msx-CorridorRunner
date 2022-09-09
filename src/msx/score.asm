@@ -36,6 +36,7 @@ INIT_SCORE:
     INC HL
     INC HL
     LD A,(HL)
+    SUB 8
     LD (IX+3),0                     ; X座標(小数部)
     LD (IX+4),A                     ; X座標(整数部)
 
@@ -44,12 +45,14 @@ INIT_SCORE:
     LD (IX+5),A                     ; スプライトパターンNo
     LD (IX+6),15                    ; カラーコード
 
-;    LD (IX+7),0                     ; 移動方向
-;    LD (IX+8),0                     ; 移動量
+    LD (IX+7),1                     ; 移動方向
+    LD (IX+8),$FF                   ; 移動量
 ;    LD (IX+9),0                     ; アニメーションテーブルアドレス
 ;    LD (IX+10),0                    ; アニメーションテーブルアドレス
 ;    LD (IX+11),0                    ; アニメーションカウンタ
-    LD (IX+12),SCORE_FLASHING_CNT   ; 点滅時間
+;    LD (IX+12),SCORE_FLASHING_CNT   ; 点滅時間
+    LD (IX+12),0                    ; 点滅時間
+    LD (IX+13),SCORE_FLASHING_CNT   ; 移動時間
 
     RET
 
@@ -61,7 +64,13 @@ UPDATE_SCORE:
     CALL SPRITE_MOVE                ; スプライトキャラクター移動処理
 
     ; ■点滅を終えたか
-    LD A,(IX+12)
+;    LD A,(IX+12)
+;    OR A
+;    RET NZ
+
+    LD A,(IX+13)
+    DEC A
+    LD (IX+13),A
     OR A
     RET NZ
 
