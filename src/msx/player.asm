@@ -547,7 +547,7 @@ UPDATE_PLAYER_GETTARGET:
 
     DEC A
     LD (TARGET_LEFT),A
-    OR A
+;    OR A
     JR NZ,UPDATE_PLAYER_GETITEM_L1  ; ゼロ以外なら次の処理へ
 
     ; ■ターゲット残数がゼロなら出口を表示する

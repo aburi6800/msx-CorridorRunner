@@ -201,8 +201,8 @@ DRAW:
     CALL UPDATE_COLOR_TBL
 
     ; ■パターンネームテーブル設定
-    CALL DRAW_INFO                  ; 情報描画
     CALL DRAW_VRAM                  ; オフスクリーンバッファの内容をVRAMに転送
+    CALL DRAW_INFO                  ; 情報描画
     EI
 
 DRAW_EXIT:
@@ -340,6 +340,25 @@ DRAW_INFO_L3:
 DRAW_INFO_L4:
     DJNZ DRAW_INFO_L1
 
+    ; ■「GO TO EXIT」表示
+    LD A,(GAME_STATE)
+    CP STATE_GAME_MAIN
+    RET NZ                      ; ゲーム状態がゲームメインでなければ終了
+
+    LD A,(TARGET_LEFT)          ; ターゲット残りがゼロでなければ終了
+    OR A
+    RET NZ
+
+    LD HL,INFO_STRING3          ; まずメッセージ文字のアドレスを設定
+
+    LD A,(TICK2)
+    AND %00000001
+    JR Z,DRAW_INFO_L5
+
+    LD HL,SAVE_OFFSCREEN
+DRAW_INFO_L5:
+    CALL PRTSTR
+
 DRAW_INFO_EXIT:
     RET
 
@@ -457,6 +476,11 @@ INFO_STRING2:
     DW $02E0
     DB $B1,$B2,$B3,"                ",$B4,"R    TIME",0
 
+; ■出口表示時のメッセージ
+INFO_STRING3:
+    DW $0069
+    DB "GOTO THE EXIT!",0
+
 ; ■カラーテーブル変更データ1
 ;   $60〜$9Fまでの色を変更
 COLOR_TBL_CHG_DATA1:
@@ -541,3 +565,7 @@ TICK3_WK:
 TICK3:
     DEFS 2                      ; 1秒のタイマー、TICK1=60ごとにインクリメント
 
+; ■オフスクリーン退避エリア
+SAVE_OFFSCREEN:
+    DEFS 2
+    DEFS 15
