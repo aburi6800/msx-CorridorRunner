@@ -26,6 +26,17 @@ INIT_FIELD:
     ; ■オフスクリーン描画
     CALL DRAW_MAP
 
+    ; ■メッセージ表示部分をコピー
+    LD BC,14                    ; コピーするデータサイズ
+    LD HL,OFFSCREEN+$0069       ; コピー元
+    LD DE,SAVE_OFFSCREEN+2      ; コピー先
+    LDIR
+
+    LD HL,$0069
+    LD (SAVE_OFFSCREEN),HL      ; 表示先オフスクリーンのオフセットアドレス
+    LD A,$00
+    LD (SAVE_OFFSCREEN+17),A    ; メッセージ終端を設定
+
     RET
 
 
