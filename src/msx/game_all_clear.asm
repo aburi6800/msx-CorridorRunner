@@ -47,28 +47,28 @@ ALL_CLEAR_INIT:
     CALL PRTSTR
     LD HL,ALL_CLEAR_MESSAGE5
     CALL PRTSTR
-;    LD HL,ALL_CLEAR_MESSAGE5
-;    CALL PRTSTR
+    LD HL,ALL_CLEAR_MESSAGE6
+    CALL PRTSTR
 
     ; ■グラフィック表示
-;    LD HL,ALL_CLEAR_PIC1
-;    CALL PRTSTR
-;    LD HL,ALL_CLEAR_PIC2
-;    CALL PRTSTR
-;    LD HL,ALL_CLEAR_PIC3
-;    CALL PRTSTR
-;    LD HL,ALL_CLEAR_PIC4
-;    CALL PRTSTR
-;    LD HL,ALL_CLEAR_PIC5
-;    CALL PRTSTR
+    LD HL,ALL_CLEAR_PIC1
+    CALL PRTSTR
+    LD HL,ALL_CLEAR_PIC2
+    CALL PRTSTR
+    LD HL,ALL_CLEAR_PIC3
+    CALL PRTSTR
+    LD HL,ALL_CLEAR_PIC4
+    CALL PRTSTR
+    LD HL,ALL_CLEAR_PIC5
+    CALL PRTSTR
 
     ; ■スプライトキャラクターワークテーブル設定
     ;   4キャラクター、固定で定義する
-;    CALL INIT_SPR_CHR_WK_TBL            ; スプライトキャラクターワークテーブル初期化
-;    LD HL,ALL_CLEAR_SPRITE              ; HL = 転送元アドレス
-;    LD DE,SPR_CHR_WK_TBL                ; DE = 転送先アドレス
-;    LD BC,16*4                          ; BC = 転送サイズ
-;    LDIR
+    CALL INIT_SPR_CHR_WK_TBL            ; スプライトキャラクターワークテーブル初期化
+    LD HL,ALL_CLEAR_SPRITE              ; HL = 転送元アドレス
+    LD DE,SPR_CHR_WK_TBL                ; DE = 転送先アドレス
+    LD BC,16*4                          ; BC = 転送サイズ
+    LDIR
 
     ; ■BGM再生
     LD HL,_09
@@ -88,41 +88,35 @@ SECTION rodata_user
 ; romに格納される
 ; ====================================================================================================
 
-; ■暫定のメッセージ
+; ■オールクリアメッセージ
 ALL_CLEAR_MESSAGE1:
-    DW $00A7
-    DB "THANKS FOR PLAYING.",0
+;    DW $00A7
+;    DB "THANKS FOR PLAYING.",0
+    DW $0088
+    DB "CONGRATULATIONS!",0
 ALL_CLEAR_MESSAGE2:
-    DW $0123
-    DB "THE FULL VERSION",0
+;    DW $0123
+;    DB "THE FULL VERSION",0
+    DW $00E4
+    DB "SHE RAN THROUGH SEVERAL",0
 ALL_CLEAR_MESSAGE3:
-    DW $0164
-    DB "WILL BE RELEASED IN THE", 0
-ALL_CLEAR_MESSAGE4:
-    DW $01AE
-    DB "SUMMER OF 2022.",0
-ALL_CLEAR_MESSAGE5:
-    DW $022A
-    DB "COMMING SOON!",0
-
-;ALL_CLEAR_MESSAGE1:
-;    DW $0088
-;    DB "CONGRATULATIONS!",0
-;ALL_CLEAR_MESSAGE2:
-;    DW $00E4
-;    DB "SHE RAN THROUGH SEVERAL",0
-;ALL_CLEAR_MESSAGE3:
-;    DW $0104
-;    DB "CORRIDORS AND REACHED THE", 0
-;ALL_CLEAR_MESSAGE4:
-;    DW $0124
-;    DB "GROUND.",0
-;ALL_CLEAR_MESSAGE5:
 ;    DW $0164
-;    DB "THE BEAUTIFUL MOONLIGHT",0
-;ALL_CLEAR_MESSAGE6:
-;    DW $0184
-;    DB "SURROUNDED HER.",0
+;    DB "WILL BE RELEASED IN THE", 0
+    DW $0104
+    DB "CORRIDORS AND REACHED THE", 0
+ALL_CLEAR_MESSAGE4:
+;    DW $01AE
+;    DB "SUMMER OF 2022.",0
+    DW $0124
+    DB "GROUND.",0
+ALL_CLEAR_MESSAGE5:
+;    DW $022A
+;    DB "COMMING SOON!",0
+    DW $0164
+    DB "THE BEAUTIFUL MOONLIGHT",0
+ALL_CLEAR_MESSAGE6:
+    DW $0184
+    DB "SURROUNDED HER.",0
 
 ALL_CLEAR_PIC1:
     DW $01EC
