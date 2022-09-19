@@ -20,6 +20,8 @@ STATE_GAME_MAIN:        EQU 4       ; ゲーム状態:ゲームメイン
 STATE_GAME_OVER:        EQU 5       ; ゲーム状態:ゲームオーバー
 STATE_ROUND_CLEAR:      EQU 6       ; ゲーム状態:ラウンドクリアー
 STATE_ALL_CLEAR:        EQU 7       ; ゲーム状態:オールクリアー
+STATE_SCOREBOARD:       EQU 8       ; ゲーム状態:ランキング表示
+STATE_NAME_ENTRY:       EQU 9       ; ゲーム状態:ネームエントリー
 
 COLOR_TBL_CHG_DATA1_CNT EQU 12      ; カラーテーブル1パターン数
 COLOR_TBL_CHG_DATA2_CNT EQU 6       ; カラーテーブル2パターン数
@@ -58,6 +60,8 @@ GAME_L1:
     JP GAME_OVER                    ; ゲーム状態:ゲームオーバー
     JP ROUND_CLEAR                  ; ゲーム状態:ラウンドクリアー
     JP ALL_CLEAR                    ; ゲーム状態:オールクリアー
+    JP SCOREBOARD                   ; ゲーム状態:ランキング表示
+    JP NAMEENTRY                    ; ゲーム状態:ネームエントリー
 
 GAME_RET:
     ; ■キー入力値取得
@@ -125,7 +129,7 @@ TICK_COUNT:
 
 TICK_COUNT_L0:
     ; ■TTICK2の処理
-    ;   TICK1の処理で設定したゼロフラグの状態を買えたくないので先に処理する
+    ;   TICK1の処理で設定したゼロフラグの状態を変えたくないので先に処理する
     LD A,(TICK2_WK)
     INC A
     CP 6
@@ -140,7 +144,7 @@ TICK_COUNT_L1:
     LD (TICK2_WK),A
 
     ; ■TICK3の処理
-    ;   TICK1の処理で設定したゼロフラグの状態を買えたくないので先に処理する
+    ;   TICK1の処理で設定したゼロフラグの状態を変えたくないので先に処理する
     LD A,(TICK3_WK)
     INC A
     CP 60
@@ -288,6 +292,10 @@ DRAW_INFO:
     LD A,(GAME_STATE)
     CP STATE_TITLE
     RET Z
+    CP STATE_SCOREBOARD
+    RET Z
+    CP STATE_NAME_ENTRY
+    RET Z
 
     ; ■タイム表示
     LD B,1
@@ -374,12 +382,17 @@ DRAW_INFO_INIT:
 
     ; ■ハイスコア表示
     LD B,3
-    LD DE,HISCORE
+;    LD DE,HISCORE
+    LD DE,SCOREBOARD_TBL+3
     LD HL,$0012
     CALL PRTBCD
 
     LD A,(GAME_STATE)
     CP STATE_TITLE
+    JP Z,DRAW_INFO_INIT_L1
+    CP STATE_SCOREBOARD
+    JP Z,DRAW_INFO_INIT_L1
+    CP STATE_NAME_ENTRY
     JP Z,DRAW_INFO_INIT_L1
 
     ; ■画面下部表示内容
@@ -443,6 +456,9 @@ INCLUDE "game_over.asm"
 
 ; ■オールクリア
 INCLUDE "game_all_clear.asm"
+
+; ■ランキング表示／ネームエントリー
+INCLUDE "game_ranking.asm"
 
 ; ■フィールド操作サブルーチン群
 INCLUDE "game_field.asm"
@@ -528,6 +544,8 @@ INCLUDE "assets/07.asm"
 INCLUDE "assets/08.asm"
 ; - ENDING
 INCLUDE "assets/09.asm"
+; - NAME ENTRY
+INCLUDE "assets/10.asm"
 
 
 ; ■SFXデータ
