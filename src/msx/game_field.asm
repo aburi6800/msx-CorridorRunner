@@ -26,11 +26,7 @@ INIT_FIELD:
     ; ■オフスクリーン描画
     CALL DRAW_MAP
 
-    ; ■メッセージ表示部分をコピー
-    LD BC,14                    ; コピーするデータサイズ
-    LD HL,OFFSCREEN+$0069       ; コピー元
-    LD DE,SAVE_OFFSCREEN+2      ; コピー先
-    LDIR
+    ; ■"GO TO EXIT"表示部分の初期設定
 
     LD HL,$0069
     LD (SAVE_OFFSCREEN),HL      ; 表示先オフスクリーンのオフセットアドレス

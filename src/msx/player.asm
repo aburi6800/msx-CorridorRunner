@@ -554,6 +554,11 @@ UPDATE_PLAYER_GETTARGET:
     LD A,(MAPWK_EXIT_OFFSET)
     LD B,A
     CALL DRAW_MAPCHIP
+    ; - 出口表示のタイミングで"GO TO EXIT"メッセージ表示部分を退避
+    LD BC,14                    ; コピーするデータサイズ
+    LD HL,OFFSCREEN+$0069       ; コピー元
+    LD DE,SAVE_OFFSCREEN+2      ; コピー先
+    LDIR
 
 UPDATE_PLAYER_GETITEM_L1:
     ; ■マップデータオフセット取得
