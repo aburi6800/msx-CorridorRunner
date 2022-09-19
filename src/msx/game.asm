@@ -357,17 +357,20 @@ DRAW_INFO_L4:
     OR A
     RET NZ
 
-    LD HL,INFO_STRING3          ; まずメッセージ文字のアドレスを設定
-
+    ; ■メッセージ表示
     LD A,(TICK2)
     AND %00000001
-    JR Z,DRAW_INFO_L5
+    JR Z,DRAW_INFO_L5           ; 1/10秒ごとに表示と非表示を切り替える
 
-    LD HL,SAVE_OFFSCREEN
-DRAW_INFO_L5:
+    ; - メッセージ消去
+    LD HL,SAVE_OFFSCREEN        ; 退避した表示データのアドレスを設定
     CALL PRTSTR
+    RET
 
-DRAW_INFO_EXIT:
+DRAW_INFO_L5:
+    ; - メッセージ表示
+    LD HL,INFO_STRING3          ; "GO TO EXIT"メッセージのアドレス
+    CALL PRTSTR
     RET
 
 
