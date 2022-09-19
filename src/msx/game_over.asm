@@ -27,7 +27,20 @@ GAME_OVER:
     JR NZ,GAME_OVER_EXIT
 
     ; ■ゲーム状態変更
-    LD A,STATE_TITLE                ; ゲーム状態をタイトルへ
+    CALL CHECK_RANKING_REGIST       ; スコアランキング判定・ソート
+
+    LD A,(SCOREBOARD_INRANK)        ; ランキング取得
+    OR A
+    JR Z,GAME_OVER_L1
+
+    ;   ランキングに入った場合
+    LD A,STATE_NAME_ENTRY           ; ゲーム状態をネームエントリーへ
+    CALL CHANGE_STATE
+    RET
+
+GAME_OVER_L1:
+    ;   ランキングに入らなかった場合
+    LD A,STATE_SCOREBOARD           ; ゲーム状態をランキング表示へ
     CALL CHANGE_STATE
 
 GAME_OVER_EXIT:
@@ -42,9 +55,6 @@ GAME_OVER_INIT:
 
     ; ■オフスクリーン初期化
     CALL RESET_OFFSCREEN
-
-    ; ■ハイスコア更新判定
-    CALL CHECK_HIGHSCORE_UPDATE
 
     ; ■ゲームオーバーメッセージ表示
     LD HL,STRING_GAME_OVER
@@ -61,48 +71,6 @@ GAME_OVER_INIT:
 
 GAME_OVER_INIT_EXIT:
     RET
-
-; ---------------------------------------------------------------------------------------------------
-; ハイスコア更新判定処理
-; ---------------------------------------------------------------------------------------------------
-CHECK_HIGHSCORE_UPDATE:
-    ; ■ハイスコア更新判定
-    LD HL,SCORE
-    LD DE,HISCORE
-    LD B,3
-
-CHECK_HIGHSCORE_UPDATE_L1:
-    OR A
-    LD A,(DE)                           ; A <- ハイスコア(DEアドレスの値)
-    INC DE                              ; DE=DE+1
-
-    SUB (HL)                            ; A=A-HL(スコアの値)
-    INC HL                              ; HL=HL+1
-
-    ; マイナスだったらハイスコア更新
-    JP M,CHECK_HIGHSCORE_UPDATE_L2
-
-    ; 同じだったら次の桁をチェック
-    JP Z,CHECK_HIGHSCORE_UPDATE_L3
-
-    ; プラスだったら更新不要なのでループを抜ける
-    JR CHECK_HIGHSCORE_UPDATE_EXIT
-
-CHECK_HIGHSCORE_UPDATE_L2:
-    ; ■ハイスコア更新
-    ; -スコアの値(3byte)でハイスコアの値を置き換える
-    LD HL,SCORE
-    LD DE,HISCORE
-    LD BC,3
-    LDIR                            ; HL(SCORE)→DE(HISCORE)へ転送
-    RET
-
-CHECK_HIGHSCORE_UPDATE_L3:
-    DJNZ CHECK_HIGHSCORE_UPDATE_L1
-
-CHECK_HIGHSCORE_UPDATE_EXIT:
-    RET
-
 
 ; ---------------------------------------------------------------------------------------------------
 ; コンティニュー処理

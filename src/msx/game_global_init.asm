@@ -32,6 +32,12 @@ GAME_GLOBAL_INIT:
     ; ■スプライトキャラクターワークテーブル初期化
     CALL INIT_SPR_CHR_WK_TBL
 
+    ; ■ランキングデータ初期化
+    LD HL,SCOREBOARD_INITDATA           ; 移送元アドレス
+    LD DE,SCOREBOARD_TBL                ; 移送先アドレス
+    LD BC,SCOREBOARD_REC_SIZE*6          ; バイト数
+    LDIR
+
     ; ■ゲーム状態をタイトルに変更
     LD A,STATE_TITLE
     CALL CHANGE_STATE

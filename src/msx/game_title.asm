@@ -14,10 +14,20 @@ GAME_TITLE:
     ; ■初回のみ初期化を実行
     JR Z,GAME_TITLE_INIT
 
+    ; ■10秒経過したらランキング表示に切り替える
+    LD BC,600
+    LD HL,(TICK1)    
+    SBC HL,BC
+    JR NZ,GAME_TITLE_L1
+
+    LD A,STATE_SCOREBOARD       ; ゲーム状態→ランキング表示
+    CALL CHANGE_STATE
+    RET
+
+GAME_TITLE_L1:
     ; ■スペースキー or トリガが押されたか判定
-    LD A,(INPUT_BUFF_STRIG)     ; A <- トリガボタンの入力値
-    OR A                        ; ゼロ(未入力)なら抜ける
-    JR Z,GAME_TITLE_EXIT
+    CALL GET_STRIG               ; トリガ入力状態判定
+    JR Z,GAME_TITLE_EXIT        ; ゼロ(未入力)なら抜ける
 
     ; ■状態をゲーム初期化へ変更
     LD A,STATE_GAME_INIT        ; ゲーム状態 <- ゲーム開始
@@ -56,10 +66,6 @@ GAME_TITLE_INIT:
     CALL PRTSTR
     LD HL,TITLE7
     CALL PRTSTR
-
-    ; ■BGM再生
-    LD HL,_00
-    CALL SOUNDDRV_BGMPLAY
 
     RET
 

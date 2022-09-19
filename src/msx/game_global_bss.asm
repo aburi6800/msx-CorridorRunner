@@ -24,21 +24,17 @@ ROUND:
 CONTINUE_ROUND:
     DEFS 1
 
-; ■ラウンド数(BCD値)
-ROUND_BCD:
-    DEFS 1
-
 ; ■スコア(BCD値)
 SCORE:
     DEFS 3
 
+; ■ラウンド数(BCD値)
+ROUND_BCD:
+    DEFS 1
+
 ; ■スコア加算値(BCD値)
 SCORE_ADDVALUE_BCD:
     DEFS 1
-
-; ■ハイスコア(BCD値)
-HISCORE:
-    DEFS 3
 
 ; ■次回エクステンドスコア(BCD値)
 NEXT_EXTEND_SCORE:
