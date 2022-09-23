@@ -8,6 +8,7 @@
 INCLUDE "enemy1.asm"
 INCLUDE "enemy2.asm"
 INCLUDE "enemy3.asm"
+INCLUDE "enemy4.asm"
 
 SECTION code_user
 
