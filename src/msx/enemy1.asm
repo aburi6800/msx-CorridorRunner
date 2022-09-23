@@ -49,9 +49,9 @@ INIT_ENEMY1_L2:
 
     INC DE                          ; +5
     LD A,33
-    LD (DE),A                       ; スプライトパターンNo=33(テキ1)    
+    LD (DE),A                       ; スプライトパターンNo    
     INC DE                          ; +6
-    LD A,14
+    LD A,7
     LD (DE),A                       ; カラーコード
 
     ; ■方向設定
