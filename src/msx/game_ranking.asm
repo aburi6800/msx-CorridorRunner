@@ -465,8 +465,8 @@ SCOREBOARD_INITDATA:
 
 ; ■スコアランキング表示文字列
 SCOREBOARD_STRING1:
-    DW $008C
-    DB "BEST 5",0
+    DW $008A
+    DB "TOP PLAYERS",0
 
 ; ■ネームエントリー表示文字列
 SCOREBOARD_STRING2:
