@@ -625,6 +625,7 @@ CHARACTER_INIT_TABLE:
     DW INIT_ENEMY1                  ; ENEMY1
     DW INIT_ENEMY2                  ; ENEMY2
     DW INIT_ENEMY3                  ; ENEMY3
+    DW INIT_ENEMY4                  ; ENEMY4
 
 ; ■キャラクターロジックテーブル
 ;   キャラクター番号に対応
@@ -636,6 +637,7 @@ CHARACTER_UPDATE_TABLE:
     DW UPDATE_ENEMY1                ; ENEMY1
     DW UPDATE_ENEMY2                ; ENEMY2
     DW UPDATE_ENEMY3                ; ENEMY3
+    DW UPDATE_ENEMY4                ; ENEMY4
 
 
 SECTION bss_user

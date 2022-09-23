@@ -18,7 +18,7 @@ INIT_ENEMY2:
 
     LD (IX),CHRNO_ENEMY2            ; キャラクター番号
     LD (IX+5),37                    ; スプライトパターンNo
-    LD (IX+6),5                     ; カラーコード
+    LD (IX+6),13                    ; カラーコード
     LD (IX+8),$FF                   ; 移動量
     LD BC,ANIM_PTN_ENEMY2
     LD (IX+9),C                     ; アニメーションテーブルアドレス
