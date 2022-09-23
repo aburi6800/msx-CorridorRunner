@@ -449,8 +449,10 @@ UPDATE_PLAYER_MOVE_L4:
 UPDATE_PLAYER_MOVE_END:
     ; ■スコア倍率のリセット判定
     LD A,(TARGET_GET_FLG)
+    CP $FF
+    JR Z,UPDATE_PLAYER_MOVE_END_L11 ; ターゲット取得フラグが$FF(=初期値)の場合は、スキップ
     OR A
-    JR NZ,UPDATE_PLAYER_MOVE_END_L1
+    JR NZ,UPDATE_PLAYER_MOVE_END_L1 ; 移動中にターゲットを取得していたら倍率はそのまま
 
     ;   移動中にターゲットを取得していない場合
     XOR A
@@ -458,21 +460,20 @@ UPDATE_PLAYER_MOVE_END:
     INC A
     LD (SCORE_ADDVALUE_BCD),A       ; スコア倍率を1に設定
 
+    ;   パーフェクト判定フラグの設定
     LD A,(TARGET_LEFT)
     OR A
-    JR Z,UPDATE_PLAYER_MOVE_END_L1  ; ターゲット残数がゼロならスキップ
+    JR Z,UPDATE_PLAYER_MOVE_END_L1  ; ターゲット残数がゼロなら変更せずにスキップ
 
-    LD A,(TARGET_GET_FLG)           ; ターゲット取得フラグが$FF(=初期値)の場合
-    OR $FF
-    JR Z,UPDATE_PLAYER_MOVE_END_L1  ; まだ一度もターゲットを取っていない場合は、処理をスキップ
-
+    ;   ターゲット残数<>0でかつ、ターゲット取得フラグ<>$FF（＝ゼロ）の時にここに入る
     XOR A
     LD (PERFECT_FLG),A              ; パーフェクト判定フラグをOFF
 
 UPDATE_PLAYER_MOVE_END_L1:
-    XOR A                           ; ターゲット取得フラグをOFF
+    XOR A                           ; ターゲット取得フラグをリセット
     LD (TARGET_GET_FLG),A
 
+UPDATE_PLAYER_MOVE_END_L11:
     ; ■停止地点のマップチップ判定
     CALL UPDATE_PLAYER_MOVE_GET_MAPDATA ; A <- マップデータ
     CP 3
@@ -482,24 +483,24 @@ UPDATE_PLAYER_MOVE_END_L1:
     JR NZ,UPDATE_PLAYER_MOVE_END_L3 ; マップデータがゼロでなければ、プレイヤー操作に状態遷移
 
     ; ■ミス時の初期設定
-    ; - パターンテーブルのインデックス
+    ;   パターンテーブルのインデックス
     XOR A
     LD (PLAYER_MISS_PTN_CNT),A
 
-    ; - 時間経過カウントをリセット
+    ;   時間経過カウントをリセット
     ;   最初に必ずDECするので、1を設定しておく
     INC A
     LD (PLAYER_MISS_TIME_CNT),A
 
-    ; - ミスの全体の時間
+    ;   ミスの全体の時間
     LD A,$60
     LD (PLAYER_CNT_WK1),A
 
-    ; ■ミスの状態に遷移
+    ;   ミスの状態に遷移
     LD A,PLAYERMODE_MISS
     LD (PLAYER_CONTROL_MODE),A
 
-    ; ■BGM再生
+    ; - BGM再生
     LD HL,_06
     CALL SOUNDDRV_BGMPLAY
     RET
