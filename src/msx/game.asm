@@ -284,10 +284,7 @@ UPDATE_COLOR_TBL_EXIT:
 DRAW_INFO:
 
     ; ■スコア表示
-    LD B,3
-    LD DE,SCORE
-    LD HL,$0006
-    CALL PRTBCD
+    CALL DRAW_SCORE
 
     LD A,(GAME_STATE)
     CP STATE_TITLE
@@ -380,8 +377,13 @@ DRAW_INFO_L5:
 ; ====================================================================================================
 DRAW_INFO_INIT:
     ; ■画面上部表示内容
-    LD HL,INFO_STRING1
+    LD HL,INFO_STRING11
     CALL PRTSTR
+    LD HL,INFO_STRING12
+    CALL PRTSTR
+
+    ; ■スコア表示
+    CALL DRAW_SCORE
 
     ; ■ハイスコア表示
     LD B,3
@@ -427,6 +429,16 @@ DRAW_INFO_INIT_L2:
     LD (HL),$B8
     INC HL
     DJNZ DRAW_INFO_INIT_L2
+    RET
+
+; ----------------------------------------------------------------------------------------------------
+; スコア表示
+; ----------------------------------------------------------------------------------------------------
+DRAW_SCORE:
+    LD B,3
+    LD DE,SCORE
+    LD HL,$0006
+    CALL PRTBCD
     RET
 
 ; ====================================================================================================
@@ -486,9 +498,12 @@ SECTION rodata_user
 ; ====================================================================================================
 
 ; ■画面上部表示内容
-INFO_STRING1:
+INFO_STRING11:
     DW $0000
-    DB "SCORE 00000000 HI 00000000      ",0
+    DB "SCORE",0
+INFO_STRING12:
+    DW $000C
+    DB "00 HI 00000000      ",0
 
 ; ■画面下部表示内容
 INFO_STRING2:
