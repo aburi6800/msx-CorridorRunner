@@ -23,7 +23,7 @@ INIT_ENEMY1:
     ; ■Y座標設定
     INC DE                          ; +1
     XOR A
-    LD (DE),A                       ; Y座標(下位)
+    LD (DE),A                       ; Y座標(小数部)
     LD A,(HL)
     CP $FF
     JR NZ,INIT_ENEMY1_L1            ; $FF以外ならランダム設定しない
@@ -31,12 +31,12 @@ INIT_ENEMY1:
 
 INIT_ENEMY1_L1:
     INC DE                          ; +2
-    LD (DE),A                       ; Y座標(上位)
+    LD (DE),A                       ; Y座標(整数部)
 
     ; ■X座標設定
     INC DE                          ; +3
     XOR A
-    LD (DE),A                       ; X座標(下位)
+    LD (DE),A                       ; X座標(小数部)
     INC HL
     LD A,(HL)
     CP $FF
@@ -45,7 +45,7 @@ INIT_ENEMY1_L1:
 
 INIT_ENEMY1_L2:
     INC DE                          ; +4
-    LD (DE),A                       ; X座標(上位)
+    LD (DE),A                       ; X座標(整数部)
 
     INC DE                          ; +5
     LD A,33
@@ -110,6 +110,11 @@ ENEMY1_BOUND:
     LD A,(TICK1)
     AND @00000001
     RET Z
+
+    ; ■出現中か
+    LD A,(IX+12)
+    OR A
+    RET NZ                          ; 出現中カウンタ > 0 の場合、終了する
 
     ; ■画面上端か
     LD HL,ENEMY_BOUNDDATA_VERTICAL  ; 参照先デーブルデータのアドレス
