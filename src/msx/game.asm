@@ -296,6 +296,7 @@ DRAW_INFO:
 
     ; ■タイム表示
     LD B,1
+    LD C,$20
     LD DE,TIME_BCD
     LD HL,$02FE
     CALL PRTBCD
@@ -387,7 +388,7 @@ DRAW_INFO_INIT:
 
     ; ■ハイスコア表示
     LD B,3
-;    LD DE,HISCORE
+    LD C,$20
     LD DE,SCOREBOARD_TBL+3
     LD HL,$0012
     CALL PRTBCD
@@ -406,6 +407,7 @@ DRAW_INFO_INIT:
 
     ; ■ラウンド数表示
     LD B,1
+    LD C,$20
     LD DE,ROUND_BCD
     LD HL,$02F6
     CALL PRTBCD
@@ -436,6 +438,7 @@ DRAW_INFO_INIT_L2:
 ; ----------------------------------------------------------------------------------------------------
 DRAW_SCORE:
     LD B,3
+    LD C,$20
     LD DE,SCORE
     LD HL,$0006
     CALL PRTBCD

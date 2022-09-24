@@ -112,6 +112,7 @@ ROUND_START_INIT:
 
     ; ■ラウンド数表示
     LD B,1
+    LD C,$20
     LD DE,ROUND_BCD
     LD HL,$0115
     CALL PRTBCD
