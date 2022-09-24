@@ -14,9 +14,9 @@ GAME_OVER:
     ; ■初回のみの処理実行
     JR Z,GAME_OVER_INIT
 
-    LD A,(MAX_ROUND)                    ; 最終ラウンド
+    LD A,MAX_ROUND                      ; 最終ラウンド
     LD HL,ROUND
-    CP (HL)
+    SUB (HL)
     JR C,GAME_OVER_L1                   ; 最終ラウンドクリアしていたらコンティニュー不可
 
     ; ■コンティニュー
@@ -66,9 +66,9 @@ GAME_OVER_INIT:
     LD HL,STRING_GAME_OVER
     CALL PRTSTR
 
-    LD A,(MAX_ROUND)                    ; 最終ラウンド
+    LD A,MAX_ROUND                      ; 最終ラウンド
     LD HL,ROUND
-    CP (HL)
+    SUB (HL)
     JR C,GAME_OVER_INIT_L1              ; エンディングまで迎えるとMAX_ROUND+1がROUNDに設定されるため、
                                         ; ここでキャリーが立つ
 
