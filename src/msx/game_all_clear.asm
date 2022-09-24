@@ -70,13 +70,17 @@ ALL_CLEAR_INIT:
     LD BC,16*4                          ; BC = 転送サイズ
     LDIR
 
-    ; ■BGM再生
-    LD HL,_09
-    CALL SOUNDDRV_BGMPLAY
-
     ; ■クリアボーナス加算
     LD DE,$5000
     CALL ADDSCORE
+
+    ; ■ラウンド数を+1する
+    LD HL,ROUND
+    INC (HL)
+
+    ; ■BGM再生
+    LD HL,_09
+    CALL SOUNDDRV_BGMPLAY
 
 
 ALL_CLEAR_INIT_EXIT:
