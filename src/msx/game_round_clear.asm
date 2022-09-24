@@ -199,16 +199,21 @@ ROUND_CLEAR_MESSAGE1_L6:
     RET
 
 ROUND_CLEAR_MESSAGE1_L7:
+;    ; ■ボーナス点計算
+;    ;   基点(500)にラウンド数*500を加算
+;    LD A,(ROUND)
+;    INC A
+;    LD B,A                          ; ループ回数として設定
+;    LD A,5                          ; 500pts
+;ROUND_CLEAR_MESSAGE1_L71:
+;    ADD A,5                         ; 500pts
+;    DAA                             ; BCD値変換
+;    DJNZ ROUND_CLEAR_MESSAGE1_L71
+;    LD (ROUND_CLEAR_BONUS_BCD),A
+
     ; ■ボーナス点計算
-    ;   基点(500)にラウンド数*500を加算
-    LD A,(ROUND)
-    INC A
-    LD B,A                          ; ループ回数として設定
-    LD A,5                          ; 500pts
-ROUND_CLEAR_MESSAGE1_L71:
-    ADD A,5                         ; 500pts
-    DAA                             ; BCD値変換
-    DJNZ ROUND_CLEAR_MESSAGE1_L71
+    ;   残り時間*100をボーナス点とする
+    LD A,(TIME_BCD)
     LD (ROUND_CLEAR_BONUS_BCD),A
 
     LD HL,STRING_ROUND_CLEAR_MSG6
