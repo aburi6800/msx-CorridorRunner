@@ -187,6 +187,7 @@ ROUND_CLEAR_MESSAGE1_L4:
 
 ROUND_CLEAR_MESSAGE1_L5:
     LD B,1
+    LD C,$20
     LD DE,ROUND_BCD
     LD HL,$0112
     CALL PRTBCD
@@ -230,6 +231,7 @@ ROUND_CLEAR_MESSAGE1_L8:
 ; ----------------------------------------------------------------------------------------------------
 ROUND_CLEAR_PRTBONUS:
     LD B,1
+    LD C,$20
     LD DE,ROUND_CLEAR_BONUS_BCD
     LD HL,$0192
     CALL PRTBCD

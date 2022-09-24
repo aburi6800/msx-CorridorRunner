@@ -92,40 +92,38 @@ DISPLAY_RANKING_RECORD:
     POP IX                              ; インデックスレジスタにランキングデータの先頭アドレスを保存
     POP HL
 
-    ; ■ランク    
+    ; ■ランキング表示
+    ;   ランク    
     LD A,B
     ADD A,$30                           ; 文字コードを設定
     CALL PUTSTR
-    INC HL
+    INC HL                              ; 2文字右へ
     INC HL
 
     ;   名前
+    LD B,3
+DISPLAY_RANKING_RECORD_L1:
     LD A,(IX)
     CALL PUTSTR
     INC HL
-    LD A,(IX+1)
-    CALL PUTSTR
-    INC HL
-    LD A,(IX+2)
-    CALL PUTSTR
+    INC IX
+    DJNZ DISPLAY_RANKING_RECORD_L1
 
     ;   スコア
-    LD B,3
+    LD B,3                              ; B <- 表示するデータのバイト数
+    LD C,$20                            ; C <- 表示桁を埋める文字コード
     PUSH IX
-    POP DE
-    INC DE
-    INC DE
-    INC DE
-    INC HL
+    POP DE                              ; DE <- 表示するデータのアドレス(IX)
     INC HL
     CALL PRTBCD
+
     XOR A
-    PUSH HL
-    CALL PUTBCD
-    POP HL
+    LD A,$30
+    CALL PUTSTR
+    INC HL
+    CALL PUTSTR
 
     ;   ラウンド
-    INC HL
     INC HL
     INC HL
     LD A,$52
@@ -133,9 +131,10 @@ DISPLAY_RANKING_RECORD:
     CALL PUTSTR
     POP HL
 
-    LD A,(IX+6)
+    LD A,(IX+3)
+    LD C,0
     INC HL
-    CALL PUTBCD
+    CALL PUTBCD                         ; ゼロはないのでこのまま
 
 DISPLAY_RANKING_RECORD_EXIT:
     RET
