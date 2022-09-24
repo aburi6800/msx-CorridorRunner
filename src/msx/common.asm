@@ -572,6 +572,10 @@ ADDSCORE:
     LD (HL),A				    ; Aレジスタの値を(IX)に格納    
 
     ; ■エクステンド判定
+    LD A,(GAME_STATE)           ; ゲーム状態
+    CP STATE_ALL_CLEAR          ; ゲーム状態：オールクリア
+    RET Z                       ; オールクリア状態ならエクステンドせずに終了
+
     LD HL,NEXT_EXTEND_SCORE
     LD DE,SCORE
     LD B,3

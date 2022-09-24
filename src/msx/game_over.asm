@@ -14,12 +14,18 @@ GAME_OVER:
     ; ■初回のみの処理実行
     JR Z,GAME_OVER_INIT
 
+    LD A,(MAX_ROUND)                    ; 最終ラウンド
+    LD HL,ROUND
+    CP (HL)
+    JR C,GAME_OVER_L1                   ; 最終ラウンドクリアしていたらコンティニュー不可
+
     ; ■コンティニュー
     ; - キーマトリクス入力値取得
     LD A,(KEYBUFF+9)
     OR A
     JP NZ,GAME_CONTINUE
 
+GAME_OVER_L1:
     ; ■TICKが300カウント(=5秒)経過してなければ抜ける
     LD BC,300
     LD HL,(TICK1)    
@@ -31,14 +37,14 @@ GAME_OVER:
 
     LD A,(SCOREBOARD_INRANK)        ; ランキング取得
     OR A
-    JR Z,GAME_OVER_L1
+    JR Z,GAME_OVER_L2
 
     ;   ランキングに入った場合
     LD A,STATE_NAME_ENTRY           ; ゲーム状態をネームエントリーへ
     CALL CHANGE_STATE
     RET
 
-GAME_OVER_L1:
+GAME_OVER_L2:
     ;   ランキングに入らなかった場合
     LD A,STATE_SCOREBOARD           ; ゲーム状態をランキング表示へ
     CALL CHANGE_STATE
@@ -59,12 +65,20 @@ GAME_OVER_INIT:
     ; ■ゲームオーバーメッセージ表示
     LD HL,STRING_GAME_OVER
     CALL PRTSTR
+
+    LD A,(MAX_ROUND)                    ; 最終ラウンド
+    LD HL,ROUND
+    CP (HL)
+    JR C,GAME_OVER_INIT_L1              ; エンディングまで迎えるとMAX_ROUND+1がROUNDに設定されるため、
+                                        ; ここでキャリーが立つ
+
     LD HL,STRING_CONTINUE
     CALL PRTSTR
 
     ; ■キーバッファクリア
     CALL KILBUF
 
+GAME_OVER_INIT_L1:
     ; ■BGM再生
     LD HL,_07
     CALL SOUNDDRV_BGMPLAY
