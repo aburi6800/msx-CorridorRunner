@@ -511,7 +511,7 @@ INFO_STRING12:
 ; ■画面下部表示内容
 INFO_STRING2:
     DW $02E0
-    DB $B1,$B2,$B3,"                ",$B4,"R    TIME",0
+    DB $B1,$B2,$B3,"                ",$B4,"RD   TIME",0
 
 ; ■出口表示時のメッセージ
 INFO_STRING3:
