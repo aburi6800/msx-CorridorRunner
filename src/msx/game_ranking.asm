@@ -127,9 +127,10 @@ DISPLAY_RANKING_RECORD_L1:
     INC HL
     INC HL
     LD A,$52
-    PUSH HL
     CALL PUTSTR
-    POP HL
+    INC HL
+    LD A,$44
+    CALL PUTSTR
 
     LD A,(IX+3)
     LD C,0
