@@ -66,22 +66,30 @@ ENEMY_APPEARANCE_CTRL_L1:
     SUB STATE_ROUND_START
     JR NZ,ENEMY_APPEARANCE_CTRL_L2  ; ゲーム状態 = ラウンドスタート以外の場合はL2へ
 
-    LD DE,$0000                     ; 初期値 = $0000 とする
+;    LD DE,$0000                     ; 初期値 = $0000 とする
+    LD HL,$0000                     ; 初期値 = $0000 とする
     JP ENEMY_APPEARANCE_CTRL_L3
 
 ENEMY_APPEARANCE_CTRL_L2:
-    LD DE,(ENEMY_PTN_CNT)           ; テキ出現カウンタ取得
-    INC DE                          ; メモリのテキ出現カウンタカウントアップ
-    LD (ENEMY_PTN_CNT),DE
+;    LD DE,(ENEMY_PTN_CNT)           ; テキ出現カウンタ取得
+    LD HL,(ENEMY_PTN_CNT)           ; テキ出現カウンタ取得
 
 ENEMY_APPEARANCE_CTRL_L3:
-    SBC HL,DE                       ; 出現カウント - tick != ZERO なら抜ける
-    RET NZ
+    SBC HL,DE                       ; 出現カウント - テキ出現カウンタ != ZERO なら抜ける
+    JR NZ,ENEMY_APPEARANCE_CTRL_L4
 
     ; テキキャラクター登録
     CALL ADD_ENEMY
 
     JP ENEMY_APPEARANCE_CTRL
+
+ENEMY_APPEARANCE_CTRL_L4:
+
+    LD HL,(ENEMY_PTN_CNT)           ; テキ出現カウンタ取得
+    INC HL                          ; メモリのテキ出現カウンタカウントアップ
+    LD (ENEMY_PTN_CNT),HL
+
+    RET
 
 
 ; ====================================================================================================
@@ -165,6 +173,7 @@ SECTION bss_user
 ; ====================================================================================================
 
 ; ■テキ出現カウンタ
+;   テキの出現タイミングをtick1で行うとポーズ時に狂うため、別カウンタを設ける
 ENEMY_PTN_CNT:
     DEFS 2
 
