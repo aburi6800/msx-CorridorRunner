@@ -14,30 +14,20 @@ GAME_MAIN:
     ; ■一時停止判定
     LD A,(GAME_IS_PAUSE)
     OR A
-    JR NZ,GAME_MAIN_L0              ; 一時停止フラグが1の場合は一時停止中処理へ
+    JR NZ,GAME_MAIN_PAUSE           ; 一時停止フラグが1の場合は一時停止中処理へ
 
-    LD A,(KEYBUFF+5)
-    OR A
-    JR Z,GAME_MAIN_L1               ; [F1]キーが押されていなければ後続の処理へ
+    LD A,(KEYBUFF)
+    CP KEY_F1
+    JR NZ,GAME_MAIN_L1              ; [F1]キーが押されていなければ後続の処理へ
 
+    ; ■一時停止
     LD A,1
     LD (GAME_IS_PAUSE),A            ; 一時停止フラグをON
     LD HL,SFX_01
     CALL SOUNDDRV_SFXPLAY
-
     CALL SOUNDDRV_PAUSE             ; サウンドドライバの一時停止
     RET
 
-GAME_MAIN_L0:
-    ; ■一時停止中処理
-    ; - キーマトリクス入力値取得
-    LD A,(KEYBUFF+5)
-    OR A
-    RET Z                           ; [F1]キーが押されていなければ抜ける
-
-    XOR A
-    LD (GAME_IS_PAUSE),A            ; 一時停止フラグをOFF
-    CALL SOUNDDRV_RESUME            ; サウンドドライバの一時停止解除
 
 GAME_MAIN_L1:
     ; ■テキ出現制御処理を呼び出す
@@ -125,3 +115,99 @@ GAME_MAIN_TIMEOUT:
 GAME_MAIN_TIMEOUT_L1:
     DEC (HL)
     RET
+
+
+; -----------------------------------------------------------------------------------------------------
+; ポーズ中処理
+; -----------------------------------------------------------------------------------------------------
+GAME_MAIN_PAUSE:
+    LD A,(KEYBUFF)                  ; キーバッファ取得
+    OR A
+    RET Z                           ; 未入力なら抜ける
+
+    ; ■キー入力があった場合はバッファに溜める
+    PUSH AF
+    LD HL,SECRET_COMMAND_BUFF+6
+    LD DE,SECRET_COMMAND_BUFF+7
+    LD BC,$0007
+    LDDR                            ; 入力中コマンドバッファを全体的に右にシフト
+    POP AF
+    LD HL,SECRET_COMMAND_BUFF
+    LD (HL),A                       ; バッファの先頭に入力値を保存
+
+    ; ■コマンドチェック
+    LD C,0                          ; C : コマンド番号
+GAME_MAIN_PAUSE_L01:
+    LD A,C                          ; A <- C(コマンド番号)
+    INC C                           ; コマンド番号+1しておく
+    ADD A,A
+    ADD A,A
+    ADD A,A                         ; *8する
+    LD HL,SECRET_COMMAND            ; HL <- コマンド
+    CALL ADD_HL_A                   ; コマンドの先頭アドレスを求める
+
+    LD A,(HL)                       ; コマンド文字数
+    OR A
+    JR Z,GAME_MAIN_PAUSE_L3         ; コマンド文字数＝ゼロならL03へ
+
+    LD B,A                          ; B <- コマンド文字数(ループ回数)
+    INC HL                          ; HL <- コマンドの先頭へ
+    LD DE,SECRET_COMMAND_BUFF       ; DE <- 入力中コマンドバッファ
+GAME_MAIN_PAUSE_L2:
+    LD A,(DE)                       ; A <- 入力コマンド
+    CP (HL)                         ; コマンドの文字と比較
+    JR NZ,GAME_MAIN_PAUSE_L01       ; 同じでなければ次のコマンドのチェックへ
+
+    INC HL                          ; 次のコマンドの文字へ
+    INC DE                          ; 次の入力中コマンドバッファの文字へ
+    DJNZ GAME_MAIN_PAUSE_L2
+
+    ; ■コマンド入力完了
+    LD A,C                          ; C <- コマンド番号(この時点で1〜になっている)
+    CP 2
+    JR Z,GAME_MAIN_PAUSE_L21        ; コマンド２
+
+    ; ■コマンド１：強制ラウンドクリア
+    LD A,STATE_ROUND_CLEAR
+    CALL CHANGE_STATE
+    JR GAME_MAIN_PAUSE_L4
+
+GAME_MAIN_PAUSE_L21:
+    ; ■コマンド２：無敵
+    LD A,1
+    LD (INVINCIBLE_FLG),A
+    RET
+
+GAME_MAIN_PAUSE_L3:
+    LD A,(KEYBUFF)                  ; キーバッファ取得
+    CP KEY_F1                       ; [F1]キーか
+    RET NZ                          ; [F1]キーが押されていなければ抜ける
+
+GAME_MAIN_PAUSE_L4:
+    XOR A
+    LD (GAME_IS_PAUSE),A            ; 一時停止フラグをOFF
+    CALL SOUNDDRV_RESUME            ; サウンドドライバの一時停止解除
+
+GAME_MAIN_PAUSE_EXIT:
+    RET
+
+
+SECTION rodata_user
+; ====================================================================================================
+; 定数エリア
+; romに格納される
+; ====================================================================================================
+; ■コマンド
+SECRET_COMMAND:
+    DB 5,KEY_A,KEY_K,KEY_U,KEY_S,KEY_A,$00,$00
+    DB 6,KEY_O,KEY_K,KEY_O,KEY_M,KEY_O,KEY_M,$00
+    DB $00
+
+SECTION bss_user
+; ====================================================================================================
+; ワークエリア
+; プログラム起動時にcrtでゼロでramに設定される 
+; ====================================================================================================
+; ■入力中コマンドバッファ
+SECRET_COMMAND_BUFF:
+    DB $00,$00,$00,$00,$00,$00,$00,$00

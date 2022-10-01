@@ -21,9 +21,9 @@ GAME_OVER:
 
     ; ■コンティニュー
     ; - キーマトリクス入力値取得
-    LD A,(KEYBUFF+9)
-    OR A
-    JP NZ,GAME_CONTINUE
+    LD A,(KEYBUFF)
+    CP KEY_F5
+    JP Z,GAME_CONTINUE
 
 GAME_OVER_L1:
     ; ■TICKが300カウント(=5秒)経過してなければ抜ける

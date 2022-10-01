@@ -12,6 +12,34 @@ SECTION code_user
 KEY_ON:                 EQU $01     ; キーオン
 KEY_OFF:                EQU $00     ; キーオフ
 
+KEY_A:                  EQU $26     ; Aキー
+KEY_B:                  EQU $27     ; Bキー
+KEY_C:                  EQU $30     ; Cキー
+KEY_D:                  EQU $31     ; Dキー
+KEY_E:                  EQU $32     ; Eキー
+KEY_F:                  EQU $33     ; Fキー
+KEY_G:                  EQU $34     ; Gキー
+KEY_H:                  EQU $35     ; Hキー
+KEY_I:                  EQU $36     ; Iキー
+KEY_J:                  EQU $37     ; Jキー
+KEY_K:                  EQU $40     ; Kキー
+KEY_L:                  EQU $41     ; Lキー
+KEY_M:                  EQU $42     ; Mキー
+KEY_N:                  EQU $43     ; Nキー
+KEY_O:                  EQU $44     ; Oキー
+KEY_P:                  EQU $45     ; Pキー
+KEY_Q:                  EQU $46     ; Qキー
+KEY_R:                  EQU $47     ; Rキー
+KEY_S:                  EQU $50     ; Sキー
+KEY_T:                  EQU $51     ; Tキー
+KEY_U:                  EQU $52     ; Uキー
+KEY_V:                  EQU $53     ; Vキー
+KEY_W:                  EQU $54     ; Wキー
+KEY_X:                  EQU $55     ; Xキー
+KEY_Y:                  EQU $56     ; Yキー
+KEY_Z:                  EQU $57     ; Zキー
+KEY_F1:                 EQU $65     ; F1キー
+KEY_F5:                 EQU $71     ; F5キー
 
 ; ====================================================================================================
 ; キー入力値取得サブルーチン
@@ -91,66 +119,80 @@ GET_STRIG:
 
 ; ====================================================================================================
 ; キーマトリクス取得処理
-; KEYBUFFのアドレスからbit0, bit1, bit2…の順に入力状態を格納する
-; SNSMATの結果と違い、未入力=0、入力=1で格納する
+; KEYBUFFに押されたキーのキーマトリクスの位置を上位(行)＋下位(列)で格納する（例："A"キー=$36)
+; 押しっぱなしにした場合は次フレームからゼロとなる
 ; ====================================================================================================
 GET_KEYMATRIX:
 
-    LD HL,KEYBUFF                   ; HL <- キーバッファアドレス
-    LD DE,KEYBUFF_SV                ; HL <- キー入力バッファSVの先頭アドレス
+    XOR A
+    LD (KEYBUFF),A                  ; キー入力バッファにキーオフを設定
+    LD B,6                          ; ループ回数
+    LD E,KEY_OFF                    ; キー入力有無判定フラグ
 
-    LD A,6                          ; キーマトリクスの6行目をスキャン対象
-    CALL SNSMAT                     ; BIOS キーマトリクススキャン
+GET_KEYMATRIX_l1:
+    LD A,B                          ; A <- キーマトリクスのスキャン対象行
+    INC A                           ; ループ回数(1〜6)+1とする                                    
+    
+    PUSH BC
     CALL GET_KEYMATRIX_SUB          ; 入力キーの情報をバッファに設定
+    POP BC
+    DJNZ GET_KEYMATRIX_l1
 
-    LD A,7                          ; キーマトリクスの6行目をスキャン対象
-    CALL SNSMAT                     ; BIOS キーマトリクススキャン
-    CALL GET_KEYMATRIX_SUB          ; 入力キーの情報をバッファに設定
+    LD A,KEY_ON
+    AND E
+    RET NZ
+
+    XOR A
+    LD (KEYBUFF_SV),A               ; キー入力バッファSVにOFFを設定
 
     RET
 
 
 GET_KEYMATRIX_SUB:
-    ; ■以下前提
-    ;   - Aレジスタにスキャン結果のデータが入っている(SNSMATの実行結果)
-    ;   - HLレジスタにキーバッファのアドレスが設定されている
-    ;   - DEレジスタにキー入力バッファSVのアドレスが設定されている
-    LD B,8                          ; 0〜7ビットをスキャンするためのループ回数
-    LD C,A                          ; C <- A (値を退避)
+    LD D,A                          ; Dレジスタには入力キーのマトリクス座標を格納する
+                                    ; 上位4ビット = 行、最初にスキャン対象行を設定しておく
+                                    ; 下位4ビット = 列、ループ処理の中でBレジスタ-1の値を設定
+    SLA D                           ; 4ビット左にシフト
+    SLA D
+    SLA D
+    SLA D
 
+    LD B,8                          ; 0〜7ビットをスキャンするためのループ回数
+
+    CALL SNSMAT                     ; BIOS キーマトリクススキャン
+    LD C,A                          ; C <- SNSMATのスキャン結果
+ 
 GET_KEYMATRIX_SUB_L1:
-    LD A,C                          ; A <- C (退避した値をAレジスタに戻す)
-    AND %00000001                   ; 下位1ビットを判定
-    JR NZ,GET_KEYMATRIX_SUB_L2      ; ビットが立っている=キーが押されていないならL2へ
+    RLC C                           ; ループ処理の中では、Bレジスタの値(8〜1)をキーマトリクスの列として扱いたいため、
+                                    ; スキャンデータを左ローテートし、bit0とCフラグにbit7の値を設定する
+    JR C,GET_KEYMATRIX_SUB_L3       ; ビットが立っている=キーが押されていないならL2へ
 
     ; ■キーが押されているときの処理
     ;   キー入力バッファSVの値を読み、OFFの時だけキー入力バッファをONにする
     ;   キー入力バッファSVがONの時は押しっぱなしなので、キー入力バッファをOFFにする
-    LD A,(DE)                       ; A <- キー入力バッファSV
+    LD E,KEY_ON                     ; キー入力フラグをON
+    LD A,(KEYBUFF_SV)               ; A <- キー入力バッファSV
     OR A
     JR Z,GET_KEYMATRIX_SUB_L12      ; キー入力バッファSVがOFFの時はL12へ
 
-    LD (HL),KEY_OFF                 ; キー入力バッファにOFFを設定
+    XOR A
+    LD (KEYBUFF),A                  ; キー入力バッファにOFFを設定
                                     ; キー入力バッファSVはそのままで良いので何もしない
+
     JR GET_KEYMATRIX_SUB_L3
 
 GET_KEYMATRIX_SUB_L12:
-    LD (HL),KEY_ON                  ; キー入力バッファにONを設定
-    LD A,KEY_ON
-    LD (DE),A                       ; キー入力バッファSVにONを設定
+    ; ■押されたキーの状態を保存
+    LD A,D                          ; A <- キーマトリクスの行(事前に上位4bitに設定済)
+    OR B                            ; キーマトリクスの列の値とのORを取り、下位4bitに設定
+    DEC A                           ; キーマトリクスの列(=Bレジスタ)は1〜8の範囲なので、-1する
+
+    LD (KEYBUFF),A                 ; キーマトリクスの行列を入力キー情報としてキー入力バッファに格納
+                                    ; Dレジスタは事前にキースキャン対象行が設定されている
+    LD (KEYBUFF_SV),A
     JR GET_KEYMATRIX_SUB_L3
 
-GET_KEYMATRIX_SUB_L2:
-    ; ■キーが押されていないときの処理
-    LD (HL),KEY_OFF                 ; キーバッファワークにキーオフを設定
-    LD A,KEY_OFF
-    LD (DE),A                       ; キー入力バッファSVにOFFを設定
-
 GET_KEYMATRIX_SUB_L3:
-    INC HL                          ; キーバッファワークのアドレスを+1
-    INC DE                          ; キー入力バッファSVのアドレスを+1
-    SRL C                           ; Cレジスタの値を右シフト
-
     DJNZ GET_KEYMATRIX_SUB_L1
 
     RET
@@ -649,11 +691,9 @@ INPUT_BUFF_STRIG:
 
 ; ■キー入力バッファ
 KEYBUFF:
-    DB  $00,$00,$00,$00,$00,$00,$00,$00 ; キーマトリクス行6
-    DB  $00,$00,$00,$00,$00,$00,$00,$00 ; キーマトリクス行7
+    DB  $00
 KEYBUFF_SV:
-    DB  $00,$00,$00,$00,$00,$00,$00,$00 ; キーマトリクス行6
-    DB  $00,$00,$00,$00,$00,$00,$00,$00 ; キーマトリクス行7
+    DB  $00
 
 ; ■オフスクリーンバッファ
 OFFSCREEN:
