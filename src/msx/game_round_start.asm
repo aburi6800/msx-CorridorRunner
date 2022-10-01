@@ -99,6 +99,9 @@ ROUND_START_INIT:
     LD (ENEMY_PTN_CNT),A
     LD (ENEMY_PTN_CNT+1),A
 
+    ; - 無敵フラグ
+    LD (INVINCIBLE_FLG),A
+
 
     ; ■スプライトキャラクターワークテーブル初期化
     CALL INIT_SPR_CHR_WK_TBL

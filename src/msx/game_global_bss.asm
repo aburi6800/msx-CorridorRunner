@@ -60,3 +60,7 @@ PERFECT_FLG:
 GAME_IS_PAUSE:
     DEFS 1
 
+; ■無敵フラグ
+INVINCIBLE_FLG:
+    DEFS 1
+
