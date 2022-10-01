@@ -7,7 +7,7 @@
 
 ## How to play
 
-[Play on WebMSX](https://webmsx.org/?MACHINE=MSX1J&ROM=https://github.com/aburi6800/msx-CorridorRunner/raw/v0.3.1/dist/c-runner.rom&FAST_BOOT)
+[Play on WebMSX](https://webmsx.org/?MACHINE=MSX1J&ROM=https://github.com/aburi6800/msx-CorridorRunner/raw/v1.0.0/dist/c-runner.rom&FAST_BOOT)
 
 ### Control
 
@@ -28,6 +28,8 @@
 - Score is increased if you take them consecutively.
 - Misses if it falls off the floor or touches an enemy.
 - When you get to the exit, the round is clear.
+- The first 20,000 pts, and every 50,000 pts thereafter, will increase the number of remaining units.
+- The game is cleared when all 16 rounds are completed.
 
 ## Build
 

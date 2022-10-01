@@ -7,7 +7,7 @@
 
 ## How to play
 
-[WebMSXで遊ぶ](https://webmsx.org/?MACHINE=MSX1J&ROM=https://github.com/aburi6800/msx-CorridorRunner/raw/v0.3.1/dist/c-runner.rom&FAST_BOOT)
+[WebMSXで遊ぶ](https://webmsx.org/?MACHINE=MSX1J&ROM=https://github.com/aburi6800/msx-CorridorRunner/raw/v1.0.0/dist/c-runner.rom&FAST_BOOT)
 
 ### 操作方法
 
@@ -20,7 +20,7 @@
 - [F5]キー
     - コンティニュー (ゲームオーバー時に押します)
 
-### ゲームルール (暫定)
+### ゲームルール
 
 <img src="images/corridor_game.png">
 
@@ -28,6 +28,8 @@
 - 連続して取るとスコアがアップします。
 - 床から落ちたり、敵に触れるとミスになります。
 - 出口まで行くと、ラウンドクリアです。
+- 最初に20,000pts、以降50,000ptsごとに残機が増えます。
+- 全16ラウンドをクリアするとゲームクリアになります。
 
 ## ビルド方法
 
@@ -58,7 +60,9 @@ $ openmsx ./dist/c-runner.rom
 
 ## ライセンス
 
-MIT License
+MITライセンスとします。
+ソフトウェアは自由に扱って構いませんが、再頒布時に著作権表示とライセンス表示を含めてください。
+また、作者や著作権者はいかなる責任も負いません。
 
 ## Thanks
 
