@@ -14,10 +14,10 @@ GAME_OVER:
     ; ■初回のみの処理実行
     JR Z,GAME_OVER_INIT
 
-    LD A,MAX_ROUND                      ; 最終ラウンド
-    LD HL,ROUND
-    SUB (HL)
-    JR C,GAME_OVER_L1                   ; 最終ラウンドクリアしていたらコンティニュー不可
+    ; - 最終ラウンドクリアしていたらコンティニュー不可
+    LD A,(ALLCLEAR_FLG)
+    OR A
+    JR NZ,GAME_OVER_L1
 
     ; ■コンティニュー
     ; - キーマトリクス入力値取得
@@ -66,19 +66,18 @@ GAME_OVER_INIT:
     LD HL,STRING_GAME_OVER
     CALL PRTSTR
 
-    LD A,MAX_ROUND                      ; 最終ラウンド
-    LD HL,ROUND
-    SUB (HL)
-    JR C,GAME_OVER_INIT_L1              ; エンディングまで迎えるとMAX_ROUND+1がROUNDに設定されるため、
-                                        ; ここでキャリーが立つ
+    ; - 最終ラウンドクリアしていたらコンティニュー不可
+    LD A,(ALLCLEAR_FLG)
+    OR A
+    JR NZ,GAME_OVER_INIT_L1
 
     LD HL,STRING_CONTINUE
     CALL PRTSTR
 
+GAME_OVER_INIT_L1:
     ; ■キーバッファクリア
     CALL KILBUF
 
-GAME_OVER_INIT_L1:
     ; ■BGM再生
     LD HL,_07
     CALL SOUNDDRV_BGMPLAY
