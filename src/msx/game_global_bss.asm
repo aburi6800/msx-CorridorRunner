@@ -32,6 +32,10 @@ SCORE:
 ROUND_BCD:
     DEFS 1
 
+; ■オールクリアフラグ
+ALLCLEAR_FLG:
+    DEFS 1
+
 ; ■スコア加算値(BCD値)
 SCORE_ADDVALUE_BCD:
     DEFS 1

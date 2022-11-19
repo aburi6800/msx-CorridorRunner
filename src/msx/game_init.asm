@@ -19,10 +19,12 @@ GAME_INIT:
     XOR A
     LD (ROUND),A
     ;   - スコア
-    XOR A
+;    XOR A
     LD (SCORE),A
     LD (SCORE+1),A
     LD (SCORE+2),A
+    ;   - オールクリアフラグ初期化
+    LD (ALLCLEAR_FLG),A
     ;   - 残機
     LD A,2
     LD (LEFT),A

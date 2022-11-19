@@ -20,7 +20,7 @@ ALL_CLEAR:
 ;    JR Z,ALL_CLEAR_EXIT
     RET Z
 
-    ; ■状態をゲーム初期化へ変更
+    ; ■状態をゲームオーバーへ変更
     LD A,STATE_GAME_OVER        ; ゲーム状態 <- ゲームオーバー
     CALL CHANGE_STATE
 
@@ -74,9 +74,9 @@ ALL_CLEAR_INIT:
     LD DE,$5000
     CALL ADDSCORE
 
-    ; ■ラウンド数を+1する
-    LD HL,ROUND
-    INC (HL)
+    ; ■オールクリアフラグ設定
+    LD A,1
+    LD (ALLCLEAR_FLG),A
 
     ; ■BGM再生
     LD HL,_09

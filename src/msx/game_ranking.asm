@@ -132,12 +132,22 @@ DISPLAY_RANKING_RECORD_L1:
     LD A,$44
     CALL PUTSTR
 
+    INC HL
+    LD A,(IX+4)
+    OR A
+    JR NZ,DISPLAY_RANKING_RECORD_L2     ; 値がゼロ以外ならL2へ
+
     LD A,(IX+3)
     LD C,0
-    INC HL
     CALL PUTBCD                         ; ゼロはないのでこのまま
+    RET
 
-DISPLAY_RANKING_RECORD_EXIT:
+DISPLAY_RANKING_RECORD_L2:
+    LD A,230                            ; オールクリア時のラウンド表示
+    CALL PUTSTR
+    INC HL
+    LD A,231
+    CALL PUTSTR
     RET
 
 ; ====================================================================================================
@@ -150,10 +160,10 @@ CHECK_RANKING_REGIST:
     XOR A
     LD (SCOREBOARD_INRANK),A
 
-    ; ■プレイヤースコアとラウンドをランキングワークにコピー
+    ; ■プレイヤースコアとラウンド、オールクリアフラグをランキングワークにコピー
     LD HL,SCORE                                  ; コピー元（プレイヤースコア(BCD値)）のアドレス
     LD DE,SCOREBOARD_TBL+SCOREBOARD_REC_SIZE*5+3 ; コピー先（6位のレコード）のアドレス
-    LD BC,4                                      ; データサイズ(スコア3バイト+ラウンド数1バイト)
+    LD BC,5                                      ; データサイズ(スコア3バイト+ラウンド数1バイト+オールクリアフラグ1バイト)
     LDIR
 
     ; ■名前初期化
@@ -443,21 +453,25 @@ SECTION rodata_user
 ; ====================================================================================================
 
 ; ■スコアランキング初期データ
+;   3byte:名前
+;   3byte:スコア(BCD値)
+;   1byte:ラウンド(BCD値)
+;   1byte:オールクリアフラグ
 SCOREBOARD_INITDATA:
     DB "AAA"    
-    DB $00,$10,$00
+    DB $00,$20,$00
     DB $05,$00
     DB "BBB"    
-    DB $00,$08,$00
+    DB $00,$15,$00
     DB $04,$00
     DB "CCC"    
-    DB $00,$06,$00
+    DB $00,$10,$00
     DB $03,$00
     DB "DDD"    
-    DB $00,$04,$00
+    DB $00,$08,$00
     DB $02,$00
     DB "EEE"    
-    DB $00,$02,$00
+    DB $00,$05,$00
     DB $01,$00
     DB "   "
     DB $00,$00,$00
