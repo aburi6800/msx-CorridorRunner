@@ -23,6 +23,11 @@ ROUND_START:
     ; ■フィールド初期化処理
     CALL INIT_FIELD
 
+    ; ■内部ランク設定
+    CALL RESET_INTERNAL_RANK_CNT    ; 内部ランク加算時間リセット
+    LD A,(INTERNAL_RANK)
+    LD (INTERNAL_RANK_SV),A         ; ラウンド開始時の内部ランク値を保存
+
     ; ■スプライトキャラクターワークテーブル初期化
     CALL INIT_SPR_CHR_WK_TBL
 
@@ -126,11 +131,11 @@ ROUND_START_INIT:
 
     RET
 
-SECTION rodata_user
 ; ====================================================================================================
 ; 定数エリア
 ; romに格納される
 ; ====================================================================================================
+SECTION rodata_user
 
 STRING_ROUND_START:
     DW $0109

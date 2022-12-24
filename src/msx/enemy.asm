@@ -61,7 +61,7 @@ ENEMY_APPEARANCE_CTRL:
 ENEMY_APPEARANCE_CTRL_L1:
     LD H,D                          ; 出現カウント(DE) -> HL
     LD L,E
-
+    
     LD A,(GAME_STATE)
     SUB STATE_ROUND_START
     JR NZ,ENEMY_APPEARANCE_CTRL_L2  ; ゲーム状態 = ラウンドスタート以外の場合はL2へ
@@ -80,7 +80,6 @@ ENEMY_APPEARANCE_CTRL_L3:
 
     ; テキキャラクター登録
     CALL ADD_ENEMY
-
     JP ENEMY_APPEARANCE_CTRL
 
 ENEMY_APPEARANCE_CTRL_L4:
@@ -97,24 +96,33 @@ ENEMY_APPEARANCE_CTRL_L4:
 ; ====================================================================================================
 ADD_ENEMY:
 
+    ; ■内部ランク判定
+    LD HL,INTERNAL_RANK_SV          ; HL <- 内部ランク退避値のアドレス
+    LD A,(HL)                       ; A <- 内部ランク値
     LD HL,(ENEMY_PTN_ADDR)          ; HL <- テキ出現パターンデータの参照先アドレス
+    INC HL
+    INC HL
+    SUB (HL)                        ; A <- 内部ランク値 - 出現ランク値
 
-    ; ■(ENEMY_PTN_ADDR+2)からキャラクター番号を取得
-    INC HL                          ; ENEMY_PTN_ADDR + 2 = キャラクター番号
-    INC HL                          ;
+    LD DE,$0007
+    JR C,ADD_ENEMY_L1               ; < 0 なら出現させずに次の処理へ
+
+    ; ■キャラクター番号取得
+    INC HL
     LD A,(HL)                       ; A <- キャラクター番号
 
     ; ■パラメタ取得開始アドレスをワークに設定
-    INC HL                          ; ENEMY_PTN_ADDR + 3 = キャラクター座標の開始アドレス
+    INC HL                          ; ENEMY_PTN_ADDR + 4 = キャラクター座標の開始アドレス
     LD (ENEMY_PARAM_ADDR),HL        ; パラメタ取得開始アドレスをワークに設定
-
-    ; ■ENEMY_APPEARANCE_CTRLの次の処理用にアドレスを計算してワークに格納しておく
-    LD DE,$0005
-    ADD HL,DE
-    LD (ENEMY_PTN_ADDR),HL
 
     ; ■キャラクター番号に対応するキャラクターをスプライトキャラクターワークテーブルに登録
     CALL ADD_CHARACTER
+
+    ; ■ENEMY_APPEARANCE_CTRLの次の処理用にアドレスを計算してワークに格納しておく
+    LD DE,$0005
+ADD_ENEMY_L1:
+    ADD HL,DE
+    LD (ENEMY_PTN_ADDR),HL
 
     RET
 
@@ -170,11 +178,11 @@ HIT_CHECK_FROM_ENEMY:
     RET
 
 
-SECTION bss_user
 ; ====================================================================================================
 ; ワークエリア
 ; プログラム起動時にcrtでゼロでramに設定される 
 ; ====================================================================================================
+SECTION bss_user
 
 ; ■テキ出現カウンタ
 ;   テキの出現タイミングをtick1で行うとポーズ時に狂うため、別カウンタを設ける
