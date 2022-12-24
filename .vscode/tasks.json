@@ -1,0 +1,61 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "CMake Clean directory",
+        "type": "shell",
+        "linux": {
+          "command": "rm -Rf ${workspaceFolder}/build && mkdir ${workspaceFolder}/build"
+        }
+      },
+      {
+        "label": "CMake Run",
+        "type": "shell",
+        "dependsOn": "Clean CMake directory",
+        "linux": {
+          "command": "(cd ${workspaceFolder}/build && cmake -DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/cmake/z88dk.cmake ..)"
+        }
+      },
+      {
+        "label": "Make Compile",
+        "type": "shell",
+        "linux": {
+          "command": "(cd ${workspaceFolder}/build && make clean && make)"
+        }
+      },
+      {
+        "label": "MAME Launch",
+        "type": "shell",
+        "dependsOn": [
+          "Deploy to MAME"
+        ],
+        "linux": {
+          "command": "(cd ${workspaceFolder}/mics/mame && ./mame cbiosm1jp crunner)"
+        }
+      },
+      {
+        "label": "MAME Launch with debugger",
+        "type": "shell",
+        "dependsOn": [
+          "Deploy to MAME"
+        ],
+        "linux": {
+          "command": "(cd ${workspaceFolder}/mics/mame && ./mame cbiosm1jp crunner -debugger gdbstub -debug)"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Deploy to MAME",
+        "dependsOn": [
+          "Make Compile"
+        ],
+        "type": "shell",
+        "linux": {
+          "command": "(cd dist/ && rm -f ${workspaceFolder}/mics/mame/roms/msx1_cart/crunner.zip && zip -j ${workspaceFolder}/mics/mame/roms/msx1_cart/crunner.zip c-runner.rom)"
+        }
+      }
+    ]
+  }
+  

@@ -76,15 +76,20 @@ GAME_MAIN_L5:
     POP BC
     DJNZ GAME_MAIN_L2
 
-    ; ■タイム減算
     CALL IS_PLAYER_MISS             ; プレイヤーミス状態を判定
 ;    JR NC,GAME_MAIN_EXIT            ; プレイヤーミス状態ならタイム減算はせずに終了
     RET NC
 
+    ; ■1秒タイマー更新判定
     LD A,(TICK3_WK)
     OR A
     RET NZ
 
+    ; ■内部ランク加算判定
+    CALL CHECK_INTERNAL_RANK_CNT
+
+    ; ■タイム減算
+GAME_MAIN_L6:
     LD A,(TIME_BCD)
     OR A
     JR Z,GAME_MAIN_TIMEOUT          ; タイムがゼロならタイムアウト処理へ
@@ -164,6 +169,8 @@ GAME_MAIN_PAUSE_L2:
 
     ; ■コマンド入力完了
     LD A,C                          ; C <- コマンド番号(この時点で1〜になっている)
+    CP 3
+    JR Z,GAME_MAIN_PAUSE_L22        ; コマンド３
     CP 2
     JR Z,GAME_MAIN_PAUSE_L21        ; コマンド２
 
@@ -176,6 +183,12 @@ GAME_MAIN_PAUSE_L21:
     ; ■コマンド２：無敵
     LD A,1
     LD (INVINCIBLE_FLG),A
+    RET
+
+GAME_MAIN_PAUSE_L22:
+    ; ■コマンド３：内部ランク表示
+    LD A,1
+    LD (INTERNAL_RANK_DISP),A
     RET
 
 GAME_MAIN_PAUSE_L3:
@@ -192,22 +205,25 @@ GAME_MAIN_PAUSE_EXIT:
     RET
 
 
-SECTION rodata_user
 ; ====================================================================================================
 ; 定数エリア
 ; romに格納される
 ; ====================================================================================================
+SECTION rodata_user
+
 ; ■コマンド
 SECRET_COMMAND:
     DB 5,KEY_A,KEY_K,KEY_U,KEY_S,KEY_A,$00,$00
-    DB 6,KEY_O,KEY_K,KEY_O,KEY_M,KEY_O,KEY_M,$00
+    DB 5,KEY_I,KEY_K,KEY_U,KEY_U,KEY_Y,$00,$00
+    DB 4,KEY_A,KEY_Y,KEY_A,KEY_S,$00,$00,$00
     DB $00
 
-SECTION bss_user
 ; ====================================================================================================
 ; ワークエリア
 ; プログラム起動時にcrtでゼロでramに設定される 
 ; ====================================================================================================
+SECTION bss_user
+
 ; ■入力中コマンドバッファ
 SECRET_COMMAND_BUFF:
     DB $00,$00,$00,$00,$00,$00,$00,$00

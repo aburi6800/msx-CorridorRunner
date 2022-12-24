@@ -301,6 +301,16 @@ DRAW_INFO:
     LD HL,$02FE
     CALL PRTBCD
 
+    ; ■内部ランク表示（表示フラグON時のみ）
+    LD A,(INTERNAL_RANK_DISP)
+    OR A
+    JR Z,DRAW_INFO_L0               ; 表示フラグOFFならスキップ
+
+    LD A,(INTERNAL_RANK)            ; 内部ランク
+    LD HL,$0020
+    CALL PRTHEX                     ; 16進数表示    
+
+DRAW_INFO_L0:
     ; ■パワーチャージメーター
     LD B,16                         ; B <- チャージパワー値
 
@@ -450,6 +460,9 @@ DRAW_SCORE:
 
 ; ■H.TIMI割込諸理
 INCLUDE "interval.asm"
+
+; ■内部ランク管理処理
+INCLUDE "rank.asm"
 
 ; ■全体初期設定
 INCLUDE "game_global_init.asm"

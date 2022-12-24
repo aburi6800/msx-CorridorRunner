@@ -7,3 +7,4 @@ src/msx/*.lis
 src/msx/*.map
 src/msx/*.sym
 .tmp/*
+mics/

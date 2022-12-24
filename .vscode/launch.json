@@ -8,24 +8,27 @@
             "type": "dezog",
             "request": "launch",
             "name": "DeZog",
-            "remoteType": "openmsx",
-            "listFiles": [
+            "remoteType": "mame",
+            "mame": {
+              "port": 23946
+            },
+            "z88dkv2": [ // Z88DK 2.2 and DeZog 3.0 or higher
                 {
-                    "path": "src/msx/main.asm.lis",
-                    "srcDirs": [], // Use list file directly
-                    "asm": "z88dk",
-                    "z88dkMapFile": "dist/example.map",
-                    "mainFile": "src/msx/main.asm",
-                    "addOffset": 0  
+                  "path": "src/msx/main.asm.lis",
+                  "mapFile": "dist/c-runner.map",
+                  "srcDirs": [""]	// Sources mode
+                },
+                {
+                    "path": "src/msx/psgdriver.asm.lis",
+                    "mapFile": "dist/c-runner.map",
+                    "srcDirs": [""]	// Sources mode
                 }
             ],
-            "commandsAfterLaunch": [
-                "-assert enable", // start with ASSERT mode ON
-                "-e cart dist/example.rom"
-            ],
-            "startAutomatically": false,
             "rootFolder": "${workspaceFolder}",
-            "tmpDir": ".tmp"
-        }
+            "commandsAfterLaunch": [
+              "-rmv",
+              //"-mv 0x4000 0xbfff",
+            ],
+         }
     ]
 }

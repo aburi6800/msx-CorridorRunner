@@ -599,7 +599,7 @@ UPDATE_PLAYER_GETITEM_L1:
     LD A,(SCORE_ADDVALUE_BCD)       ; スコア倍率
 ;    CP $16
     CP $08
-    RET Z                           ; 既に最高倍率なら抜ける
+    JR Z,UPDATE_PLAYER_GETITEM_L2   ; 既に最高倍率ならL2へ
 
     ; ■次の表示に向けた準備
     ADD A,A                         ; スコア倍率を２倍
@@ -609,8 +609,13 @@ UPDATE_PLAYER_GETITEM_L1:
     LD A,(SCORE_CHRNO)              ; 得点のキャラクター番号を設定
     INC A
     LD (SCORE_CHRNO),A
+    RET
 
-UPDATE_PLAYER_GETITEM_EXIT:
+UPDATE_PLAYER_GETITEM_L2:
+    ; ■内部ランク上昇
+    LD A,1
+    CALL CHANGE_INTERNAL_RANK
+
     RET
 
 ; ----------------------------------------------------------------------------------------------------
@@ -759,6 +764,11 @@ PLAYER_MISS_CHANGE_GAME_STATE:
     ; - 残機を１減らす
     LD HL,LEFT
     DEC (HL)
+
+    ; - 内部ランク値減算
+    LD A,-32
+    CALL CHANGE_INTERNAL_RANK
+
     ; - ゲーム状態をラウンドスタートに戻す
     LD A,STATE_ROUND_START
     CALL CHANGE_STATE
@@ -799,11 +809,11 @@ SET_PLAYER_MISS_EXPLOSION:
     RET
 
 
-SECTION rodata_user
 ; ====================================================================================================
 ; 定数エリア
 ; romに格納される
 ; ====================================================================================================
+SECTION rodata_user
 
 ; ■チャージウェイト値
 CHARGE_WAIT_VALUE:
@@ -819,11 +829,11 @@ PLAYER_MISS_PTN1:
 TARGET_GET_SFX_TBL:
     DW SFX_10, SFX_11, SFX_12, SFX_13
 
-SECTION bss_user
 ; ====================================================================================================
 ; ワークエリア
 ; プログラム起動時にcrtでゼロでramに設定される 
 ; ====================================================================================================
+SECTION bss_user
 
 ; ■プレイヤー操作モード
 ; 0=CONTROL,1=TURN LEFT,2=TURN RIGHT,3=CHARGE,4=MOVE,5〜=MISS

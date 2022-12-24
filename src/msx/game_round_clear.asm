@@ -216,6 +216,15 @@ ROUND_CLEAR_MESSAGE1_L7:
     LD A,(TIME_BCD)
     LD (ROUND_CLEAR_BONUS_BCD),A
 
+    ; ■内部ランク加算
+    LD A,(TIME_BCD)
+    SRL A
+    SRL A
+    SRL A
+    SRL A                           ; A <- 残り時間/10
+    ADD A,A                         ; ここでAは2倍
+    CALL CHANGE_INTERNAL_RANK
+
     LD HL,STRING_ROUND_CLEAR_MSG6
     CALL ROUND_CLEAR_MESSAGE1_L6
     CALL ROUND_CLEAR_PRTBONUS
@@ -281,12 +290,15 @@ ROUND_CLEAR_ADDBONUS_L1:
     OR A
     JR Z,ROUND_CLEAR_ADDBONUS_L3    ; パーフェクト判定フラグがOFFであればスキップ
 
-    ; ■次の状態をパーフェクトボーナスに遷移
+    ; ■パーフェクトボーナスを加算し、次の状態をパーフェクトボーナスに遷移
     LD DE,$0100                     ; ボーナス加算
     CALL ADDSCORE
 
     LD HL,SFX_04                    ; パーフェクトファンファーレ
     CALL SOUNDDRV_SFXPLAY
+
+    LD A,5
+    CALL CHANGE_INTERNAL_RANK       ; 内部ランク変動
 
     LD A,$80                        ; カウンタ設定
     LD (ROUND_CLEAR_CNT),A
@@ -348,7 +360,7 @@ ROUND_CLEAR_MESSAGE2:
 
     ; ■次のラウンドに進める
     LD HL,ROUND
-    INC (HL)                       ; データがないので一旦保留
+    INC (HL)
 
     ; ■ゲーム状態を変更
     LD A,STATE_ROUND_START          ; ゲーム状態 <- ラウンド開始
@@ -357,11 +369,11 @@ ROUND_CLEAR_MESSAGE2:
     RET
 
 
-SECTION rodata_user
 ; ====================================================================================================
 ; 定数エリア
 ; romに格納される
 ; ====================================================================================================
+SECTION rodata_user
 
 STRING_ROUND_CLEAR_MSG1:
     DW $00C6
@@ -389,11 +401,11 @@ STRING_ROUND_CLEAR_MSG8:
     DB "PERFECT  10000",0
 
 
-SECTION bss_user
 ; ====================================================================================================
 ; ワークエリア
 ; プログラム起動時にcrtでゼロでramに設定される 
 ; ====================================================================================================
+SECTION bss_user
 
 ; ■ラウンドクリア処理の状態
 ROUND_CLEAR_STS:
