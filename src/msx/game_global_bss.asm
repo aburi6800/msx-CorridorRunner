@@ -24,14 +24,6 @@ ROUND:
 CONTINUE_ROUND:
     DEFS 1
 
-; ■ラウンド数(BCD値)
-ROUND_BCD:
-    DEFS 1
-
-; ■オールクリアフラグ
-ALLCLEAR_FLG:
-    DEFS 1
-
 ; ■残機
 LEFT:
     DEFS 1

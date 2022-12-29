@@ -256,6 +256,9 @@ PUTSTR_EXIT:
 ; IN  : HL = 文字データのアドレス
 ; ====================================================================================================
 PRTSTR:
+    PUSH BC
+    PUSH DE
+
     LD C,(HL)                       ; BC <- オフスクリーンオフセット値
     INC HL
     LD B,(HL)
@@ -272,7 +275,6 @@ PRTSTR_L1:
 	OR 0					        ; 0かどうか
     JR Z,PRTSTR_END			        ; 0の場合はPRTENDへ
 
-;    LD (HL),A                       ; オフスクリーンバッファに設定
     CALL PUTSTR
 
 	INC HL					        ; HL=HL+1
@@ -280,6 +282,8 @@ PRTSTR_L1:
     JR PRTSTR_L1
 
 PRTSTR_END:
+    POP DE
+    POP BC
 	RET
 
 
