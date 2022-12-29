@@ -7,7 +7,7 @@
 
 ## How to play
 
-[WebMSXで遊ぶ](https://webmsx.org/?MACHINE=MSX1J&ROM=https://github.com/aburi6800/msx-CorridorRunner/raw/v1.1.0/dist/c-runner.rom&FAST_BOOT)
+[WebMSXで遊ぶ](https://webmsx.org/?MACHINE=MSX1J&ROM=https://github.com/aburi6800/msx-CorridorRunner/raw/v1.1.1/dist/c-runner.rom&FAST_BOOT)
 
 ### 操作方法
 
