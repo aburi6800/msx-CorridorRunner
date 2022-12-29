@@ -24,10 +24,6 @@ ROUND:
 CONTINUE_ROUND:
     DEFS 1
 
-; ■スコア(BCD値)
-SCORE:
-    DEFS 3
-
 ; ■ラウンド数(BCD値)
 ROUND_BCD:
     DEFS 1
@@ -35,14 +31,6 @@ ROUND_BCD:
 ; ■オールクリアフラグ
 ALLCLEAR_FLG:
     DEFS 1
-
-; ■スコア加算値(BCD値)
-SCORE_ADDVALUE_BCD:
-    DEFS 1
-
-; ■次回エクステンドスコア(BCD値)
-NEXT_EXTEND_SCORE:
-    DEFS 3
 
 ; ■残機
 LEFT:
