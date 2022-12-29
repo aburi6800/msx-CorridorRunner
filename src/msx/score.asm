@@ -158,8 +158,17 @@ SCORE_CHRNO:
     DEFS 1
 
 ; ■スコア(BCD値)
+;   ランキングデータの構造と合わせるため、スコア＋ラウンド数＋オールクリアフラグをここに定義する
 SCORE:
     DEFS 3
+
+; ■ラウンド数(BCD値)
+ROUND_BCD:
+    DEFS 1
+
+; ■オールクリアフラグ
+ALLCLEAR_FLG:
+    DEFS 1
 
 ; ■スコア加算値(BCD値)
 SCORE_ADDVALUE_BCD:
