@@ -135,7 +135,8 @@ ADD_ENEMY_TIMEOUT:
     LD HL,ENEMY_TIMEOUT             ; HL <- テキ出現パターンデータの参照先アドレス
 
     ; ■(ENEMY_PTN_ADDR+2)からキャラクター番号を取得
-    INC HL                          ; ENEMY_PTN_ADDR + 2 = キャラクター番号
+    INC HL                          ; ENEMY_PTN_ADDR + 3 = キャラクター番号
+    INC HL                          ;
     INC HL                          ;
     LD A,(HL)                       ; A <- キャラクター番号
 
