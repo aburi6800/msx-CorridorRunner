@@ -173,7 +173,7 @@ CHECK_RANKING_REGIST:
     LD (SCOREBOARD_TBL+SCOREBOARD_REC_SIZE*5+2),A
 
     ; ■ランキングワークをチェック
-    LD B,6                                      ; 6位（=プレイヤーのスコア)から処理する
+    LD B,5                                      ; 6位（=プレイヤーのスコア)から処理する
     LD DE,SCOREBOARD_TBL+SCOREBOARD_REC_SIZE*4  ; 5位のレコードのアドレス
     LD HL,SCOREBOARD_TBL+SCOREBOARD_REC_SIZE*5  ; 6位のレコードのアドレス
 
@@ -217,7 +217,6 @@ CHECK_RANKING_REGIST_L3:
     LD (SCOREBOARD_REGIST_ADDR),DE  ; 入れ替え先の順位のデータのアドレスを登録先として保存
     CALL RANKING_SWAP               ; ランキング入れ替え
     LD A,B
-    DEC A
     LD (SCOREBOARD_INRANK),A        ; ランキング順
     ; ■HLを-8して一つ上の順位のレコードのアドレスを設定
     LD A,L
@@ -459,19 +458,24 @@ SECTION rodata_user
 ;   1byte:オールクリアフラグ
 SCOREBOARD_INITDATA:
     DB "AAA"    
-    DB $00,$20,$00
+;    DB $00,$20,$00
+    DB $00,$02,$00
     DB $05,$00
     DB "BBB"    
-    DB $00,$15,$00
+;    DB $00,$15,$00
+    DB $00,$01,$50
     DB $04,$00
     DB "CCC"    
-    DB $00,$10,$00
+;    DB $00,$10,$00
+    DB $00,$01,$00
     DB $03,$00
     DB "DDD"    
-    DB $00,$08,$00
+;    DB $00,$08,$00
+    DB $00,$00,$80
     DB $02,$00
     DB "EEE"    
-    DB $00,$05,$00
+;    DB $00,$05,$00
+    DB $00,$00,$50
     DB $01,$00
     DB "   "
     DB $00,$00,$00
